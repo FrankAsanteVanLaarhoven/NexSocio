@@ -35,6 +35,7 @@ export default function ProfilePage() {
         setCompany(p.company || "");
         setSkills(p.skills || "");
       })
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load profile"))
       .finally(() => setLoading(false));
   }, [session]);
 

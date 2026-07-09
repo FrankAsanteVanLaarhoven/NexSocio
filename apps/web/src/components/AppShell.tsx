@@ -2,6 +2,7 @@
 
 import { TacticalGrid } from "@nexus/ui";
 import { BetaBanner } from "./BetaBanner";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Header } from "./Header";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <TacticalGrid />
       <BetaBanner />
       <Header />
-      <main className="relative z-10 px-6 py-12">{children}</main>
+      <main className="relative z-10 px-6 py-12">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
     </div>
   );
 }

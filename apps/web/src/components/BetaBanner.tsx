@@ -12,7 +12,17 @@ export function BetaBanner() {
 
   useEffect(() => {
     if (!session) return;
-    getFeatureFlags(session.accessToken).then((f) => setCohort(f.cohort ?? null));
+    let cancelled = false;
+    getFeatureFlags(session.accessToken)
+      .then((f) => {
+        if (!cancelled) setCohort(f.cohort ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setCohort(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
   if (!hydrated || !session || !cohort) return null;
