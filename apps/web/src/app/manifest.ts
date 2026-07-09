@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BRAND_ICONS } from "@/lib/brand";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -15,34 +16,28 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["social", "business", "productivity"],
     icons: [
       {
-        src: "/icons/icon-192.png",
+        src: BRAND_ICONS.icon192,
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.png",
+        src: BRAND_ICONS.icon512,
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.png",
+        src: BRAND_ICONS.icon512,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
       },
-      {
-        src: "/icons/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "any",
-      },
     ],
     shortcuts: [
-      { name: "Feed", url: "/feed", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
-      { name: "Calls", url: "/calls", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
-      { name: "Inbox", url: "/inbox", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
+      { name: "Feed", url: "/feed", icons: [{ src: BRAND_ICONS.icon192, sizes: "192x192" }] },
+      { name: "Calls", url: "/calls", icons: [{ src: BRAND_ICONS.icon192, sizes: "192x192" }] },
+      { name: "Inbox", url: "/inbox", icons: [{ src: BRAND_ICONS.icon192, sizes: "192x192" }] },
     ],
   };
 }

@@ -3,6 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+// Canonical source — see apps/web/src/lib/brand.ts and public/brand/brand.lock.json
 const input = join(root, "apps/web/public/brand/logo-mark-source.jpg");
 const output = join(root, "apps/web/public/brand/logo-mark.png");
 

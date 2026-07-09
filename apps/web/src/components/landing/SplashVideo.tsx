@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { BRAND_LOGO } from "@/lib/brand";
 
-const SPLASH_SRC = "/splash-nexsocio.mp4?v=5";
+const SPLASH_SRC = `${BRAND_LOGO.splashVideo}?v=5`;
 
 export function SplashVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);

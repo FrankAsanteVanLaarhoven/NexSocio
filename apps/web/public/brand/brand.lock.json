@@ -1,0 +1,15 @@
+{
+  "id": "nexsocio-liquid-n",
+  "version": 1,
+  "name": "NexSocio Liquid N",
+  "locked": true,
+  "canonical": {
+    "markAccent": "/brand/logo-mark-accent.png",
+    "markAccentDark": "/brand/logo-mark-accent-dark.png",
+    "source": "/brand/logo-mark-source.jpg",
+    "favicon": "/icons/favicon.png",
+    "pwa192": "/icons/icon-192.png",
+    "pwa512": "/icons/icon-512.png"
+  },
+  "regenerate": "npm run pwa:icons"
+}

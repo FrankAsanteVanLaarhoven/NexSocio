@@ -2,10 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {
+  BRAND_DISPLAY_NAME,
+  BRAND_LOGO,
+  BRAND_WORDMARK,
+  type BrandLogoSize,
+  type BrandLogoVariant,
+} from "@/lib/brand";
 
 type BrandLogoProps = {
-  variant?: "header" | "icon" | "wordmark";
-  size?: "md" | "lg";
+  variant?: BrandLogoVariant;
+  size?: BrandLogoSize;
   href?: string;
   className?: string;
 };
@@ -15,12 +22,12 @@ const SIZES = {
   lg: { box: "h-11 w-11", img: 44, text: "text-lg sm:text-xl" },
 } as const;
 
-function LogoMark({ size = "lg", className = "" }: { size?: "md" | "lg"; className?: string }) {
+function LogoMark({ size = "lg", className = "" }: { size?: BrandLogoSize; className?: string }) {
   const dim = SIZES[size];
   return (
     <span className={`relative inline-flex shrink-0 items-center justify-center ${dim.box} ${className}`}>
       <Image
-        src="/brand/logo-mark-accent.png"
+        src={BRAND_LOGO.markAccent}
         alt=""
         width={dim.img}
         height={dim.img}
@@ -29,7 +36,7 @@ function LogoMark({ size = "lg", className = "" }: { size?: "md" | "lg"; classNa
         aria-hidden
       />
       <Image
-        src="/brand/logo-mark-accent-dark.png"
+        src={BRAND_LOGO.markAccentDark}
         alt=""
         width={dim.img}
         height={dim.img}
@@ -44,7 +51,7 @@ function LogoMark({ size = "lg", className = "" }: { size?: "md" | "lg"; classNa
 export function BrandLogo({
   variant = "header",
   size = "lg",
-  href = "/",
+  href,
   className = "",
 }: BrandLogoProps) {
   const textSize = SIZES[size].text;
@@ -54,23 +61,27 @@ export function BrandLogo({
       <LogoMark size={size} className={className} />
     ) : variant === "wordmark" ? (
       <span className={`inline-flex items-center font-bold tracking-tight ${textSize} ${className}`}>
-        <span className="text-primary">Nex</span>
-        <span className="text-accent">Socio</span>
+        <span className="text-primary">{BRAND_WORDMARK.primary}</span>
+        <span className="text-accent">{BRAND_WORDMARK.accent}</span>
       </span>
     ) : (
       <span className={`inline-flex items-center gap-3 ${className}`}>
         <LogoMark size={size} />
         <span className={`font-bold tracking-tight leading-none ${textSize}`}>
-          <span className="text-primary">Nex</span>
-          <span className="text-accent">Socio</span>
+          <span className="text-primary">{BRAND_WORDMARK.primary}</span>
+          <span className="text-accent">{BRAND_WORDMARK.accent}</span>
         </span>
       </span>
     );
 
-  if (!href) return content;
+  if (href === undefined) return content;
 
   return (
-    <Link href={href} className="inline-flex shrink-0 items-center rounded-lg transition-opacity hover:opacity-90">
+    <Link
+      href={href}
+      className="inline-flex shrink-0 items-center rounded-lg transition-opacity hover:opacity-90"
+      aria-label={BRAND_DISPLAY_NAME}
+    >
       {content}
     </Link>
   );

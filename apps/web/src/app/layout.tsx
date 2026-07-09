@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/PwaRegister";
+import { BRAND_ICONS } from "@/lib/brand";
 import { SITE_DOMAIN, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -42,8 +43,8 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
   keywords: ["NexSocio", SITE_DOMAIN, "social network", "WebRTC", "marketplace"],
   icons: {
-    icon: [{ url: "/icons/favicon.png", sizes: "32x32", type: "image/png" }],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    icon: [{ url: BRAND_ICONS.favicon, sizes: "32x32", type: "image/png" }],
+    apple: [{ url: BRAND_ICONS.apple, sizes: "192x192", type: "image/png" }],
   },
 };
 
