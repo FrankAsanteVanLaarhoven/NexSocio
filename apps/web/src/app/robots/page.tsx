@@ -11,9 +11,11 @@ import {
   issueRobotCommand,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 import type { DigitalTwin, RobotDashboard } from "@nexus/types";
 
 export default function RobotsPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const [dashboard, setDashboard] = useState<RobotDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export default function RobotsPage() {
       setMsg(res.message);
       await load();
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Command failed");
+      setMsg(e instanceof Error ? e.message : t("robots.commandFailed"));
     }
   }
 
@@ -65,10 +67,8 @@ export default function RobotsPage() {
         ) : (
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
-          <h1 className="text-xl font-semibold text-[#F5F5F5]">Robot & Agent Layer</h1>
-          <p className="text-xs text-[#8A8A8A] mt-1">
-            Digital twins · Safety-certified command channel
-          </p>
+          <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("robots.title")}</h1>
+          <p className="text-xs text-[#8A8A8A] mt-1">{t("robots.subtitle")}</p>
         </div>
 
         {dashboard && (
@@ -83,7 +83,7 @@ export default function RobotsPage() {
           </div>
         ) : (
           <>
-            <Panel open title="Digital Twins">
+            <Panel open title={t("robots.digitalTwins")}>
               <div className="grid gap-3 sm:grid-cols-2">
                 {dashboard?.twins.map((twin: DigitalTwin) => (
                   <button
@@ -112,35 +112,35 @@ export default function RobotsPage() {
               </div>
             </Panel>
 
-            <Panel open title="Issue Command" subtitle="Certified allowlist: move, stop, scan, greet, status">
+            <Panel open title={t("robots.issueCommand")} subtitle={t("robots.commandSubtitle")}>
               <div className="space-y-3">
                 <Input
-                  label="Command"
+                  label={t("robots.commandLabel")}
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
-                  placeholder="status"
+                  placeholder={t("robots.commandPlaceholder")}
                 />
                 <Button className="w-full" onClick={handleCommand}>
-                  Send to {selectedAgent}
+                  {t("robots.sendTo", { agent: selectedAgent })}
                 </Button>
                 {msg && <p className="text-xs text-[#8A8A8A]">{msg}</p>}
               </div>
             </Panel>
 
-            <Panel open title="Create Digital Twin">
+            <Panel open title={t("robots.createTwin")}>
               <div className="flex gap-2">
                 <Input
                   className="flex-1"
-                  placeholder="Twin name..."
+                  placeholder={t("robots.twinNamePlaceholder")}
                   value={newTwinName}
                   onChange={(e) => setNewTwinName(e.target.value)}
                 />
-                <Button onClick={handleCreateTwin}>Create</Button>
+                <Button onClick={handleCreateTwin}>{t("common.create")}</Button>
               </div>
             </Panel>
 
             {dashboard && dashboard.recent_commands.length > 0 && (
-              <Panel open title="Recent Commands">
+              <Panel open title={t("robots.recentCommands")}>
                 <div className="space-y-2">
                   {dashboard.recent_commands.map((cmd, i) => (
                     <div key={i} className="flex justify-between text-xs border-b border-[#1F1F1F] pb-2">

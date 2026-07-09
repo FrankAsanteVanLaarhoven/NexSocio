@@ -10,19 +10,11 @@ import { useInbox, useMarkNotificationRead } from "@/hooks/queries/useInbox";
 import { PushEnableBanner } from "@/components/PushEnableBanner";
 import { useNotificationSocket } from "@/hooks/useNotificationSocket";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 import type { Notification } from "@nexus/types";
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "now";
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-}
-
 export default function InboxPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
   const { data, isLoading } = useInbox(token);
@@ -32,6 +24,16 @@ export default function InboxPage() {
 
   const notifications = data?.notifications ?? [];
   const unread = data?.unread_count ?? 0;
+
+  function timeAgo(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return t("common.now");
+    if (m < 60) return t("common.minutesAgo", { m });
+    const h = Math.floor(m / 60);
+    if (h < 24) return t("common.hoursAgo", { h });
+    return t("common.daysAgo", { d: Math.floor(h / 24) });
+  }
 
   async function handleOpen(n: Notification) {
     if (!token || n.read || markRead.isPending) return;
@@ -48,21 +50,21 @@ export default function InboxPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Link href="/settings" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
-                  ← Settings
+                  {t("common.backToSettings")}
                 </Link>
-                <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">Inbox</h1>
+                <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">{t("inbox.title")}</h1>
               </div>
               {unread > 0 && (
-                <PulseBadge className="text-[10px] text-[#FF5252]">{unread} new</PulseBadge>
+                <PulseBadge className="text-[10px] text-[#FF5252]">{t("inbox.newCount", { n: unread })}</PulseBadge>
               )}
             </div>
             {token && <PushEnableBanner token={token} />}
 
-            <Panel open title="Notifications">
+            <Panel open title={t("inbox.notifications")}>
               {isLoading ? (
-                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("common.loading")}</p>
               ) : notifications.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No notifications yet.</p>
+                <p className="text-xs text-[#5A5A5A]">{t("inbox.empty")}</p>
               ) : (
                 <AnimatedList>
                   <AnimatePresence initial={false}>

@@ -7,22 +7,24 @@ import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { useMyStatus, usePostStatus, useStatusFeed } from "@/hooks/queries/useStatus";
 import { useAuthStore } from "@/lib/auth-store";
-
-function timeLeft(expires: string) {
-  const ms = new Date(expires).getTime() - Date.now();
-  if (ms <= 0) return "Expired";
-  const h = Math.floor(ms / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
-}
+import { useTranslation } from "@/i18n";
 
 export default function StatusPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
   const { data: feed = [], isLoading } = useStatusFeed(token);
   const { data: mine } = useMyStatus(token);
   const postStatus = usePostStatus(token);
   const [text, setText] = useState("");
+
+  function timeLeft(expires: string) {
+    const ms = new Date(expires).getTime() - Date.now();
+    if (ms <= 0) return t("status.expired");
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? t("status.hoursLeft", { h, m }) : t("status.minutesLeft", { m });
+  }
 
   async function handlePost() {
     if (!text.trim()) return;
@@ -38,24 +40,24 @@ export default function StatusPage() {
         ) : (
           <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Status</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">24-hour updates · WhatsApp-style</p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("status.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("status.subtitle")}</p>
             </div>
 
             {mine && (
-              <Panel open title="Your status">
-                <p className="text-sm text-[#F5F5F5]">{mine.text || "Media status"}</p>
+              <Panel open title={t("status.yours")}>
+                <p className="text-sm text-[#F5F5F5]">{mine.text || t("status.mediaStatus")}</p>
                 <p className="text-[10px] text-[#5A5A5A] mt-1">{timeLeft(mine.expires_at)}</p>
               </Panel>
             )}
 
-            <Panel open title="Post status">
+            <Panel open title={t("status.postStatus")}>
               <div className="space-y-3">
                 <Input
-                  label="What's happening?"
+                  label={t("status.placeholder")}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Available for calls…"
+                  placeholder={t("status.callsAvailable")}
                 />
                 <Button
                   className="w-full"
@@ -63,16 +65,16 @@ export default function StatusPage() {
                   disabled={!text.trim()}
                   onClick={handlePost}
                 >
-                  Share for 24h
+                  {t("status.share24h")}
                 </Button>
               </div>
             </Panel>
 
-            <Panel open title="Feed">
+            <Panel open title={t("status.feed")}>
               {isLoading ? (
-                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("common.loading")}</p>
               ) : feed.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No active statuses.</p>
+                <p className="text-xs text-[#5A5A5A]">{t("status.empty")}</p>
               ) : (
                 <AnimatedList className="space-y-3">
                   {feed.map((s) => (

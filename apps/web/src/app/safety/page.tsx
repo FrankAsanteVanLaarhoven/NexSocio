@@ -7,9 +7,11 @@ import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { getSafetyDashboard } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 import type { SafetyDashboard } from "@nexus/types";
 
 export default function SafetyPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const [dashboard, setDashboard] = useState<SafetyDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,11 +25,11 @@ export default function SafetyPage() {
 
   const metrics = dashboard
     ? [
-        { label: "Total Events", value: dashboard.total_events, color: "#00E5FF" },
-        { label: "Blocked", value: dashboard.blocked_count, color: "#FF5252" },
-        { label: "Under Review", value: dashboard.review_count, color: "#FFB300" },
-        { label: "Open Reports", value: dashboard.open_reports, color: "#7C4DFF" },
-        { label: "Incident Rate", value: `${dashboard.incident_rate}%`, color: "#4FC3F7" },
+        { label: t("safety.totalEvents"), value: dashboard.total_events, color: "#00E5FF" },
+        { label: t("safety.blocked"), value: dashboard.blocked_count, color: "#FF5252" },
+        { label: t("safety.underReview"), value: dashboard.review_count, color: "#FFB300" },
+        { label: t("safety.openReports"), value: dashboard.open_reports, color: "#7C4DFF" },
+        { label: t("safety.incidentRate"), value: `${dashboard.incident_rate}%`, color: "#4FC3F7" },
       ]
     : [];
 
@@ -39,10 +41,8 @@ export default function SafetyPage() {
         ) : (
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <h1 className="text-xl font-semibold text-[#F5F5F5]">Safety Dashboard</h1>
-          <p className="text-xs text-[#8A8A8A] mt-1">
-            Multi-layer governance: deterministic rules + ML stub
-          </p>
+          <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("safety.title")}</h1>
+          <p className="text-xs text-[#8A8A8A] mt-1">{t("safety.subtitle")}</p>
         </div>
 
         {loading ? (
@@ -65,9 +65,9 @@ export default function SafetyPage() {
               ))}
             </div>
 
-            <Panel open title="Recent Moderation Events">
+            <Panel open title={t("safety.recentEvents")}>
               {dashboard.recent_events.length === 0 ? (
-                <p className="text-sm text-[#8A8A8A] text-center py-6">No events yet</p>
+                <p className="text-sm text-[#8A8A8A] text-center py-6">{t("safety.noEvents")}</p>
               ) : (
                 <div className="space-y-2">
                   {dashboard.recent_events.map((e) => (
@@ -80,7 +80,7 @@ export default function SafetyPage() {
                         <span className="ml-2 text-[10px] text-[#5A5A5A]">{e.labels}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-xs text-[#8A8A8A]">score {e.score}</span>
+                        <span className="text-xs text-[#8A8A8A]">{t("safety.score", { n: e.score })}</span>
                         <p className="text-[10px] text-[#5A5A5A]">
                           {new Date(e.created_at).toLocaleString()}
                         </p>

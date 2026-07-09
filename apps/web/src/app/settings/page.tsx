@@ -7,7 +7,8 @@ import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { useAuthStore } from "@/lib/auth-store";
-import { groupsForSector } from "@/lib/settings-registry";
+import { useTranslation } from "@/i18n";
+import { useSettingsRegistry } from "@/lib/use-settings-registry";
 
 type SectorFilter = "personal" | "professional" | "all";
 
@@ -19,6 +20,8 @@ export default function SettingsPage() {
   );
   const [query, setQuery] = useState("");
 
+  const { t } = useTranslation();
+  const { groupsForSector } = useSettingsRegistry();
   const groups = groupsForSector(sector).map((g) => ({
     ...g,
     items: g.items.filter(
@@ -37,16 +40,16 @@ export default function SettingsPage() {
         ) : (
           <div className="mx-auto max-w-2xl space-y-5 pb-12">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Settings</h1>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("settings.title")}</h1>
               <p className="text-xs text-[#8A8A8A] mt-1">
-                Personal & professional — wallet · network · analytics · privacy
+                {t("settings.subtitle")}
               </p>
             </div>
 
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search settings…"
+              placeholder={t("settings.searchPlaceholder")}
               className="w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A]"
             />
 
@@ -64,17 +67,17 @@ export default function SettingsPage() {
                       : "text-[#8A8A8A] hover:text-[#F5F5F5]"
                   }`}
                 >
-                  {s}
+                  {t(s === "all" ? "settings.sectorAll" : s === "personal" ? "common.personal" : "common.professional")}
                 </button>
               ))}
             </div>
 
             <div className="grid grid-cols-4 gap-2">
               {[
-                { href: "/inbox", icon: "✉", label: "Inbox" },
-                { href: "/wallet", icon: "💳", label: "Wallet" },
-                { href: "/shop", icon: "🛒", label: "Shop" },
-                { href: "/settings/analytics", icon: "📊", label: "Stats" },
+                { href: "/inbox", icon: "✉", labelKey: "settings.quickInbox" },
+                { href: "/wallet", icon: "💳", labelKey: "settings.quickWallet" },
+                { href: "/shop", icon: "🛒", labelKey: "settings.quickShop" },
+                { href: "/settings/analytics", icon: "📊", labelKey: "settings.quickStats" },
               ].map((q) => (
                 <Link
                   key={q.href}
@@ -82,7 +85,7 @@ export default function SettingsPage() {
                   className="flex flex-col items-center gap-1 rounded-lg border border-[#1F1F1F] py-3 hover:border-[#00E5FF]/30 transition-colors"
                 >
                   <span className="text-lg">{q.icon}</span>
-                  <span className="text-[10px] text-[#8A8A8A]">{q.label}</span>
+                  <span className="text-[10px] text-[#8A8A8A]">{t(q.labelKey)}</span>
                 </Link>
               ))}
             </div>

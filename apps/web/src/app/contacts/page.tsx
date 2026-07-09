@@ -1,15 +1,17 @@
 "use client";
 
+import { Button, Input, Panel, FadeIn } from "@nexus/ui";
 import { useState } from "react";
-import { Button, FadeIn, Input, Panel } from "@nexus/ui";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { ContactPicker } from "@/components/ContactPicker";
 import { useAddContact, useContacts, useShareWithContacts } from "@/hooks/queries/useContacts";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 
 export default function ContactsPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
   const { data: contacts = [], isLoading } = useContacts(token, true);
@@ -41,11 +43,11 @@ export default function ContactsPage() {
         message: shareMsg.trim(),
         contact_ids: selected,
       });
-      setMsg(`Shared with ${result.shared_count} contact(s).`);
+      setMsg(t("contacts.sharedSuccess", { n: result.shared_count }));
       setShareMsg("");
       setSelected([]);
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Share failed");
+      setMsg(err instanceof Error ? err.message : t("contacts.shareFailed"));
     }
   }
 
@@ -57,30 +59,30 @@ export default function ContactsPage() {
         ) : (
           <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Contacts</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">Sync connections · share with selection</p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("contacts.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("contacts.subtitle")}</p>
             </div>
 
-            <Panel open title="Add contact">
+            <Panel open title={t("contacts.addContact")}>
               <div className="space-y-3">
-                <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-                <Input label="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input label={t("contacts.name")} value={name} onChange={(e) => setName(e.target.value)} />
+                <Input label={t("contacts.emailOptional")} value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Button
                   className="w-full"
                   loading={addContact.isPending}
                   disabled={!name.trim()}
                   onClick={handleAdd}
                 >
-                  Add contact
+                  {t("contacts.addContact")}
                 </Button>
               </div>
             </Panel>
 
-            <Panel open title={`All contacts (${contacts.length})`}>
+            <Panel open title={t("contacts.allContacts", { n: contacts.length })}>
               {isLoading ? (
-                <p className="text-xs text-[#5A5A5A]">Syncing…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("contacts.syncing")}</p>
               ) : contacts.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No contacts — add one or connect with members.</p>
+                <p className="text-xs text-[#5A5A5A]">{t("contacts.empty")}</p>
               ) : (
                 <div className="space-y-1">
                   {contacts.map((c) => (
@@ -96,13 +98,13 @@ export default function ContactsPage() {
               )}
             </Panel>
 
-            <Panel open title="Share with contacts">
+            <Panel open title={t("contacts.shareTitle")}>
               <div className="space-y-3">
                 <Input
-                  label="Message"
+                  label={t("contacts.message")}
                   value={shareMsg}
                   onChange={(e) => setShareMsg(e.target.value)}
-                  placeholder="Check out this update…"
+                  placeholder={t("contacts.sharePlaceholder")}
                 />
                 {token && (
                   <ContactPicker token={token} selected={selected} onChange={setSelected} />
@@ -113,7 +115,7 @@ export default function ContactsPage() {
                   disabled={!shareMsg.trim() || selected.length === 0}
                   onClick={handleShare}
                 >
-                  Share ({selected.length} selected)
+                  {t("contacts.shareSelected", { n: selected.length })}
                 </Button>
                 {msg && <p className="text-xs text-[#00C853]">{msg}</p>}
               </div>

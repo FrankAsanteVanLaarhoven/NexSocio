@@ -23,6 +23,7 @@ import { isImageUrl, isVideoUrl, resolveMediaUrl } from "@/lib/media-formats";
 import type { UploadedMedia } from "@/lib/media-upload";
 import { resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
+import { useTranslation } from "@/i18n";
 import type { PlaceResult } from "@nexus/types";
 
 function PostCard({
@@ -34,6 +35,7 @@ function PostCard({
   token: string;
   onReport: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [showComments, setShowComments] = useState(false);
@@ -62,14 +64,14 @@ function PostCard({
               {post.post_type && post.post_type !== "text" && (
                 <span className="ml-2 text-[#7C4DFF]">· {post.post_type}</span>
               )}
-              {post.is_twin_post && <span className="ml-2 text-[#00E5FF]">· twin</span>}
+              {post.is_twin_post && <span className="ml-2 text-[#00E5FF]">· {t("feed.twin")}</span>}
               {post.show_ai_tag && (
-                <span className="ml-2 text-[#7C4DFF] font-medium">· NEXSOCIO AI</span>
+                <span className="ml-2 text-[#7C4DFF] font-medium">· {t("feed.aiTag")}</span>
               )}
             </p>
             {(post.is_live_session || post.location_label) && (
               <LiveLocationTag
-                label={post.location_label || post.place_name || "Live"}
+                label={post.location_label || post.place_name || t("feed.live")}
                 isLive={post.is_live_session || post.post_type === "live"}
                 since={post.created_at}
                 lat={post.location_lat ?? post.place_lat}
@@ -85,7 +87,7 @@ function PostCard({
             onClick={() => onReport(post.id)}
             className="text-[10px] text-[#5A5A5A] hover:text-[#FF5252] transition-colors"
           >
-            Report
+            {t("feed.report")}
           </button>
         </div>
       </div>
@@ -107,7 +109,7 @@ function PostCard({
             {post.place_address && (
               <p className="text-[10px] text-[#8A8A8A] truncate">{post.place_address}</p>
             )}
-            <p className="text-[10px] text-[#00E5FF] mt-0.5">Get directions in app →</p>
+            <p className="text-[10px] text-[#00E5FF] mt-0.5">{t("feed.getDirections")}</p>
           </div>
         </Link>
       )}
@@ -139,7 +141,7 @@ function PostCard({
           onClick={() => toggleLike(post.id)}
           className={`text-xs transition-colors ${liked ? "text-[#FF5252]" : "text-[#5A5A5A] hover:text-[#F5F5F5]"}`}
         >
-          {liked ? "♥ Liked" : "♡ Like"}
+          {liked ? t("feed.liked") : t("feed.like")}
         </button>
         <button
           type="button"
@@ -149,23 +151,23 @@ function PostCard({
           }}
           className="text-xs text-[#5A5A5A] hover:text-[#F5F5F5]"
         >
-          Comment
+          {t("feed.comment")}
         </button>
         {post.place_lat != null ? (
           <Link
             href={inAppMapUrl({
               lat: post.place_lat!,
               lng: post.place_lng!,
-              name: post.place_name || "Place",
+              name: post.place_name || t("feed.place"),
               navigate: true,
             })}
             className="text-xs text-[#FFB300] hover:underline"
           >
-            Promote · Map
+            {t("feed.promoteMap")}
           </Link>
         ) : (
           <button type="button" className="text-xs text-[#5A5A5A] hover:text-[#FFB300]">
-            Promote
+            {t("feed.promote")}
           </button>
         )}
       </div>
@@ -175,7 +177,7 @@ function PostCard({
             <p key={c.id} className="text-xs text-[#8A8A8A] pl-2 border-l border-[#2A2A2A]">
               <span className="text-[#F5F5F5]">{c.author_name}:</span> {c.body}
               {c.moderation_status === "pending" && (
-                <span className="ml-2 text-[#FFB300]">· pending review</span>
+                <span className="ml-2 text-[#FFB300]">· {t("feed.pendingReview")}</span>
               )}
             </p>
           ))}
@@ -184,7 +186,7 @@ function PostCard({
               className="flex-1"
               value={commentBody}
               onChange={(e) => setCommentBody(e.target.value)}
-              placeholder="Add comment (moderated before publish)..."
+              placeholder={t("feed.commentPlaceholder")}
             />
             <Button
               size="sm"
@@ -193,14 +195,14 @@ function PostCard({
                 const c = await createComment(token, post.id, commentBody.trim());
                 setCommentMsg(
                   c.moderation_status === "pending"
-                    ? "Comment submitted for review"
-                    : "Comment posted"
+                    ? t("feed.commentSubmitted")
+                    : t("feed.commentPosted")
                 );
                 setCommentBody("");
                 setComments(await getComments(post.id));
               }}
             >
-              Send
+              {t("common.send")}
             </Button>
           </div>
           {commentMsg && <p className="text-[10px] text-[#8A8A8A]">{commentMsg}</p>}
@@ -211,6 +213,7 @@ function PostCard({
 }
 
 export function Feed() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session)!;
   const viewContext = session.viewContext ?? "personal";
   const feedType = useAuthStore((s) => s.feedType);
@@ -367,19 +370,19 @@ export function Feed() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[#F5F5F5]">
-            {viewContext === "professional" ? "Professional Feed" : "Feed"}
+            {viewContext === "professional" ? t("feed.titlePro") : t("feed.title")}
           </h2>
           <p className="text-xs text-[#8A8A8A] mt-1">
-            Context: <span className="text-[#00E5FF] capitalize">{viewContext}</span>
+            {t("feed.context")} <span className="text-[#00E5FF] capitalize">{viewContext}</span>
             {viewContext === "personal" && (
               <span className="ml-2">
-                · {feedType === "connections" ? "Connections only" : "Global"}
+                · {feedType === "connections" ? t("feed.connectionsOnly") : t("feed.global")}
               </span>
             )}
           </p>
         </div>
         <Button size="sm" onClick={() => setComposing(true)}>
-          New Post
+          {t("feed.newPost")}
         </Button>
       </div>
 
@@ -395,7 +398,7 @@ export function Feed() {
                   : "border-[#2A2A2A] text-[#8A8A8A] hover:border-[#3A3A3A]"
               }`}
             >
-              {type === "global" ? "Global" : "Connections"}
+              {type === "global" ? t("feed.global") : t("feed.connections")}
             </button>
           ))}
         </div>
@@ -417,8 +420,8 @@ export function Feed() {
 
       <Panel
         open={composing}
-        title="Compose"
-        subtitle={usedAi ? "Tagged NEXSOCIO AI unless you hide it (Premium/Business)" : undefined}
+        title={t("feed.compose")}
+        subtitle={usedAi ? t("feed.composeSubtitle") : undefined}
         onClose={() => {
           setComposing(false);
           setUsedAi(false);
@@ -434,30 +437,30 @@ export function Feed() {
             }}
             placeholder={
               viewContext === "professional"
-                ? "Share professional insight..."
-                : "Share something with NEXSOCIO..."
+                ? t("feed.placeholderPro")
+                : t("feed.placeholder")
             }
             rows={4}
             className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#00E5FF]/20"
           />
           <div className="rounded-md border border-[#1F1F1F] p-3 space-y-2">
-            <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">Attach media (optional)</p>
+            <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">{t("feed.attachMedia")}</p>
             <div className="flex gap-2 mb-2">
-              {(["text", "photo", "reel"] as const).map((t) => (
+              {(["text", "photo", "reel"] as const).map((mediaType) => (
                 <button
-                  key={t}
+                  key={mediaType}
                   type="button"
                   onClick={() => {
-                    setMediaPostType(t);
-                    if (t === "text") setAttachedMedia(null);
+                    setMediaPostType(mediaType);
+                    if (mediaType === "text") setAttachedMedia(null);
                   }}
                   className={`px-2 py-1 text-[10px] rounded border ${
-                    mediaPostType === t
+                    mediaPostType === mediaType
                       ? "border-[#00E5FF]/40 text-[#00E5FF]"
                       : "border-[#2A2A2A] text-[#8A8A8A]"
                   }`}
                 >
-                  {t === "text" ? "Text only" : t === "photo" ? "Photo" : "Reel"}
+                  {mediaType === "text" ? t("feed.textOnly") : mediaType === "photo" ? t("feed.photo") : t("feed.reel")}
                 </button>
               ))}
             </div>
@@ -473,16 +476,16 @@ export function Feed() {
             )}
           </div>
           <div className="rounded-md border border-[#1F1F1F] p-3 space-y-2">
-            <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">Tag a place (optional)</p>
+            <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">{t("feed.tagPlace")}</p>
             <div className="flex gap-2">
               <Input
                 className="flex-1"
                 value={placeQuery}
                 onChange={(e) => setPlaceQuery(e.target.value)}
-                placeholder="Restaurant, landmark, venue…"
+                placeholder={t("feed.placePlaceholder")}
               />
               <Button size="sm" variant="secondary" loading={searchingPlace} onClick={handleSearchPlace}>
-                Find
+                {t("feed.find")}
               </Button>
             </div>
             {selectedPlace && (
@@ -513,7 +516,7 @@ export function Feed() {
           </div>
           {usedAi && (
             <div className="flex items-center gap-2 rounded-md border border-[#7C4DFF]/30 bg-[#7C4DFF]/5 px-3 py-2">
-              <span className="text-[10px] uppercase tracking-wider text-[#7C4DFF]">NEXSOCIO AI</span>
+              <span className="text-[10px] uppercase tracking-wider text-[#7C4DFF]">{t("feed.aiTag")}</span>
               {canHideAiTag ? (
                 <label className="ml-auto flex items-center gap-2 text-xs text-[#8A8A8A] cursor-pointer">
                   <input
@@ -522,11 +525,11 @@ export function Feed() {
                     onChange={(e) => setHideAiTag(e.target.checked)}
                     className="accent-[#7C4DFF]"
                   />
-                  Hide tag (Premium/Business)
+                  {t("feed.hideTag")}
                 </label>
               ) : (
                 <span className="ml-auto text-[10px] text-[#8A8A8A]">
-                  Visible to all · upgrade to hide
+                  {t("feed.hideTagHint")}
                 </span>
               )}
             </div>
@@ -539,7 +542,7 @@ export function Feed() {
               disabled={!body.trim()}
               onClick={handleAiCompose}
             >
-              Compose with NEXSOCIO AI
+              {t("feed.composeAi")}
             </Button>
             <div className="flex gap-2">
               <Button
@@ -550,10 +553,10 @@ export function Feed() {
                   setHideAiTag(false);
                 }}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button loading={submitting} disabled={!body.trim()} onClick={handlePost}>
-                Publish
+                {t("feed.publish")}
               </Button>
             </div>
           </div>
@@ -566,7 +569,7 @@ export function Feed() {
         </div>
       ) : posts.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[#2A2A2A] py-16 text-center">
-          <p className="text-sm text-[#8A8A8A]">No posts yet. Be the first to share.</p>
+          <p className="text-sm text-[#8A8A8A]">{t("feed.empty")}</p>
         </div>
       ) : (
         <div className="space-y-4">

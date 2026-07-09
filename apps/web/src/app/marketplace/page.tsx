@@ -17,15 +17,16 @@ import {
 } from "@/lib/api";
 import { isImageUrl, isVideoUrl, resolveMediaUrl } from "@/lib/media-formats";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 
 const CATEGORIES = [
-  { id: "all", label: "All" },
-  { id: "apparel", label: "Apparel" },
-  { id: "digital", label: "Digital" },
-  { id: "creator", label: "Creator" },
-  { id: "subscriptions", label: "Subscriptions" },
-  { id: "general", label: "General" },
-];
+  { id: "all", labelKey: "common.all" },
+  { id: "apparel", labelKey: "marketplace.categories.apparel" },
+  { id: "digital", labelKey: "marketplace.categories.digital" },
+  { id: "creator", labelKey: "marketplace.categories.creator" },
+  { id: "subscriptions", labelKey: "marketplace.categories.subscriptions" },
+  { id: "general", labelKey: "marketplace.categories.general" },
+] as const;
 
 function formatPrice(amount: number, currency: string) {
   const sym = currency === "GBP" ? "£" : currency === "USD" ? "$" : `${currency} `;
@@ -41,6 +42,8 @@ function ProductCard({
   onAdd: (id: string) => void;
   adding: string | null;
 }) {
+  const { t } = useTranslation();
+
   return (
     <article className="rounded-lg border border-[#1F1F1F] bg-[#111111] p-4 flex flex-col">
       {product.media_url && (
@@ -76,7 +79,7 @@ function ProductCard({
       <p className="text-xs text-[#8A8A8A] mt-3 line-clamp-2 flex-1">{product.description}</p>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-[10px] text-[#5A5A5A] uppercase tracking-wider">
-          {product.is_digital ? "Digital" : `${product.stock} left`}
+          {product.is_digital ? t("marketplace.digital") : t("marketplace.stockLeft", { n: product.stock })}
         </span>
         <Button
           size="sm"
@@ -84,7 +87,7 @@ function ProductCard({
           disabled={!product.is_digital && product.stock < 1}
           onClick={() => onAdd(product.id)}
         >
-          Add to cart
+          {t("marketplace.addToCart")}
         </Button>
       </div>
     </article>
@@ -92,6 +95,7 @@ function ProductCard({
 }
 
 export default function MarketplacePage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [cart, setCart] = useState<Cart | null>(null);
@@ -139,7 +143,7 @@ export default function MarketplacePage() {
       const wallet = await getWallet(session.accessToken);
       setBalance(wallet.balance);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Could not add to cart");
+      setMessage(e instanceof Error ? e.message : t("marketplace.addFailed"));
     } finally {
       setAdding(null);
     }
@@ -157,12 +161,12 @@ export default function MarketplacePage() {
     setMessage(null);
     try {
       const result = await checkout(session.accessToken);
-      setMessage(`Order placed · ${formatPrice(result.total_paid, result.currency)} paid`);
+      setMessage(t("marketplace.orderPlaced", { amount: formatPrice(result.total_paid, result.currency) }));
       const wallet = await getWallet(session.accessToken);
       setBalance(wallet.balance);
       setCart(await getCart(session.accessToken));
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Checkout failed");
+      setMessage(e instanceof Error ? e.message : t("marketplace.checkoutFailed"));
     } finally {
       setCheckingOut(false);
     }
@@ -177,13 +181,8 @@ export default function MarketplacePage() {
           <div className="mx-auto max-w-5xl space-y-6 pb-12">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-xl font-semibold text-[#F5F5F5]">Marketplace</h1>
-                <p className="text-xs text-[#8A8A8A] mt-1">
-                  Buy from members · sell in{" "}
-                  <Link href="/shop" className="text-[#00E5FF] hover:underline">
-                    Shop
-                  </Link>
-                </p>
+                <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("marketplace.title")}</h1>
+                <p className="text-xs text-[#8A8A8A] mt-1">{t("marketplace.subtitle")}</p>
               </div>
               <div className="flex items-center gap-3">
                 {balance != null && (
@@ -191,12 +190,12 @@ export default function MarketplacePage() {
                     href="/wallet"
                     className="text-xs px-3 py-1.5 rounded-md border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#00E5FF]"
                   >
-                    Wallet · {formatPrice(balance, "GBP")}
+                    {t("marketplace.walletBalance", { amount: formatPrice(balance, "GBP") })}
                   </Link>
                 )}
                 {cart && cart.item_count > 0 && (
                   <span className="text-xs px-2 py-1 rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30">
-                    {cart.item_count} in cart
+                    {t("marketplace.inCart", { n: cart.item_count })}
                   </span>
                 )}
               </div>
@@ -214,7 +213,7 @@ export default function MarketplacePage() {
                       : "border-[#2A2A2A] text-[#8A8A8A] hover:border-[#3A3A3A]"
                   }`}
                 >
-                  {c.label}
+                  {t(c.labelKey)}
                 </button>
               ))}
             </div>
@@ -224,10 +223,10 @@ export default function MarketplacePage() {
                 className="flex-1"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search marketplace…"
+                placeholder={t("marketplace.searchPlaceholder")}
               />
               <Button size="sm" variant="secondary" onClick={load}>
-                Search
+                {t("common.search")}
               </Button>
             </div>
 
@@ -238,7 +237,7 @@ export default function MarketplacePage() {
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00E5FF] border-t-transparent" />
                   </div>
                 ) : products.length === 0 ? (
-                  <p className="text-sm text-[#8A8A8A] text-center py-16">No products found.</p>
+                  <p className="text-sm text-[#8A8A8A] text-center py-16">{t("marketplace.empty")}</p>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {products.map((p) => (
@@ -248,9 +247,9 @@ export default function MarketplacePage() {
                 )}
               </div>
 
-              <Panel open title={`Cart${cart ? ` · ${cart.item_count}` : ""}`}>
+              <Panel open title={t("marketplace.cart", { n: cart?.item_count ?? 0 })}>
                 {!cart?.items.length ? (
-                  <p className="text-xs text-[#5A5A5A]">Your cart is empty</p>
+                  <p className="text-xs text-[#5A5A5A]">{t("marketplace.cartEmpty")}</p>
                 ) : (
                   <div className="space-y-3">
                     {cart.items.map((item) => (
@@ -276,13 +275,13 @@ export default function MarketplacePage() {
                       </div>
                     ))}
                     <div className="flex justify-between text-sm pt-1">
-                      <span className="text-[#8A8A8A]">Subtotal</span>
+                      <span className="text-[#8A8A8A]">{t("marketplace.subtotal")}</span>
                       <span className="text-[#F5F5F5] font-medium">
                         {formatPrice(cart.subtotal, cart.currency)}
                       </span>
                     </div>
                     <Button className="w-full" loading={checkingOut} onClick={handleCheckout}>
-                      Checkout with wallet
+                      {t("marketplace.checkout")}
                     </Button>
                     {message && (
                       <p className="text-[10px] text-[#8A8A8A] text-center">{message}</p>

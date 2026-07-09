@@ -12,8 +12,10 @@ import {
 import { useAuthStore } from "@/lib/auth-store";
 import { useSettingsStore } from "@/lib/settings-store";
 import { parseVoiceCommand } from "@/lib/voice-commander";
+import { useTranslation } from "@/i18n";
 
 export function VoiceCommander() {
+  const { t, dateLocale } = useTranslation();
   const router = useRouter();
   const enabled = useSettingsStore((s) => s.voiceControlEnabled);
   const session = useAuthStore((s) => s.session);
@@ -37,16 +39,16 @@ export function VoiceCommander() {
           const twin = dash.twins[0];
           if (twin) {
             await activateTwin(session.accessToken, twin.agent_id, session.displayName);
-            setBriefingText(`Twin ${twin.name} is now representing you.`);
+            setBriefingText(t("common.twinActivated", { name: twin.name }));
           }
           break;
         }
         case "deactivate_twin": {
           const dash = await getRobotDashboard(session.accessToken);
-          const active = dash.active_twin || dash.twins.find((t) => t.is_active);
+          const active = dash.active_twin || dash.twins.find((twin) => twin.is_active);
           if (active) {
             await deactivateTwin(session.accessToken, active.agent_id);
-            setBriefingText("Welcome back. Twin deactivated.");
+            setBriefingText(t("common.twinDeactivated"));
           }
           break;
         }
@@ -69,13 +71,13 @@ export function VoiceCommander() {
             body: action.body,
             context: session.viewContext ?? "personal",
           });
-          setBriefingText("Posted via voice.");
+          setBriefingText(t("common.voicePosted"));
           break;
         default:
           break;
       }
     },
-    [router, session]
+    [router, session, t]
   );
 
   useEffect(() => {
@@ -87,7 +89,7 @@ export function VoiceCommander() {
     const recognition = new Ctor();
     recognition.continuous = true;
     recognition.interimResults = false;
-    recognition.lang = useSettingsStore.getState().locale;
+    recognition.lang = dateLocale;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[event.results.length - 1]?.[0]?.transcript?.trim();
@@ -116,7 +118,7 @@ export function VoiceCommander() {
       recognition.stop();
       setListening(false);
     };
-  }, [enabled, session, handleTranscript]);
+  }, [enabled, session, handleTranscript, dateLocale]);
 
   if (!enabled || !session) return null;
 
@@ -127,7 +129,7 @@ export function VoiceCommander() {
           <span
             className={`h-2.5 w-2.5 rounded-full ${listening ? "animate-pulse bg-[#00E5FF]" : "bg-[#5A5A5A]"}`}
           />
-          <p className="text-[10px] uppercase tracking-widest text-[#00E5FF]">Voice Control</p>
+          <p className="text-[10px] uppercase tracking-widest text-[#00E5FF]">{t("common.voiceControl")}</p>
         </div>
         {lastCommand && (
           <p className="mt-1.5 text-xs text-[#8A8A8A] truncate">&ldquo;{lastCommand}&rdquo;</p>

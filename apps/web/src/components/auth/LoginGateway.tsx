@@ -25,18 +25,20 @@ import { CameraCapture } from "./CameraCapture";
 import { MethodSetup } from "./MethodSetup";
 import { PinPad } from "./PinPad";
 import { VoiceAuth } from "./VoiceAuth";
+import { useTranslation } from "@/i18n";
 
-const METHODS: { id: AuthMethod | "kids"; label: string; icon: string }[] = [
-  { id: "webauthn", label: "Biometric", icon: "◎" },
-  { id: "pin", label: "PIN", icon: "⁕" },
-  { id: "face", label: "Face ID", icon: "◉" },
-  { id: "palm", label: "Palm", icon: "✋" },
-  { id: "voice", label: "Voice", icon: "🎙" },
-  { id: "password", label: "Password", icon: "🔑" },
-  { id: "kids", label: "Kids", icon: "👶" },
+const METHODS: { id: AuthMethod | "kids"; labelKey: string; icon: string }[] = [
+  { id: "webauthn", labelKey: "auth.biometric", icon: "◎" },
+  { id: "pin", labelKey: "auth.methodPin", icon: "⁕" },
+  { id: "face", labelKey: "auth.methodFace", icon: "◉" },
+  { id: "palm", labelKey: "auth.methodPalm", icon: "✋" },
+  { id: "voice", labelKey: "auth.methodVoice", icon: "🎙" },
+  { id: "password", labelKey: "auth.methodPassword", icon: "🔑" },
+  { id: "kids", labelKey: "auth.methodKids", icon: "👶" },
 ];
 
 export function LoginGateway() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,7 +84,7 @@ export function LoginGateway() {
       applyAuthLogin(result);
       router.push("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Login failed");
+      setError(e instanceof Error ? e.message : t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ export function LoginGateway() {
       applyAuthLogin(result);
       router.push("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Invalid PIN");
+      setError(e instanceof Error ? e.message : t("auth.invalidPin"));
       setPin("");
     } finally {
       setLoading(false);
@@ -114,7 +116,7 @@ export function LoginGateway() {
       applyAuthLogin(result);
       router.push("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Biometric login failed");
+      setError(e instanceof Error ? e.message : t("auth.biometricFailed"));
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ export function LoginGateway() {
       applyAuthLogin(result);
       router.push("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Verification failed");
+      setError(e instanceof Error ? e.message : t("auth.verificationFailed"));
     } finally {
       setLoading(false);
     }
@@ -146,7 +148,7 @@ export function LoginGateway() {
       applyAuthLogin(result);
       router.push("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Face ID verification failed");
+      setError(e instanceof Error ? e.message : t("auth.faceIdFailed"));
     } finally {
       setLoading(false);
     }
@@ -155,9 +157,9 @@ export function LoginGateway() {
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Sign in to NEXSOCIO</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">{t("auth.signInTitle")}</h1>
         <p className="mt-2 text-sm text-[#8A8A8A]">
-          Tap a method to sign in or set it up for testing
+          {t("auth.signInSubtitle")}
         </p>
       </div>
 
@@ -179,7 +181,7 @@ export function LoginGateway() {
                   : "border-[#2A2A2A] text-[#8A8A8A] hover:border-[#3A3A3A] hover:text-[#F5F5F5]"
               }`}
             >
-              {m.icon} {m.label}
+              {m.icon} {t(m.labelKey)}
               {!enrolled && m.id !== "kids" && m.id !== "password" && (
                 <span className="ml-1 text-[#FFB300]">+</span>
               )}
@@ -189,30 +191,30 @@ export function LoginGateway() {
       </div>
 
       {error && (
-        <Panel open title="Authentication Error" className="border-[#FF5252]/30">
+        <Panel open title={t("auth.authError")} className="border-[#FF5252]/30">
           <p className="text-sm text-[#FF5252]">{error}</p>
         </Panel>
       )}
 
       {method !== "kids" && (
         <Input
-          label="Email"
+          label={t("auth.email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@nexsocio.io"
+          placeholder={t("auth.emailPlaceholder")}
         />
       )}
 
       {method === "password" && (
-        <Panel open title="Password Sign In">
+        <Panel open title={t("auth.passwordSignIn")}>
           <div className="space-y-4">
             <Input
-              label="Password"
+              label={t("auth.password")}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
+              placeholder={t("auth.passwordPlaceholder")}
             />
             <Button
               className="w-full"
@@ -220,10 +222,10 @@ export function LoginGateway() {
               disabled={!email || password.length < 8}
               onClick={handlePasswordLogin}
             >
-              Sign In
+              {t("auth.signIn")}
             </Button>
             <p className="text-[10px] text-[#5A5A5A] text-center">
-              Sign in first, then enroll other methods using the tabs above (+)
+              {t("auth.enrollHint")}
             </p>
           </div>
         </Panel>
@@ -232,8 +234,8 @@ export function LoginGateway() {
       {method === "pin" && email.includes("@") && (
         <Panel
           open
-          title="6-Digit PIN"
-          subtitle={isEnrolled("pin") ? "Enter your PIN to unlock" : "Set up your PIN"}
+          title={t("auth.pinTitle")}
+          subtitle={isEnrolled("pin") ? t("auth.pinUnlock") : t("auth.pinSetup")}
         >
           {isEnrolled("pin") ? (
             <div className="space-y-4">
@@ -244,7 +246,7 @@ export function LoginGateway() {
                 disabled={pin.length !== 6}
                 onClick={handlePinLogin}
               >
-                Unlock with PIN
+                {t("auth.unlockPin")}
               </Button>
             </div>
           ) : (
@@ -256,22 +258,22 @@ export function LoginGateway() {
       {method === "webauthn" && email.includes("@") && (
         <Panel
           open
-          title="Biometric / Passkey"
-          subtitle="Face ID · Touch ID · Fingerprint"
+          title={t("auth.biometricPasskey")}
+          subtitle={t("auth.biometricSubtitle")}
         >
           {!webauthnSupported ? (
             <p className="text-sm text-[#8A8A8A]">
-              WebAuthn is not supported in this browser. Use Face ID scan or Password instead.
+              {t("auth.webauthnUnsupported")}
             </p>
           ) : isEnrolled("webauthn") ? (
             <div className="space-y-4">
               <p className="text-xs text-[#8A8A8A]">
                 {platformAuth
-                  ? "Use your device biometrics or security key."
-                  : "Use your registered passkey or security key."}
+                  ? t("auth.useDeviceBiometrics")
+                  : t("auth.useRegisteredPasskey")}
               </p>
               <Button className="w-full" loading={loading} onClick={handleWebAuthnLogin}>
-                Authenticate with Biometrics
+                {t("auth.authenticateBiometric")}
               </Button>
             </div>
           ) : (
@@ -281,7 +283,7 @@ export function LoginGateway() {
       )}
 
       {method === "face" && email.includes("@") && (
-        <Panel open title="Face ID Scan" subtitle="Camera required">
+        <Panel open title={t("auth.faceIdScan")} subtitle={t("auth.cameraRequired")}>
           {isEnrolled("face") ? (
             <CameraCapture
               mode="face"
@@ -296,7 +298,7 @@ export function LoginGateway() {
       )}
 
       {method === "palm" && email.includes("@") && (
-        <Panel open title="Palm Scan" subtitle="Camera + touch mapping">
+        <Panel open title={t("auth.palmScan")} subtitle={t("auth.cameraTouch")}>
           {isEnrolled("palm") ? (
             <CameraCapture
               mode="palm"
@@ -311,7 +313,7 @@ export function LoginGateway() {
       )}
 
       {method === "voice" && email.includes("@") && (
-        <Panel open title="Voice Command" subtitle={`Say "${VOICE_COMMAND}"`}>
+        <Panel open title={t("auth.voiceCommand")} subtitle={`Say "${VOICE_COMMAND}"`}>
           {isEnrolled("voice") ? (
             <VoiceAuth
               loading={loading}
@@ -325,20 +327,20 @@ export function LoginGateway() {
       )}
 
       {method === "kids" && (
-        <Panel open title="Kids Face ID Login" subtitle="Face ID only · Real human verification">
+        <Panel open title={t("auth.kidsFaceLogin")} subtitle={t("auth.kidsSubtitle")}>
           <div className="space-y-4">
             <Input
-              label="Your Name"
+              label={t("auth.yourName")}
               value={kidsName}
               onChange={(e) => setKidsName(e.target.value)}
-              placeholder="Name from registration"
+              placeholder={t("auth.namePlaceholder")}
             />
             <p className="text-xs text-[#7C4DFF]">
-              Children can only sign in with Face ID. Register at{" "}
+              {t("auth.kidsRegisterAt")}{" "}
               <Link href="/register?kids=1" className="underline">
-                Kids registration
+                {t("auth.kidsFaceRegister")}
               </Link>{" "}
-              first (parental approval required).
+              {t("auth.kidsRegisterFirst")}
             </p>
             {kidsName.length >= 2 && (
               <CameraCapture
@@ -353,17 +355,17 @@ export function LoginGateway() {
       )}
 
       {method !== "kids" && method !== "password" && !email.includes("@") && (
-        <p className="text-center text-xs text-[#8A8A8A]">Enter your email to continue</p>
+        <p className="text-center text-xs text-[#8A8A8A]">{t("auth.enterEmail")}</p>
       )}
 
       <p className="text-center text-xs text-[#5A5A5A]">
-        New to NEXSOCIO?{" "}
+        {t("auth.newHere")}{" "}
         <Link href="/register" className="text-[#00E5FF] hover:underline">
-          Create account
+          {t("auth.createAccount")}
         </Link>
         {" · "}
         <Link href="/register?kids=1" className="text-[#7C4DFF] hover:underline">
-          Kids registration
+          {t("auth.kidsFaceRegister")}
         </Link>
       </p>
     </div>

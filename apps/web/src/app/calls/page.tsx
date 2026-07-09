@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { CallView } from "@/components/CallView";
+import { useTranslation } from "@/i18n";
 import {
   useAnswerCall,
   useEndCall,
@@ -18,6 +19,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import type { CallSession } from "@nexus/types";
 
 export default function CallsPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
   const userId = session?.userId ?? "";
@@ -90,27 +92,25 @@ export default function CallsPage() {
         ) : (
           <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Calls</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">
-                Real WebRTC voice & video
-              </p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("calls.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("calls.subtitle")}</p>
             </div>
 
             {ringing && !activeCall && (
-              <Panel open title="Incoming call">
+              <Panel open title={t("calls.incoming")}>
                 <p className="text-sm text-[#F5F5F5]">
                   {ringing.caller_name} · {ringing.call_type}
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button className="flex-1" onClick={() => handleAnswer(ringing)}>
-                    Answer
+                    {t("calls.answer")}
                   </Button>
                   <Button
                     className="flex-1"
                     variant="secondary"
                     onClick={() => handleEnd(ringing.id)}
                   >
-                    Decline
+                    {t("calls.decline")}
                   </Button>
                 </div>
               </Panel>
@@ -128,15 +128,15 @@ export default function CallsPage() {
             )}
 
             {!showMedia && (
-              <Panel open title="New call">
+              <Panel open title={t("calls.newCall")}>
                 <div className="space-y-3">
-                  <label className="block text-xs text-[#8A8A8A]">Contact</label>
+                  <label className="block text-xs text-[#8A8A8A]">{t("calls.contact")}</label>
                   <select
                     value={selected}
                     onChange={(e) => setSelected(e.target.value)}
                     className="w-full rounded-md border border-[#2A2A2A] bg-[#111] px-3 py-2 text-sm text-[#F5F5F5]"
                   >
-                    <option value="">Select contact</option>
+                    <option value="">{t("calls.selectContact")}</option>
                     {callableContacts.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.display_name}
@@ -144,18 +144,18 @@ export default function CallsPage() {
                     ))}
                   </select>
                   <div className="flex gap-2">
-                    {(["voice", "video"] as const).map((t) => (
+                    {(["voice", "video"] as const).map((type) => (
                       <button
-                        key={t}
+                        key={type}
                         type="button"
-                        onClick={() => setCallType(t)}
+                        onClick={() => setCallType(type)}
                         className={`flex-1 py-2 text-xs uppercase tracking-wider rounded-md border ${
-                          callType === t
+                          callType === type
                             ? "border-[#00E5FF]/50 bg-[#00E5FF]/10 text-[#00E5FF]"
                             : "border-[#2A2A2A] text-[#8A8A8A]"
                         }`}
                       >
-                        {t}
+                        {t(`calls.${type}`)}
                       </button>
                     ))}
                   </div>
@@ -165,17 +165,17 @@ export default function CallsPage() {
                     disabled={!selected}
                     onClick={handleStart}
                   >
-                    Call
+                    {t("calls.call")}
                   </Button>
                 </div>
               </Panel>
             )}
 
-            <Panel open title="Recent calls">
+            <Panel open title={t("calls.recent")}>
               {isLoading ? (
-                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("common.loading")}</p>
               ) : calls.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No calls yet.</p>
+                <p className="text-xs text-[#5A5A5A]">{t("calls.empty")}</p>
               ) : (
                 <div className="space-y-2">
                   {calls.map((c) => (

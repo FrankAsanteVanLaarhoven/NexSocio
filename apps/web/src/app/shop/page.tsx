@@ -18,6 +18,7 @@ import {
   getSalesOrders,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 
 const CATEGORIES = ["general", "apparel", "digital", "creator", "subscriptions"];
 
@@ -27,6 +28,7 @@ function formatPrice(amount: number, currency: string) {
 }
 
 export default function ShopPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const viewContext = session?.viewContext ?? "personal";
   const [listings, setListings] = useState<MarketplaceProduct[]>([]);
@@ -81,10 +83,10 @@ export default function ShopPage() {
       setDescription("");
       setPrice("");
       setListingMedia(null);
-      setMessage("Listing published to marketplace");
+      setMessage(t("shop.listingPublished"));
       await load();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Could not create listing");
+      setMessage(e instanceof Error ? e.message : t("shop.createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -101,40 +103,38 @@ export default function ShopPage() {
           <div className="mx-auto max-w-lg space-y-5 pb-12">
             <div>
               <Link href="/settings" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
-                ← Settings
+                {t("common.backToSettings")}
               </Link>
-              <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">Shop</h1>
+              <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">{t("shop.title")}</h1>
               <p className="text-xs text-[#8A8A8A]">
-                {viewContext === "professional"
-                  ? "Seller hub · listings · sales"
-                  : "Your orders & seller tools"}
+                {viewContext === "professional" ? t("shop.subtitle") : t("shop.subtitlePersonal")}
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <StatCard label="Listings" value={String(dash.active_listings)} />
-              <StatCard label="Sales" value={formatPrice(dash.total_sales, dash.currency)} />
-              <StatCard label="To fulfill" value={String(dash.orders_to_fulfill)} />
+              <StatCard label={t("shop.statsListings")} value={String(dash.active_listings)} />
+              <StatCard label={t("shop.statsSales")} value={formatPrice(dash.total_sales, dash.currency)} />
+              <StatCard label={t("shop.statsToFulfill")} value={String(dash.orders_to_fulfill)} />
             </div>
 
             <Link
               href="/marketplace"
               className="block rounded-lg border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-4 py-3 text-sm text-[#00E5FF] hover:border-[#00E5FF]/50 transition-colors"
             >
-              Browse Marketplace →
+              {t("shop.browseMarketplace")}
             </Link>
 
-            <Panel open title="Create listing">
+            <Panel open title={t("shop.createListing")}>
               <div className="space-y-3">
-                <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Product name" />
+                <Input label={t("shop.titleLabel")} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("shop.titlePlaceholder")} />
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description"
+                  placeholder={t("shop.description")}
                   rows={3}
                   className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50"
                 />
-                <Input label="Price (£)" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="19.99" />
+                <Input label={t("shop.priceLabel")} value={price} onChange={(e) => setPrice(e.target.value)} placeholder={t("shop.pricePlaceholder")} />
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -147,22 +147,22 @@ export default function ShopPage() {
                 <MediaUploader
                   context="shop"
                   token={session.accessToken}
-                  label="Product photo or demo video"
+                  label={t("shop.mediaLabel")}
                   previewUrl={listingMedia?.url}
                   onUploaded={setListingMedia}
                   onClear={() => setListingMedia(null)}
                   compact
                 />
                 <Button className="w-full" loading={submitting} disabled={!title.trim() || !price} onClick={handleCreate}>
-                  Publish to marketplace
+                  {t("shop.publishListing")}
                 </Button>
                 {message && <p className="text-[10px] text-[#8A8A8A]">{message}</p>}
               </div>
             </Panel>
 
-            <Panel open title="My listings">
+            <Panel open title={t("shop.myListings")}>
               {listings.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No listings yet — create one above</p>
+                <p className="text-xs text-[#5A5A5A]">{t("shop.noListings")}</p>
               ) : (
                 listings.map((p) => (
                   <div key={p.id} className="flex justify-between items-center py-3 border-b border-[#1F1F1F]">
@@ -175,40 +175,40 @@ export default function ShopPage() {
               )}
             </Panel>
 
-            <Panel open title="Your orders">
+            <Panel open title={t("shop.yourOrders")}>
               {purchases.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No purchases yet</p>
+                <p className="text-xs text-[#5A5A5A]">{t("shop.noPurchases")}</p>
               ) : (
                 purchases.map((o) => (
                   <div key={o.id} className="py-2 border-b border-[#1F1F1F] text-xs">
                     <p className="text-[#F5F5F5]">
                       #{o.id.slice(0, 8)} · {o.status} · {formatPrice(o.total, o.currency)}
                     </p>
-                    <p className="text-[#5A5A5A] mt-0.5">from {o.seller_name}</p>
+                    <p className="text-[#5A5A5A] mt-0.5">{t("shop.orderFrom", { name: o.seller_name })}</p>
                   </div>
                 ))
               )}
             </Panel>
 
-            <Panel open title="Business sales">
+            <Panel open title={t("shop.businessSales")}>
               {sales.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No sales yet</p>
+                <p className="text-xs text-[#5A5A5A]">{t("shop.noSales")}</p>
               ) : (
                 sales.map((o) => (
                   <div key={o.id} className="py-2 border-b border-[#1F1F1F] text-xs">
                     <p className="text-[#F5F5F5]">
                       #{o.id.slice(0, 8)} · {o.status} · {formatPrice(o.total, o.currency)}
                     </p>
-                    <p className="text-[#5A5A5A] mt-0.5">to {o.buyer_name}</p>
+                    <p className="text-[#5A5A5A] mt-0.5">{t("shop.orderTo", { name: o.buyer_name })}</p>
                   </div>
                 ))
               )}
             </Panel>
 
-            <Panel open title="QR code">
+            <Panel open title={t("shop.qrCode")}>
               <div className="mx-auto h-36 w-36 rounded-xl border border-[#2A2A2A] flex flex-col items-center justify-center text-[#5A5A5A] text-xs text-center p-4 gap-2">
                 <span className="text-3xl">▣</span>
-                Shop QR<br />Scan to browse
+                {t("shop.qrScan")}
               </div>
               <p className="text-[10px] text-[#5A5A5A] text-center mt-2 break-all">{shopUrl}</p>
               <Button
@@ -217,7 +217,7 @@ export default function ShopPage() {
                 variant="secondary"
                 onClick={() => navigator.clipboard?.writeText(shopUrl)}
               >
-                Copy marketplace link
+                {t("shop.copyLink")}
               </Button>
             </Panel>
           </div>

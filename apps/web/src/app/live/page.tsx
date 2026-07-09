@@ -11,8 +11,10 @@ import { createMediaPost } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { pingLocation, resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
+import { useTranslation } from "@/i18n";
 
 export default function LivePage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const showLiveTag = useSettingsStore((s) => s.showLiveLocationTag);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -88,20 +90,18 @@ export default function LivePage() {
         ) : (
           <div className="mx-auto max-w-2xl space-y-6">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Live</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">
-                Stream · followers see your live location tag
-              </p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("live.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("live.subtitle")}</p>
             </div>
 
-            <Panel open title={live ? "🔴 LIVE" : "Go Live"}>
+            <Panel open title={live ? t("live.livePanel") : t("live.goLive")}>
               <div className="space-y-4">
                 <div className="relative aspect-video overflow-hidden rounded-lg border border-[#2A2A2A] bg-[#0A0A0A]">
                   <video ref={videoRef} playsInline muted={!live} className="h-full w-full object-cover" />
                   {live && (
                     <div className="absolute top-3 left-3 flex items-center gap-2 rounded bg-[#FF5252]/90 px-2 py-1">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                      <span className="text-[10px] font-bold text-white uppercase">Live</span>
+                      <span className="text-[10px] font-bold text-white uppercase">{t("feed.live")}</span>
                     </div>
                   )}
                   {live && liveLocation && showLiveTag && (
@@ -118,26 +118,24 @@ export default function LivePage() {
                   )}
                   {live && (
                     <div className="absolute top-3 right-3 text-[10px] text-white bg-black/50 px-2 py-1 rounded">
-                      {viewers} viewers
+                      {t("live.viewers", { n: viewers })}
                     </div>
                   )}
                 </div>
                 {!live && (
-                  <Input label="Stream title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What's this stream about?" />
+                  <Input label={t("live.streamTitle")} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("live.streamPlaceholder")} />
                 )}
                 {live ? (
                   <Button className="w-full" variant="danger" onClick={endLive}>
-                    End Stream
+                    {t("live.endStream")}
                   </Button>
                 ) : (
                   <Button className="w-full" onClick={goLive}>
-                    Start Live Stream
+                    {t("live.startStream")}
                   </Button>
                 )}
                 <p className="text-[10px] text-[#5A5A5A] text-center">
-                  {showLiveTag
-                    ? "Followers see a small location + time tag on your live post"
-                    : "Enable live location tags in Settings → Location Finder"}
+                  {showLiveTag ? t("live.locationHint") : t("live.locationDisabled")}
                 </p>
               </div>
             </Panel>

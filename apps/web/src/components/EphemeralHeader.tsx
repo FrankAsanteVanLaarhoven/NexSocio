@@ -4,29 +4,31 @@ import { ModeBadge } from "@nexus/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/i18n";
 import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import { useAuthStore } from "@/lib/auth-store";
 import { useSettingsStore } from "@/lib/settings-store";
 
 const DOCK = [
-  { href: "/", label: "Feed", icon: "◈" },
-  { href: "/twin", label: "Twin", icon: "◎" },
-  { href: "/studio", label: "Studio", icon: "▣" },
-  { href: "/live", label: "Live", icon: "●" },
-  { href: "/status", label: "Status", icon: "◌" },
-  { href: "/calls", label: "Calls", icon: "☎" },
-  { href: "/teams", label: "Teams", icon: "▤" },
-  { href: "/contacts", label: "Contacts", icon: "☰" },
-  { href: "/hub", label: "Hub", icon: "◉" },
-  { href: "/marketplace", label: "Market", icon: "🛒" },
-  { href: "/map", label: "Map", icon: "⌖" },
-  { href: "/find", label: "Find", icon: "⊕" },
-  { href: "/connections", label: "Connect", icon: "◇" },
-  { href: "/inbox", label: "Inbox", icon: "✉" },
-  { href: "/settings", label: "Settings", icon: "⚙" },
-];
+  { href: "/", labelKey: "nav.feed", icon: "◈" },
+  { href: "/twin", labelKey: "nav.twin", icon: "◎" },
+  { href: "/studio", labelKey: "nav.studio", icon: "▣" },
+  { href: "/live", labelKey: "nav.live", icon: "●" },
+  { href: "/status", labelKey: "nav.status", icon: "◌" },
+  { href: "/calls", labelKey: "nav.calls", icon: "☎" },
+  { href: "/teams", labelKey: "nav.teams", icon: "▤" },
+  { href: "/contacts", labelKey: "nav.contacts", icon: "☰" },
+  { href: "/hub", labelKey: "nav.hub", icon: "◉" },
+  { href: "/marketplace", labelKey: "nav.market", icon: "🛒" },
+  { href: "/map", labelKey: "nav.map", icon: "⌖" },
+  { href: "/find", labelKey: "nav.find", icon: "⊕" },
+  { href: "/connections", labelKey: "nav.connect", icon: "◇" },
+  { href: "/inbox", labelKey: "nav.inbox", icon: "✉" },
+  { href: "/settings", labelKey: "nav.settings", icon: "⚙" },
+] as const;
 
 export function EphemeralHeader() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const hydrated = useAuthHydrated();
   const session = useAuthStore((s) => s.session);
@@ -88,7 +90,7 @@ export function EphemeralHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                title={item.label}
+                title={t(item.labelKey)}
                 className={`px-2 py-1.5 text-[10px] uppercase tracking-wider rounded-md transition-colors ${
                   pathname === item.href
                     ? "text-[#00E5FF] bg-[#00E5FF]/10"
@@ -96,7 +98,7 @@ export function EphemeralHeader() {
                 }`}
               >
                 <span className="hidden sm:inline">{item.icon} </span>
-                <span className="hidden md:inline">{item.label}</span>
+                <span className="hidden md:inline">{t(item.labelKey)}</span>
                 <span className="sm:hidden">{item.icon}</span>
               </Link>
             ))}
@@ -105,18 +107,18 @@ export function EphemeralHeader() {
 
         <div className="flex items-center gap-2 shrink-0">
           {voiceOn && (
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#00E5FF]" title="Voice active" />
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#00E5FF]" title={t("nav.voiceActive")} />
           )}
           {hydrated && !session && (
             <>
               <Link href="/login" className="text-[10px] text-[#8A8A8A] hover:text-[#F5F5F5]">
-                Sign in
+                {t("nav.signIn")}
               </Link>
               <Link
                 href="/register"
                 className="text-[10px] px-2 py-1 rounded border border-[#00E5FF]/30 text-[#00E5FF]"
               >
-                Register
+                {t("nav.register")}
               </Link>
             </>
           )}
@@ -132,7 +134,7 @@ export function EphemeralHeader() {
                       viewContext === ctx ? "bg-[#00E5FF]/20 text-[#00E5FF]" : "text-[#5A5A5A]"
                     }`}
                   >
-                    {ctx.slice(0, 4)}
+                    {ctx === "personal" ? t("nav.persShort") : t("nav.profShort")}
                   </button>
                 ))}
               </div>
@@ -142,7 +144,7 @@ export function EphemeralHeader() {
                 onClick={clearSession}
                 className="text-[10px] text-[#5A5A5A] hover:text-[#F5F5F5]"
               >
-                Out
+                {t("nav.signOut")}
               </button>
             </>
           )}

@@ -13,6 +13,7 @@ import { getHubDashboard, getMarketHistory } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { useSettingsStore } from "@/lib/settings-store";
 import type { HubDashboard, MarketHistory, MarketQuote } from "@nexus/types";
+import { useTranslation } from "@/i18n";
 
 const WORLD_CLOCKS = [
   { city: "London", tz: "Europe/London" },
@@ -71,6 +72,7 @@ function QuoteRow({
 }
 
 export default function HubPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const { timezone, currency, locale, likes, wishlist, hubHistory, addHubHistory } =
     useSettingsStore();
@@ -139,14 +141,12 @@ export default function HubPage() {
           <div className="mx-auto max-w-5xl space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h1 className="text-xl font-semibold text-[#F5F5F5]">Hub</h1>
-                <p className="text-xs text-[#8A8A8A] mt-1">
-                  Live Yahoo markets · trending · news · map · devices
-                </p>
+                <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("hub.title")}</h1>
+                <p className="text-xs text-[#8A8A8A] mt-1">{t("hub.subtitle")}</p>
               </div>
               {dash && (
                 <p className="text-[10px] text-[#5A5A5A]">
-                  Updated {new Date(dash.updated_at).toLocaleTimeString(locale)} · {dash.source}
+                  {t("hub.updated")} {new Date(dash.updated_at).toLocaleTimeString(locale)} · {t("common.source")} {dash.source}
                 </p>
               )}
             </div>
@@ -163,7 +163,7 @@ export default function HubPage() {
                       : "border-[#2A2A2A] text-[#8A8A8A] hover:border-[#3A3A3A]"
                   }`}
                 >
-                  {tab === "markets" ? "Markets" : tab === "news" ? "News & Trending" : "Map & Devices"}
+                  {tab === "markets" ? t("hub.markets") : tab === "news" ? t("hub.news") : t("hub.mapDevices")}
                 </button>
               ))}
             </div>
@@ -176,7 +176,7 @@ export default function HubPage() {
               <>
                 {(activeTab === "markets" || activeTab === "news") && (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Panel open title="Your Time" subtitle={timezone}>
+                    <Panel open title={t("hub.yourTime")} subtitle={timezone}>
                       <p className="text-3xl font-light text-[#00E5FF] tabular-nums">
                         {now.toLocaleTimeString(locale, {
                           timeZone: timezone,
@@ -194,21 +194,21 @@ export default function HubPage() {
                         })}
                       </p>
                     </Panel>
-                    <Panel open title="Alerts" subtitle={`${likes.length} likes · ${wishlist.length} wishlist`}>
+                    <Panel open title={t("hub.alerts")} subtitle={t("hub.alertsSubtitle", { likes: likes.length, wishlist: wishlist.length })}>
                       <p className="text-xs text-[#8A8A8A]">
-                        Notifications {useSettingsStore.getState().notificationsEnabled ? "on" : "off"}
+                        {useSettingsStore.getState().notificationsEnabled ? t("hub.notificationsOn") : t("hub.notificationsOff")}
                       </p>
-                      <p className="text-[10px] text-[#5A5A5A] mt-2">Promote · mentions · twin messages</p>
+                      <p className="text-[10px] text-[#5A5A5A] mt-2">{t("hub.alertsBody")}</p>
                     </Panel>
-                    <Panel open title="Currency" subtitle={`Base: ${currency}`}>
-                      <p className="text-xs text-[#8A8A8A]">Live FX via Yahoo cross-rates in markets tab</p>
+                    <Panel open title={t("hub.currency")} subtitle={`Base: ${currency}`}>
+                      <p className="text-xs text-[#8A8A8A]">{t("hub.currencyHint")}</p>
                     </Panel>
                   </div>
                 )}
 
                 {activeTab === "markets" && dash && (
                   <>
-                    <Panel open title="Live Markets" subtitle="Yahoo Finance · refreshes every 60s">
+                    <Panel open title={t("hub.liveMarkets")} subtitle={t("hub.liveMarketsSubtitle")}>
                       <div className="grid gap-4 lg:grid-cols-2">
                         <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
                           {dash.markets.map((q) => (
@@ -272,10 +272,10 @@ export default function HubPage() {
                       </div>
                     </Panel>
 
-                    <Panel open title="History" subtitle="Recently viewed symbols">
+                    <Panel open title={t("hub.history")} subtitle="Recently viewed symbols">
                       <div className="flex flex-wrap gap-2">
                         {hubHistory.length === 0 && (
-                          <p className="text-xs text-[#5A5A5A]">Tap a symbol to build your history</p>
+                          <p className="text-xs text-[#5A5A5A]">{t("hub.historyHint")}</p>
                         )}
                         {hubHistory.map((h) => (
                           <button
@@ -297,7 +297,7 @@ export default function HubPage() {
 
                 {activeTab === "news" && dash && (
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <Panel open title="Trending" subtitle="Yahoo Finance US">
+                    <Panel open title={t("hub.trending")} subtitle={t("hub.trendingSubtitle")}>
                       <div className="space-y-2 max-h-80 overflow-y-auto">
                         {dash.trending.map((t) => (
                           <button
@@ -333,7 +333,7 @@ export default function HubPage() {
                       </div>
                     </Panel>
 
-                    <Panel open title="News Feed" subtitle="Yahoo Finance headlines">
+                    <Panel open title={t("hub.newsFeed")} subtitle={t("hub.newsFeedSubtitle")}>
                       <div className="space-y-3 max-h-80 overflow-y-auto">
                         {dash.news.map((n) => (
                           <InAppLink
@@ -347,7 +347,7 @@ export default function HubPage() {
                               {n.published_at
                                 ? ` · ${new Date(n.published_at * 1000).toLocaleString(locale)}`
                                 : ""}
-                              <span className="ml-2 text-[#7C4DFF]">· read in app</span>
+                              <span className="ml-2 text-[#7C4DFF]">{t("hub.readInApp")}</span>
                             </p>
                             {n.related_tickers.length > 0 && (
                               <p className="text-[9px] text-[#00E5FF] mt-1">
@@ -363,13 +363,13 @@ export default function HubPage() {
 
                 {activeTab === "map" && dash && (
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <Panel open title="Google Maps" subtitle="Satellite · navigation · nearby places">
+                    <Panel open title={t("hub.googleMaps")} subtitle={t("hub.googleMapsSubtitle")}>
                       <GoogleMapExplorer promotedPlaces={dash.promoted_places || []} />
                       <Link
                         href="/map"
                         className="mt-3 inline-block text-xs text-[#00E5FF] hover:underline"
                       >
-                        Open full-screen map →
+                        {t("hub.openMap")}
                       </Link>
                       <div className="mt-3 space-y-2">
                         {dash.events.map((e) => (
@@ -387,21 +387,21 @@ export default function HubPage() {
                       </div>
                       {(dash.promoted_places || []).length > 0 && (
                         <div className="mt-4 pt-3 border-t border-[#1F1F1F]">
-                          <p className="text-[10px] uppercase text-[#5A5A5A] mb-2">Promoted from feed</p>
+                          <p className="text-[10px] uppercase text-[#5A5A5A] mb-2">{t("hub.promotedFromFeed")}</p>
                           {(dash.promoted_places || []).map((p) => (
                             <Link
                               key={p.place_id}
                               href={`/map?lat=${p.lat}&lng=${p.lng}&name=${encodeURIComponent(p.name)}&navigate=1`}
                               className="block text-xs text-[#FFB300] py-1 hover:underline"
                             >
-                              📍 {p.name} — by {p.promoted_by}
+                              {t("hub.promotedBy", { name: p.name, author: p.promoted_by ?? "" })}
                             </Link>
                           ))}
                         </div>
                       )}
                     </Panel>
 
-                    <Panel open title="Device Status" subtitle="Twins · safety · live feeds">
+                    <Panel open title={t("hub.deviceStatus")} subtitle={t("hub.deviceStatusSubtitle")}>
                       <div className="space-y-2">
                         {dash.devices.map((d) => (
                           <div
@@ -429,7 +429,7 @@ export default function HubPage() {
                   </div>
                 )}
 
-                <Panel open title="World Clocks">
+                <Panel open title={t("hub.worldClocks")}>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     {WORLD_CLOCKS.map((c) => (
                       <div key={c.city} className="rounded-lg border border-[#1F1F1F] p-3 text-center">
@@ -447,7 +447,7 @@ export default function HubPage() {
                 </Panel>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Panel open title="7-Day Forecast" subtitle="Local stub — OpenWeather in production">
+                  <Panel open title={t("hub.forecast")} subtitle={t("hub.forecastSubtitle")}>
                     <div className="flex justify-between gap-1">
                       {WEATHER_7.map((d) => (
                         <div key={d.day} className="flex-1 text-center py-2 rounded border border-[#1F1F1F]">
@@ -460,7 +460,7 @@ export default function HubPage() {
                     </div>
                   </Panel>
 
-                  <Panel open title="Calendar" subtitle={now.toLocaleDateString(locale, { month: "long", year: "numeric" })}>
+                  <Panel open title={t("hub.calendar")} subtitle={now.toLocaleDateString(locale, { month: "long", year: "numeric" })}>
                     <div className="grid grid-cols-7 gap-1 text-center text-[10px]">
                       {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
                         <span key={`cal-hdr-${i}`} className="text-[#5A5A5A] py-1">{d}</span>

@@ -5,8 +5,9 @@ import { Panel } from "@nexus/ui";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/auth-store";
-import { SECTION_META } from "@/lib/settings-registry";
+import { useSettingsRegistry } from "@/lib/use-settings-registry";
 
 export function SettingsSectionShell({
   section,
@@ -15,8 +16,10 @@ export function SettingsSectionShell({
   section: string;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
-  const meta = SECTION_META[section] || { title: section, subtitle: "" };
+  const { sectionMeta } = useSettingsRegistry();
+  const meta = sectionMeta[section] || { title: section, subtitle: "" };
 
   return (
     <AppShell>
@@ -27,7 +30,7 @@ export function SettingsSectionShell({
           <div className="mx-auto max-w-lg space-y-4">
             <div className="flex items-center gap-3">
               <Link href="/settings" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
-                ← Settings
+                {t("common.backToSettings")}
               </Link>
             </div>
             <div>
@@ -104,6 +107,7 @@ export function ConnectorButton({
   connected: boolean;
   onConnect: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -114,7 +118,7 @@ export function ConnectorButton({
     >
       <span className="text-sm text-[#F5F5F5]">{name}</span>
       <span className={`text-[10px] uppercase ${connected ? "text-[#00C853]" : "text-[#5A5A5A]"}`}>
-        {connected ? "Connected" : "Connect"}
+        {connected ? t("common.connected") : t("common.connect")}
       </span>
     </button>
   );

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Button, FadeIn, Panel } from "@nexus/ui";
 import type { CallSession } from "@nexus/types";
 import { useWebRTCCall } from "@/hooks/useWebRTCCall";
+import { useTranslation } from "@/i18n";
 
 interface CallViewProps {
   token: string;
@@ -15,6 +16,7 @@ interface CallViewProps {
 }
 
 export function CallView({ token, userId, call, role, peerName, onEnd }: CallViewProps) {
+  const { t } = useTranslation();
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -39,18 +41,18 @@ export function CallView({ token, userId, call, role, peerName, onEnd }: CallVie
 
   const statusLabel =
     state === "connected"
-      ? "Connected"
+      ? t("calls.connected")
       : state === "ringing"
-        ? "Ringing…"
+        ? t("calls.ringing")
         : state === "connecting"
-          ? "Connecting…"
+          ? t("calls.connecting")
           : state === "error"
-            ? error || "Error"
-            : "Call";
+            ? error || t("calls.error")
+            : t("calls.call");
 
   return (
     <FadeIn>
-      <Panel open title={`${call.call_type} call · ${peerName}`}>
+      <Panel open title={t("calls.callWith", { type: call.call_type, peer: peerName })}>
         <div className="space-y-4">
           <p
             className={`text-sm ${
@@ -77,7 +79,7 @@ export function CallView({ token, userId, call, role, peerName, onEnd }: CallVie
               />
               {!remoteStream && (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-[#5A5A5A]">
-                  Waiting for {peerName}…
+                  {t("calls.waitingFor", { peer: peerName })}
                 </div>
               )}
             </div>
@@ -95,10 +97,10 @@ export function CallView({ token, userId, call, role, peerName, onEnd }: CallVie
 
           <div className="flex gap-2">
             <Button className="flex-1" variant="secondary" onClick={toggleMute}>
-              {muted ? "Unmute" : "Mute"}
+              {muted ? t("calls.unmute") : t("calls.mute")}
             </Button>
             <Button className="flex-1" variant="secondary" onClick={hangup}>
-              End
+              {t("calls.end")}
             </Button>
           </div>
         </div>

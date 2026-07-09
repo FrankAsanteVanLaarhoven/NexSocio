@@ -11,9 +11,11 @@ import { getMe, updateProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { resolveMediaUrl } from "@/lib/media-formats";
 import { useSettingsStore } from "@/lib/settings-store";
+import { useTranslation } from "@/i18n";
 import type { UserProfile } from "@nexus/types";
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const updateDisplayName = useAuthStore((s) => s.updateDisplayName);
   const profileMediaUrl = useSettingsStore((s) => s.profileMediaUrl);
@@ -42,7 +44,7 @@ export default function ProfilePage() {
         setCompany(p.company || "");
         setSkills(p.skills || "");
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load profile"))
+      .catch((e) => setError(e instanceof Error ? e.message : t("profile.loadFailed")))
       .finally(() => setLoading(false));
   }, [session]);
 
@@ -63,7 +65,7 @@ export default function ProfilePage() {
       updateDisplayName(updated.display_name);
       setSuccess(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed");
+      setError(e instanceof Error ? e.message : t("profile.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -77,8 +79,8 @@ export default function ProfilePage() {
         ) : (
       <div className="mx-auto max-w-lg space-y-6">
         <div>
-          <h1 className="text-xl font-semibold text-[#F5F5F5]">Profile & Settings</h1>
-          <p className="text-xs text-[#8A8A8A] mt-1">Manage your NEXSOCIO identity</p>
+          <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("profile.title")}</h1>
+          <p className="text-xs text-[#8A8A8A] mt-1">{t("profile.subtitle")}</p>
         </div>
 
         {loading ? (
@@ -86,7 +88,7 @@ export default function ProfilePage() {
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00E5FF] border-t-transparent" />
           </div>
         ) : (
-          <Panel open title="Your Profile">
+          <Panel open title={t("profile.yourProfile")}>
             <div className="space-y-4">
               <div className="flex items-center gap-3 pb-4 border-b border-[#1F1F1F]">
                 {profileMediaUrl ? (
@@ -107,15 +109,15 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <Input label="Display Name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-              <Input label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell your story..." />
-              <Input label="Headline" value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="Senior Engineer @ NEXSOCIO" />
-              <Input label="Company" value={company} onChange={(e) => setCompany(e.target.value)} />
-              <Input label="Skills" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Rust, ML, Robotics" />
+              <Input label={t("profile.displayName")} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+              <Input label={t("profile.bio")} value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("profile.bioPlaceholder")} />
+              <Input label={t("profile.headline")} value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder={t("profile.headlinePlaceholder")} />
+              <Input label={t("profile.company")} value={company} onChange={(e) => setCompany(e.target.value)} />
+              <Input label={t("profile.skills")} value={skills} onChange={(e) => setSkills(e.target.value)} placeholder={t("profile.skillsPlaceholder")} />
 
               {profile?.age_verified && (
                 <div className="rounded-md border border-[#00C853]/30 bg-[#00C853]/5 px-3 py-2">
-                  <p className="text-xs text-[#00C853]">✓ Age verified via ZKP</p>
+                  <p className="text-xs text-[#00C853]">{t("profile.ageVerified")}</p>
                 </div>
               )}
 
@@ -124,7 +126,7 @@ export default function ProfilePage() {
                   <MediaUploader
                     context="avatar"
                     token={session.accessToken}
-                    label="Profile photo (JPG/PNG/WebP)"
+                    label={t("profile.profilePhotoLabel")}
                     previewUrl={profileMediaUrl}
                     onUploaded={(m) => updateSettings({ profileMediaUrl: m.url })}
                     onClear={() => updateSettings({ profileMediaUrl: null })}
@@ -133,7 +135,7 @@ export default function ProfilePage() {
                   <MediaUploader
                     context="business"
                     token={session.accessToken}
-                    label="Business promo (photo or video)"
+                    label={t("profile.businessPromoLabel")}
                     previewUrl={businessMediaUrl}
                     onUploaded={(m) => updateSettings({ businessMediaUrl: m.url })}
                     onClear={() => updateSettings({ businessMediaUrl: null })}
@@ -143,10 +145,10 @@ export default function ProfilePage() {
               )}
 
               {error && <p className="text-xs text-[#FF5252]">{error}</p>}
-              {success && <p className="text-xs text-[#00C853]">Profile saved successfully</p>}
+              {success && <p className="text-xs text-[#00C853]">{t("profile.saveSuccess")}</p>}
 
               <Button className="w-full" loading={saving} onClick={handleSave}>
-                Save Changes
+                {t("profile.saveChanges")}
               </Button>
             </div>
           </Panel>

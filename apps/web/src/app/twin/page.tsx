@@ -21,8 +21,10 @@ import {
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
+import { useTranslation } from "@/i18n";
 
 export default function TwinPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -108,7 +110,7 @@ export default function TwinPage() {
     try {
       const data = await readFileAsDataUrl(file);
       await uploadTwinAvatar(session.accessToken, twin.agent_id, data);
-      setStatus("Avatar photo saved — ready for talking-head video.");
+      setStatus(t("twin.avatarSaved"));
       await load();
     } finally {
       setBusy(false);
@@ -127,7 +129,7 @@ export default function TwinPage() {
     setBusy(true);
     try {
       await uploadTwinAvatar(session.accessToken, twin.agent_id, data);
-      setStatus("Avatar captured from camera.");
+      setStatus(t("twin.avatarCaptured"));
       await load();
     } finally {
       setBusy(false);
@@ -155,21 +157,21 @@ export default function TwinPage() {
 
       if (job.video_url) {
         setAvatarVideo(job.video_url);
-        setStatus(`D-ID video ready (${job.provider})`);
+        setStatus(t("twin.didVideoReady", { provider: job.provider }));
         return;
       }
 
       const image = twin.avatar_image;
       if (!image) {
-        setStatus("Upload your photo first.");
+        setStatus(t("twin.uploadPhotoFirst"));
         return;
       }
 
       const local = await renderTalkingAvatar(image, avatarScript.trim());
       setAvatarVideo(local.videoDataUrl);
-      setStatus("Talking avatar rendered on device — lip-sync ready.");
+      setStatus(t("twin.talkingAvatarRendered"));
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Video generation failed");
+      setStatus(err instanceof Error ? err.message : t("twin.videoFailed"));
     } finally {
       setBusy(false);
     }
@@ -186,7 +188,7 @@ export default function TwinPage() {
         ai_assisted: true,
         hide_ai_tag: canHideAiTag && hideAiTag,
       });
-      setStatus("AI talking video posted to feed.");
+      setStatus(t("twin.aiVideoPosted"));
       setAvatarVideo(null);
       setAvatarScript("");
       await load();
@@ -203,10 +205,8 @@ export default function TwinPage() {
         ) : (
           <div className="mx-auto max-w-2xl space-y-6">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Digital Twin</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">
-                Talking avatar · represent you when busy · post · voice debrief
-              </p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("twin.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("twin.subtitle")}</p>
             </div>
 
             {loading ? (
@@ -215,15 +215,15 @@ export default function TwinPage() {
               </div>
             ) : (
               <>
-                <Panel open title="Create Your Twin">
+                <Panel open title={t("twin.create")}>
                   <div className="flex gap-2">
                     <Input
                       className="flex-1"
-                      placeholder="Twin name e.g. Ava Assistant"
+                      placeholder={t("twin.namePlaceholder")}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                     />
-                    <Button onClick={handleCreate}>Create</Button>
+                    <Button onClick={handleCreate}>{t("common.create")}</Button>
                   </div>
                 </Panel>
 
@@ -242,7 +242,7 @@ export default function TwinPage() {
                         </p>
                       )}
 
-                      <Panel open title="Talking Avatar" subtitle="Upload photo → speech-driven lip sync">
+                      <Panel open title={t("twin.talkingAvatar")} subtitle={t("twin.talkingAvatarSubtitle")}>
                         <div className="space-y-3">
                           <input
                             ref={fileRef}
@@ -264,18 +264,18 @@ export default function TwinPage() {
                             </div>
                             <div className="flex-1 space-y-2">
                               <Button size="sm" variant="secondary" onClick={() => fileRef.current?.click()}>
-                                Upload Photo
+                                {t("twin.uploadPhoto")}
                               </Button>
                               <Button size="sm" variant="secondary" onClick={startAvatarCamera}>
-                                Camera
+                                {t("twin.camera")}
                               </Button>
                               <Button size="sm" onClick={() => captureAvatar(twin)}>
-                                Save Frame
+                                {t("twin.saveFrame")}
                               </Button>
                             </div>
                           </div>
                           <Input
-                            label="What your twin says on video"
+                            label={t("twin.avatarSaysLabel")}
                             value={avatarScript}
                             onChange={(e) => setAvatarScript(e.target.value)}
                             placeholder={`Hi — I'm the digital twin of ${session.displayName}...`}
@@ -287,7 +287,7 @@ export default function TwinPage() {
                             disabled={!avatarScript.trim() || !twin.avatar_image}
                             onClick={() => handleGenerateVideo(twin)}
                           >
-                            Generate Talking Video
+                            {t("twin.generateVideo")}
                           </Button>
                           {avatarVideo && (
                             <video
@@ -305,7 +305,7 @@ export default function TwinPage() {
                               onChange={(e) => setHideAiTag(e.target.checked)}
                               className="accent-[#7C4DFF]"
                             />
-                            {canHideAiTag ? "Hide NEXSOCIO AI tag on video post" : "NEXSOCIO AI tag shown on video"}
+                            {canHideAiTag ? t("twin.hideAiTagVideo") : t("twin.aiTagShownVideo")}
                           </label>
                           <Button
                             size="sm"
@@ -314,7 +314,7 @@ export default function TwinPage() {
                             disabled={!avatarVideo}
                             onClick={() => handlePublishVideo(twin)}
                           >
-                            Post AI Video to Feed
+                            {t("twin.postAiVideo")}
                           </Button>
                         </div>
                       </Panel>
@@ -322,15 +322,15 @@ export default function TwinPage() {
                       <div className="flex flex-wrap gap-2">
                         {!twin.is_active ? (
                           <Button size="sm" onClick={() => handleActivate(twin)}>
-                            I&apos;m Busy — Activate
+                            {t("twin.activate")}
                           </Button>
                         ) : (
                           <>
                             <Button size="sm" variant="secondary" onClick={() => handleDeactivate(twin)}>
-                              I&apos;m Back — Deactivate
+                              {t("twin.deactivate")}
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => handleBriefing(twin)}>
-                              Voice Debrief
+                              {t("twin.voiceDebrief")}
                             </Button>
                           </>
                         )}
@@ -338,16 +338,16 @@ export default function TwinPage() {
                       {twin.is_active && (
                         <>
                           <Input
-                            label="Post as twin"
+                            label={t("twin.postAsTwin")}
                             value={postBody}
                             onChange={(e) => setPostBody(e.target.value)}
-                            placeholder="Share an update while you're away..."
+                            placeholder={t("twin.postAsTwinPlaceholder")}
                           />
                           <Button size="sm" className="w-full" onClick={() => handleTwinPost(twin)}>
-                            Publish Twin Post
+                            {t("twin.publishTwin")}
                           </Button>
                           <Input
-                            label="Simulate visitor message"
+                            label={t("twin.simulateVisitor")}
                             value={msgBody}
                             onChange={(e) => setMsgBody(e.target.value)}
                             placeholder="Hi, is favl available?"
@@ -358,7 +358,7 @@ export default function TwinPage() {
                             className="w-full"
                             onClick={() => handleTestMessage(twin)}
                           >
-                            Send Test Message
+                            {t("twin.sendTestMessage")}
                           </Button>
                         </>
                       )}
@@ -371,7 +371,7 @@ export default function TwinPage() {
                 )}
 
                 {briefing && (
-                  <Panel open title="While You Were Away" className="border-[#7C4DFF]/30">
+                  <Panel open title={t("twin.whileAway")} className="border-[#7C4DFF]/30">
                     <p className="text-sm text-[#F5F5F5] mb-4">{briefing.voice_summary}</p>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {briefing.messages.map((m) => (
@@ -394,7 +394,7 @@ export default function TwinPage() {
                 {active && (
                   <div className="rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/5 px-4 py-3 text-center">
                     <p className="text-xs text-[#00E5FF]">
-                      {active.name} is representing {active.owner_display_name || session.displayName}
+                      {t("twin.representing", { name: active.name, owner: active.owner_display_name || session.displayName })}
                     </p>
                   </div>
                 )}

@@ -12,9 +12,11 @@ import {
   searchUsers,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 import type { Connection, PublicUser } from "@nexus/types";
 
 export default function ConnectionsPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [pending, setPending] = useState<Connection[]>([]);
@@ -75,20 +77,20 @@ export default function ConnectionsPage() {
         ) : (
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="text-xl font-semibold text-[#F5F5F5]">Connections</h1>
-          <p className="text-xs text-[#8A8A8A] mt-1">Build your social graph</p>
+          <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("connections.title")}</h1>
+          <p className="text-xs text-[#8A8A8A] mt-1">{t("connections.subtitle")}</p>
         </div>
 
-        <Panel open title="Find People">
+        <Panel open title={t("connections.findPeople")}>
           <div className="flex gap-2">
             <Input
               className="flex-1"
-              placeholder="Search by name or headline..."
+              placeholder={t("connections.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-            <Button onClick={handleSearch}>Search</Button>
+            <Button onClick={handleSearch}>{t("common.search")}</Button>
           </div>
           {searchResults.length > 0 && (
             <div className="mt-4 space-y-2">
@@ -109,7 +111,7 @@ export default function ConnectionsPage() {
                     loading={actionLoading === user.id}
                     onClick={() => handleConnect(user.id)}
                   >
-                    Connect
+                    {t("common.connect")}
                   </Button>
                 </div>
               ))}
@@ -118,7 +120,7 @@ export default function ConnectionsPage() {
         </Panel>
 
         {pending.length > 0 && (
-          <Panel open title={`Pending Requests (${pending.length})`}>
+          <Panel open title={t("connections.pending", { n: pending.length })}>
             <div className="space-y-2">
               {pending.map((conn) => (
                 <div
@@ -126,14 +128,14 @@ export default function ConnectionsPage() {
                   className="flex items-center justify-between rounded-md border border-[#2A2A2A] p-3"
                 >
                   <p className="text-sm text-[#F5F5F5]">
-                    {conn.other_display_name || "Unknown user"}
+                    {conn.other_display_name || t("connections.unknownUser")}
                   </p>
                   <Button
                     size="sm"
                     loading={actionLoading === conn.id}
                     onClick={() => handleAccept(conn.id)}
                   >
-                    Accept
+                    {t("connections.accept")}
                   </Button>
                 </div>
               ))}
@@ -141,14 +143,14 @@ export default function ConnectionsPage() {
           </Panel>
         )}
 
-        <Panel open title={`Your Connections (${connections.length})`}>
+        <Panel open title={t("connections.yours", { n: connections.length })}>
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#00E5FF] border-t-transparent" />
             </div>
           ) : connections.length === 0 ? (
             <p className="text-sm text-[#8A8A8A] text-center py-8">
-              No connections yet. Search above to connect.
+              {t("connections.empty")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -161,7 +163,7 @@ export default function ConnectionsPage() {
                     {(conn.other_display_name || "?").charAt(0).toUpperCase()}
                   </div>
                   <p className="text-sm text-[#F5F5F5]">
-                    {conn.other_display_name || "Connected user"}
+                    {conn.other_display_name || t("connections.connectedUser")}
                   </p>
                 </div>
               ))}

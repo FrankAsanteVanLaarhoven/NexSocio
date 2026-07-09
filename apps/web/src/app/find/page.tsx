@@ -11,10 +11,13 @@ import { inAppMapUrl } from "@/components/InAppLink";
 import { getMemberLocations } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { formatLocationAge } from "@/lib/location";
+import { useTranslation } from "@/i18n";
 import type { MemberLocation } from "@nexus/types";
 import { useSettingsStore } from "@/lib/settings-store";
 
 function MemberCard({ member }: { member: MemberLocation }) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={`rounded-lg border px-4 py-3 ${
@@ -27,7 +30,7 @@ function MemberCard({ member }: { member: MemberLocation }) {
         <div className="min-w-0">
           <p className="text-sm font-medium text-[#F5F5F5]">{member.display_name}</p>
           <p className="text-[10px] text-[#5A5A5A] mt-0.5">
-            Updated {formatLocationAge(member.updated_at)}
+            {t("find.updated")} {formatLocationAge(member.updated_at)}
           </p>
           <div className="mt-2">
             <LiveLocationTag
@@ -43,11 +46,11 @@ function MemberCard({ member }: { member: MemberLocation }) {
         <div className="flex flex-col gap-1 shrink-0">
           {member.find_me_enabled && (
             <span className="text-[9px] uppercase tracking-wider text-[#FF8A80] font-bold">
-              Find Me
+              {t("find.findMe")}
             </span>
           )}
           {member.is_live && (
-            <span className="text-[9px] uppercase tracking-wider text-[#FF5252]">● Live</span>
+            <span className="text-[9px] uppercase tracking-wider text-[#FF5252]">{t("find.live")}</span>
           )}
           <Link
             href={inAppMapUrl({
@@ -58,7 +61,7 @@ function MemberCard({ member }: { member: MemberLocation }) {
             })}
             className="text-[10px] text-[#00E5FF] hover:underline"
           >
-            Map →
+            {t("find.mapLink")}
           </Link>
         </div>
       </div>
@@ -67,6 +70,7 @@ function MemberCard({ member }: { member: MemberLocation }) {
 }
 
 export default function FindPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const findMe = useSettingsStore((s) => s.findMeEnabled);
   const [members, setMembers] = useState<MemberLocation[]>([]);
@@ -109,33 +113,29 @@ export default function FindPage() {
           <div className="mx-auto max-w-2xl space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-xl font-semibold text-[#F5F5F5]">Location Finder</h1>
-                <p className="text-xs text-[#8A8A8A] mt-1">
-                  Find members who need help · see where followers are live
-                </p>
+                <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("find.title")}</h1>
+                <p className="text-xs text-[#8A8A8A] mt-1">{t("find.subtitle")}</p>
               </div>
               <Link
                 href="/settings/location"
                 className="text-[10px] px-2 py-1 rounded border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#00E5FF]"
               >
-                Settings
+                {t("find.settings")}
               </Link>
             </div>
 
             {findMe && (
               <div className="rounded-lg border border-[#FF5252]/40 bg-[#FF5252]/10 px-4 py-3 flex items-center gap-3">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF5252]" />
-                <p className="text-xs text-[#FF8A80]">
-                  Your Find Me is on — others can locate you on this map.
-                </p>
+                <p className="text-xs text-[#FF8A80]">{t("find.findMeOn")}</p>
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Visible", value: String(members.length) },
-                { label: "Find Me", value: String(findMeCount) },
-                { label: "Live now", value: String(liveCount) },
+                { label: t("find.visible"), value: String(members.length) },
+                { label: t("find.findMe"), value: String(findMeCount) },
+                { label: t("find.liveNow"), value: String(liveCount) },
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -147,15 +147,13 @@ export default function FindPage() {
               ))}
             </div>
 
-            <Panel open title="Members nearby & live">
+            <Panel open title={t("find.membersNearby")}>
               {loading ? (
                 <div className="flex justify-center py-8">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00E5FF] border-t-transparent" />
                 </div>
               ) : members.length === 0 ? (
-                <p className="text-sm text-[#8A8A8A] text-center py-8">
-                  No shared locations yet. Enable Find Me or follower sharing in settings.
-                </p>
+                <p className="text-sm text-[#8A8A8A] text-center py-8">{t("find.noLocations")}</p>
               ) : (
                 <div className="space-y-3">
                   {members.map((m) => (
@@ -165,10 +163,7 @@ export default function FindPage() {
               )}
             </Panel>
 
-            <p className="text-[10px] text-[#5A5A5A] text-center">
-              Login locations are visible in each member&apos;s profile when tracking is enabled.
-              Live tags appear on posts and streams.
-            </p>
+            <p className="text-[10px] text-[#5A5A5A] text-center">{t("find.footerHint")}</p>
           </div>
         )}
       </AuthHydrationGate>

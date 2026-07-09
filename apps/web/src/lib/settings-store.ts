@@ -50,7 +50,7 @@ interface SettingsState extends UserSettings {
 const defaults: UserSettings = {
   voiceControlEnabled: false,
   ephemeralNav: true,
-  locale: "en-GB",
+  locale: "en",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   currency: "GBP",
   notificationsEnabled: true,

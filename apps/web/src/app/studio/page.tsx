@@ -17,6 +17,7 @@ import type { PodcastEpisode } from "@nexus/types";
 import type { UploadedMedia } from "@/lib/media-upload";
 import { useAuthStore } from "@/lib/auth-store";
 import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
+import { useTranslation } from "@/i18n";
 
 const FILTERS = [
   { id: "none", label: "Original" },
@@ -30,6 +31,7 @@ const FILTERS = [
 type StudioMode = "reel" | "photo" | "ai_video" | "podcast" | "vlog" | "tv";
 
 export default function StudioPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -124,9 +126,9 @@ export default function StudioPage() {
       setPreview(result.videoDataUrl);
       setCaption(aiScript.trim());
       setUsedAi(true);
-      setMsg("Talking avatar ready — publish when you're happy.");
+      setMsg(t("studio.avatarReady"));
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Generation failed");
+      setMsg(err instanceof Error ? err.message : t("studio.generationFailed"));
     } finally {
       setLoading(false);
     }
@@ -145,7 +147,7 @@ export default function StudioPage() {
         episode_type: mode as "podcast" | "vlog" | "tv",
         publish: true,
       });
-      setMsg(`${mode} episode published!`);
+      setMsg(t("studio.episodePublished", { mode }));
       setEpTitle("");
       setEpDesc("");
       setPreview(null);
@@ -153,7 +155,7 @@ export default function StudioPage() {
       const list = await listPodcastEpisodes(session.accessToken, mode as "podcast" | "vlog" | "tv");
       setEpisodes(list);
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Publish failed");
+      setMsg(err instanceof Error ? err.message : t("studio.publishFailed"));
     } finally {
       setLoading(false);
     }
@@ -179,7 +181,7 @@ export default function StudioPage() {
         ai_assisted: usedAi || mode === "ai_video",
         hide_ai_tag: (usedAi || mode === "ai_video") && canHideAiTag && hideAiTag,
       });
-      setMsg("Published!");
+      setMsg(t("studio.publishSuccess"));
       setCaption("");
       setPreview(null);
       setUploadedMedia(null);
@@ -200,10 +202,8 @@ export default function StudioPage() {
         ) : (
           <div className="mx-auto max-w-lg space-y-6">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Studio</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">
-                Reels · photos · podcast · vlog · TV · AI avatars
-              </p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("studio.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("studio.subtitle")}</p>
             </div>
             <div className="flex gap-2 flex-wrap">
               {(["reel", "photo", "ai_video", "podcast", "vlog", "tv"] as const).map((m) => (
@@ -222,7 +222,7 @@ export default function StudioPage() {
                       : "border-[#2A2A2A] text-[#8A8A8A]"
                   }`}
                 >
-                  {m === "ai_video" ? "AI Avatar" : m}
+                  {m === "ai_video" ? t("studio.aiAvatar") : m}
                 </button>
               ))}
             </div>
@@ -231,13 +231,13 @@ export default function StudioPage() {
               <Panel
                 open
                 title={mode === "podcast" ? "Podcast" : mode === "vlog" ? "Vlog" : "TV Show"}
-                subtitle="Upload media · publish episodes"
+                subtitle={t("studio.broadcastSubtitle")}
               >
                 <div className="space-y-4">
                   <MediaUploader
                     context={mode === "podcast" ? "reel" : "reel"}
                     token={session.accessToken}
-                    label={`Upload ${mode} media`}
+                    label={t("studio.uploadMedia", { mode })}
                     previewUrl={uploadedMedia?.url}
                     onUploaded={(m) => {
                       setUploadedMedia(m);
@@ -247,12 +247,12 @@ export default function StudioPage() {
                     compact
                   />
                   <Input
-                    label="Episode title"
+                    label={t("studio.episodeTitle")}
                     value={epTitle}
                     onChange={(e) => setEpTitle(e.target.value)}
                   />
                   <Input
-                    label="Description"
+                    label={t("shop.description")}
                     value={epDesc}
                     onChange={(e) => setEpDesc(e.target.value)}
                   />
@@ -262,12 +262,12 @@ export default function StudioPage() {
                     disabled={!epTitle.trim()}
                     onClick={publishEpisode}
                   >
-                    Publish {mode}
+                    {t("studio.publishEpisode", { mode })}
                   </Button>
                   {episodes.length > 0 && (
                     <div className="space-y-2 border-t border-[#1F1F1F] pt-3">
                       <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">
-                        Your episodes
+                        {t("studio.yourEpisodes")}
                       </p>
                       {episodes.map((ep) => (
                         <div key={ep.id} className="text-xs text-[#8A8A8A] py-1 border-b border-[#1F1F1F]">
@@ -282,7 +282,7 @@ export default function StudioPage() {
                 </div>
               </Panel>
             ) : mode === "ai_video" ? (
-              <Panel open title="Talking Avatar" subtitle="Photo + speech → realistic lip-sync video">
+              <Panel open title={t("studio.talkingAvatar")} subtitle={t("studio.talkingAvatarSubtitle")}>
                 <div className="space-y-4">
                   <input
                     ref={fileRef}
@@ -302,23 +302,23 @@ export default function StudioPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button className="flex-1" variant="secondary" onClick={() => fileRef.current?.click()}>
-                      Upload Photo
+                      {t("studio.uploadPhoto")}
                     </Button>
                     <Button className="flex-1" variant="secondary" onClick={startCamera}>
-                      Capture
+                      {t("studio.capture")}
                     </Button>
                     <Button className="flex-1" onClick={capture}>
-                      Use Frame
+                      {t("studio.useFrame")}
                     </Button>
                   </div>
                   <Input
-                    label="Script (what your avatar says)"
+                    label={t("studio.scriptLabel")}
                     value={aiScript}
                     onChange={(e) => setAiScript(e.target.value)}
                     placeholder="Hi, I'm here while favl is busy..."
                   />
                   <Button className="w-full" loading={loading} disabled={!avatarPhoto || !aiScript.trim()} onClick={generateAiVideo}>
-                    Generate Talking Video
+                    {t("studio.generateTalkingVideo")}
                   </Button>
                   {usedAi && (
                     <label className="flex items-center gap-2 text-xs text-[#8A8A8A]">
@@ -329,16 +329,16 @@ export default function StudioPage() {
                         onChange={(e) => setHideAiTag(e.target.checked)}
                         className="accent-[#7C4DFF]"
                       />
-                      {canHideAiTag ? "Hide NEXSOCIO AI tag" : "NEXSOCIO AI tag shown (upgrade to hide)"}
+                      {canHideAiTag ? t("studio.hideAiTag") : t("studio.aiTagShownUpgrade")}
                     </label>
                   )}
                   <Button className="w-full" loading={loading} disabled={!preview} onClick={publish}>
-                    Publish AI Video
+                    {t("studio.publishAiVideo")}
                   </Button>
                 </div>
               </Panel>
             ) : (
-              <Panel open title="Camera & Filters">
+              <Panel open title={t("studio.cameraFilters")}>
                 <div className="space-y-4">
                   <div className="relative aspect-[9/16] max-h-[420px] mx-auto overflow-hidden rounded-xl border border-[#2A2A2A] bg-black">
                     {preview ? (
@@ -370,7 +370,7 @@ export default function StudioPage() {
                   <MediaUploader
                     context={mode === "reel" ? "reel" : "photo"}
                     token={session.accessToken}
-                    label={mode === "reel" ? "Upload reel (MP4/MOV)" : "Upload photo"}
+                    label={mode === "reel" ? t("studio.uploadReel") : t("studio.uploadPhotoMedia")}
                     previewUrl={uploadedMedia?.url}
                     onUploaded={(m) => {
                       setUploadedMedia(m);
@@ -380,14 +380,14 @@ export default function StudioPage() {
                     compact
                   />
                   <Button className="w-full" variant="secondary" onClick={startCamera}>
-                    Start Camera
+                    {t("studio.startCamera")}
                   </Button>
                   <Button className="w-full" onClick={capture}>
-                    Capture {mode === "reel" ? "Frame" : "Photo"}
+                    {mode === "reel" ? t("studio.captureFrame") : t("studio.capturePhoto")}
                   </Button>
-                  <Input label="Caption" value={caption} onChange={(e) => setCaption(e.target.value)} />
+                  <Input label={t("studio.caption")} value={caption} onChange={(e) => setCaption(e.target.value)} />
                   <Button className="w-full" variant="secondary" disabled={!caption.trim()} onClick={handleAiCaption}>
-                    Polish caption with NEXSOCIO AI
+                    {t("studio.polishCaption")}
                   </Button>
                   {usedAi && (
                     <label className="flex items-center gap-2 text-xs text-[#8A8A8A]">
@@ -398,11 +398,11 @@ export default function StudioPage() {
                         onChange={(e) => setHideAiTag(e.target.checked)}
                         className="accent-[#7C4DFF]"
                       />
-                      {canHideAiTag ? "Hide NEXSOCIO AI tag" : "NEXSOCIO AI tag shown"}
+                      {canHideAiTag ? t("studio.hideAiTag") : t("studio.aiTagShown")}
                     </label>
                   )}
                   <Button className="w-full" loading={loading} disabled={!preview && !uploadedMedia} onClick={publish}>
-                    Publish {mode}
+                    {t("studio.publishMode", { mode })}
                   </Button>
                 </div>
               </Panel>

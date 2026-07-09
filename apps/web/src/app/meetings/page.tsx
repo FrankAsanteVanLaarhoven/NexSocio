@@ -9,6 +9,7 @@ import { LoginGateway } from "@/components/auth/LoginGateway";
 import { MeetingRoomView } from "@/components/MeetingRoomView";
 import { useCreateMeeting, useMeetings, useUpcomingMeetings } from "@/hooks/queries/useMeetings";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 import type { Meeting } from "@nexus/types";
 
 function formatWhen(iso: string) {
@@ -21,6 +22,7 @@ function formatWhen(iso: string) {
 }
 
 export default function MeetingsPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const token = session?.accessToken;
   const { data: mine = [], isLoading: loadingMine } = useMeetings(token);
@@ -50,17 +52,17 @@ export default function MeetingsPage() {
           <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
               <Link href="/teams" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
-                ← Teams
+                {t("common.backToTeams")}
               </Link>
-              <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">Meetings</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">Schedule · join with room code</p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">{t("meetings.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("meetings.subtitle")}</p>
             </div>
 
-            <Panel open title="Schedule meeting">
+            <Panel open title={t("meetings.schedule")}>
               <div className="space-y-3">
-                <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <Input label={t("meetings.titleLabel")} value={title} onChange={(e) => setTitle(e.target.value)} />
                 <Input
-                  label="Date & time"
+                  label={t("meetings.dateTime")}
                   type="datetime-local"
                   value={when}
                   onChange={(e) => setWhen(e.target.value)}
@@ -71,7 +73,7 @@ export default function MeetingsPage() {
                   disabled={!title.trim() || !when}
                   onClick={handleCreate}
                 >
-                  Schedule
+                  {t("meetings.scheduleBtn")}
                 </Button>
               </div>
             </Panel>
@@ -85,11 +87,11 @@ export default function MeetingsPage() {
               />
             )}
 
-            <Panel open title="Upcoming">
+            <Panel open title={t("meetings.upcoming")}>
               {loadingUpcoming ? (
-                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("common.loading")}</p>
               ) : upcoming.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No upcoming meetings.</p>
+                <p className="text-xs text-[#5A5A5A]">{t("meetings.noUpcoming")}</p>
               ) : (
                 <AnimatedList className="space-y-2">
                   {upcoming.map((m) => (
@@ -101,11 +103,11 @@ export default function MeetingsPage() {
               )}
             </Panel>
 
-            <Panel open title="Your meetings">
+            <Panel open title={t("meetings.yours")}>
               {loadingMine ? (
-                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("common.loading")}</p>
               ) : mine.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">You have not hosted any meetings yet.</p>
+                <p className="text-xs text-[#5A5A5A]">{t("meetings.noHosted")}</p>
               ) : (
                 <AnimatedList className="space-y-2">
                   {mine.map((m) => (
@@ -130,21 +132,27 @@ function MeetingRow({
   meeting: Meeting;
   onJoin?: (m: Meeting) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-lg border border-[#2A2A2A] p-3">
       <p className="text-sm text-[#F5F5F5] font-medium">{meeting.title}</p>
       <p className="text-[10px] text-[#5A5A5A] mt-0.5">
-        {formatWhen(meeting.scheduled_at)} · {meeting.duration_min}m · host {meeting.host_name}
+        {t("meetings.meta", {
+          when: formatWhen(meeting.scheduled_at),
+          duration: meeting.duration_min,
+          host: meeting.host_name,
+        })}
       </p>
       <div className="flex items-center justify-between mt-2">
-        <p className="text-xs text-[#00E5FF] font-mono">Room {meeting.room_code}</p>
+        <p className="text-xs text-[#00E5FF] font-mono">{t("common.room", { code: meeting.room_code })}</p>
         {onJoin && meeting.status === "scheduled" && (
           <button
             type="button"
             onClick={() => onJoin(meeting)}
             className="text-[10px] uppercase tracking-wider text-[#00E5FF] hover:underline"
           >
-            Join video
+            {t("meetings.joinVideo")}
           </button>
         )}
       </div>

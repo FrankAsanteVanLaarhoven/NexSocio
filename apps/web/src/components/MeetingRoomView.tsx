@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Button, FadeIn, Panel } from "@nexus/ui";
 import type { Meeting } from "@nexus/types";
 import { useWebRTCRoom } from "@/hooks/useWebRTCRoom";
+import { useTranslation } from "@/i18n";
 
 interface MeetingRoomViewProps {
   token: string;
@@ -13,6 +14,7 @@ interface MeetingRoomViewProps {
 }
 
 export function MeetingRoomView({ token, userId, meeting, onLeave }: MeetingRoomViewProps) {
+  const { t } = useTranslation();
   const localRef = useRef<HTMLVideoElement>(null);
   const {
     localStream,
@@ -47,14 +49,14 @@ export function MeetingRoomView({ token, userId, meeting, onLeave }: MeetingRoom
 
   return (
     <FadeIn>
-      <Panel open title={meeting.title} subtitle={`Room ${meeting.room_code}`}>
+      <Panel open title={meeting.title} subtitle={t("common.room", { code: meeting.room_code })}>
         <div className="space-y-4">
           <p className={`text-sm ${state === "connected" ? "text-[#00C853]" : "text-[#8A8A8A]"}`}>
             {state === "connected"
-              ? `Connected · ${peerCount + 1} participants`
+              ? t("meetings.participants", { n: peerCount + 1 })
               : state === "connecting"
-                ? "Connecting…"
-                : error || "In meeting"}
+                ? t("calls.connecting")
+                : error || t("meetings.inMeeting")}
           </p>
 
           <div className="grid grid-cols-2 gap-2">
@@ -67,7 +69,7 @@ export function MeetingRoomView({ token, userId, meeting, onLeave }: MeetingRoom
                 className="h-full w-full object-cover"
               />
               <span className="absolute bottom-1 left-1 text-[10px] text-[#00E5FF] bg-black/60 px-1 rounded">
-                You
+                {t("common.you")}
               </span>
             </div>
             {remotes.map(([peerId, stream]) => (
@@ -75,17 +77,17 @@ export function MeetingRoomView({ token, userId, meeting, onLeave }: MeetingRoom
             ))}
             {remotes.length === 0 && (
               <div className="aspect-video rounded-lg border border-dashed border-[#2A2A2A] flex items-center justify-center text-xs text-[#5A5A5A]">
-                Waiting for others…
+                {t("meetings.waitingOthers")}
               </div>
             )}
           </div>
 
           <div className="flex gap-2">
             <Button className="flex-1" variant="secondary" onClick={toggleMute}>
-              {muted ? "Unmute" : "Mute"}
+              {muted ? t("calls.unmute") : t("calls.mute")}
             </Button>
             <Button className="flex-1" variant="secondary" onClick={handleLeave}>
-              Leave
+              {t("meetings.leave")}
             </Button>
           </div>
         </div>

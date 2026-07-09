@@ -9,6 +9,7 @@ import { LoginGateway } from "@/components/auth/LoginGateway";
 import { StatCard } from "@/components/settings/SettingsSectionShell";
 import { getWallet, getWalletTransactions, setPaymentProvider } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useTranslation } from "@/i18n";
 
 function formatAmount(amount: number, currency: string) {
   const sym = currency === "GBP" ? "£" : currency === "USD" ? "$" : `${currency} `;
@@ -17,6 +18,7 @@ function formatAmount(amount: number, currency: string) {
 }
 
 export default function WalletPage() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const [balance, setBalance] = useState("—");
   const [coins, setCoins] = useState(0);
@@ -75,28 +77,22 @@ export default function WalletPage() {
           <div className="mx-auto max-w-lg space-y-5 pb-12">
             <div className="flex items-center gap-3">
               <Link href="/settings" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
-                ← Settings
+                {t("common.backToSettings")}
               </Link>
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">Wallet</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">
-                Pay on{" "}
-                <Link href="/marketplace" className="text-[#00E5FF] hover:underline">
-                  Marketplace
-                </Link>
-                {" "}· Stripe · PayPal · crypto
-              </p>
+              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("wallet.title")}</h1>
+              <p className="text-xs text-[#8A8A8A] mt-1">{t("wallet.subtitle")}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Balance" value={loading ? "…" : balance} />
-              <StatCard label="Bonus coins" value={String(coins)} />
+              <StatCard label={t("wallet.balance")} value={loading ? "…" : balance} />
+              <StatCard label={t("wallet.bonusCoins")} value={String(coins)} />
             </div>
-            <Panel open title="Payment methods">
+            <Panel open title={t("wallet.paymentMethods")}>
               <button type="button" className="w-full text-left py-3 border-b border-[#1F1F1F] text-sm text-[#F5F5F5]">
-                ＋ Add card or bank account
+                {t("wallet.addCard")}
               </button>
-              <div className="py-2 text-xs text-[#5A5A5A]">Wallet balance used for marketplace checkout</div>
+              <div className="py-2 text-xs text-[#5A5A5A]">{t("wallet.balanceHint")}</div>
             </Panel>
             <Panel open title="Stripe">
               <Button
@@ -105,7 +101,7 @@ export default function WalletPage() {
                 className="w-full"
                 onClick={() => toggleProvider("stripe", !stripeOn)}
               >
-                {stripeOn ? "Stripe connected ✓" : "Connect Stripe"}
+                {stripeOn ? t("wallet.stripeConnected") : t("wallet.connectStripe")}
               </Button>
             </Panel>
             <Panel open title="PayPal">
@@ -115,21 +111,21 @@ export default function WalletPage() {
                 className="w-full"
                 onClick={() => toggleProvider("paypal", !paypalOn)}
               >
-                {paypalOn ? "PayPal connected ✓" : "Connect PayPal"}
+                {paypalOn ? t("wallet.paypalConnected") : t("wallet.connectPaypal")}
               </Button>
             </Panel>
-            <Panel open title="Crypto & tokens">
-              <p className="text-xs text-[#8A8A8A]">NEXSOCIO tokens, bonus coins, and airdrops appear here.</p>
+            <Panel open title={t("wallet.crypto")}>
+              <p className="text-xs text-[#8A8A8A]">{t("wallet.cryptoHint")}</p>
               <div className="mt-2 flex gap-2">
                 <span className="text-xs px-2 py-1 rounded border border-[#7C4DFF]/40 text-[#7C4DFF]">NEXS 420</span>
-                <span className="text-xs px-2 py-1 rounded border border-[#FFB300]/40 text-[#FFB300]">{coins} coins</span>
+                <span className="text-xs px-2 py-1 rounded border border-[#FFB300]/40 text-[#FFB300]">{t("wallet.coins", { n: coins })}</span>
               </div>
             </Panel>
-            <Panel open title="Transactions">
+            <Panel open title={t("wallet.transactions")}>
               {loading ? (
-                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+                <p className="text-xs text-[#5A5A5A]">{t("common.loading")}</p>
               ) : transactions.length === 0 ? (
-                <p className="text-xs text-[#5A5A5A]">No transactions yet — shop on Marketplace</p>
+                <p className="text-xs text-[#5A5A5A]">{t("wallet.noTransactions")}</p>
               ) : (
                 transactions.map((t) => (
                   <div key={t.id} className="flex justify-between py-2 border-b border-[#1F1F1F] text-xs">
@@ -141,8 +137,8 @@ export default function WalletPage() {
                 ))
               )}
             </Panel>
-            <Panel open title="Payouts & refunds">
-              <p className="text-xs text-[#8A8A8A]">Sales payouts and refunds appear in transactions.</p>
+            <Panel open title={t("wallet.payouts")}>
+              <p className="text-xs text-[#8A8A8A]">{t("wallet.payoutsHint")}</p>
             </Panel>
           </div>
         )}
