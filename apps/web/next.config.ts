@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   outputFileTracingRoot: rootDir,
   transpilePackages: ["@nexus/ui", "@nexus/types"],
   experimental: {
