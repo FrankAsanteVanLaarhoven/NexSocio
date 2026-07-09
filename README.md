@@ -2,7 +2,7 @@
 
 **Repository:** [github.com/FrankAsanteVanLaarhoven/NExsocio](https://github.com/FrankAsanteVanLaarhoven/NExsocio)
 
-**World-Leading SOTA Socio-Technical Platform** — Production-grade monorepo with zero-trust security, ZKP age-adaptive modes, unified professional/personal context, real-time collaboration, push notifications, multi-party WebRTC, full i18n, theming, and embodied AI integration.
+**Production socio-technical platform** for social networking, professional/personal feeds, WebRTC voice & video calls, multi-party meetings, push notifications, marketplace commerce, digital twins, and safety moderation — delivered as a multilingual Next.js PWA backed by 10 FastAPI microservices with zero-trust JWT, ZKP age modes, and AWS/K8s deployment.
 
 *Blueprint Version 1.0 | Updated 09 July 2026*
 
