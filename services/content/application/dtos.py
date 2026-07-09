@@ -10,12 +10,25 @@ class CreatePostRequest(BaseModel):
     body: str = Field(..., min_length=1, max_length=5000)
     visibility: ContentVisibility = ContentVisibility.PUBLIC
     context: ViewContext = ViewContext.PERSONAL
-    media_url: str | None = Field(default=None, max_length=512)
+    media_url: str | None = Field(default=None, max_length=2_000_000)
     post_type: str = Field(default="text", pattern=r"^(text|reel|photo|live)$")
     filter_preset: str | None = Field(default=None, max_length=64)
     is_twin_post: bool = False
     twin_agent_id: str | None = None
     owner_display_name: str | None = None
+    ai_assisted: bool = False
+    hide_ai_tag: bool = False
+
+
+class AIComposeRequest(BaseModel):
+    draft: str = Field(..., min_length=1, max_length=5000)
+    tone: str = Field(default="friendly", pattern=r"^(friendly|professional|bold|casual)$")
+    context: str = Field(default="social", pattern=r"^(social|professional)$")
+
+
+class AIComposeResponse(BaseModel):
+    composed: str
+    tagged_as: str = "NEXSOCIO AI"
 
 
 class PostResponse(BaseModel):
@@ -32,6 +45,8 @@ class PostResponse(BaseModel):
     filter_preset: str | None = None
     is_twin_post: bool = False
     twin_agent_id: str | None = None
+    is_ai_generated: bool = False
+    show_ai_tag: bool = False
     created_at: datetime
 
 

@@ -4,10 +4,12 @@ import type { Comment, Post } from "@nexus/types";
 import { Button, Input, ModeBadge, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
 import {
+  composeWithAI,
   createComment,
   createPost,
   getComments,
   getFeed,
+  getMe,
   getProfessionalDashboard,
   reportPost,
 } from "@/lib/api";
@@ -52,6 +54,9 @@ function PostCard({
                 <span className="ml-2 text-[#7C4DFF]">· {post.post_type}</span>
               )}
               {post.is_twin_post && <span className="ml-2 text-[#00E5FF]">· twin</span>}
+              {post.show_ai_tag && (
+                <span className="ml-2 text-[#7C4DFF] font-medium">· NEXSOCIO AI</span>
+              )}
             </p>
           </div>
         </div>
@@ -67,9 +72,22 @@ function PostCard({
       </div>
       <p className="mt-4 text-sm leading-relaxed text-[#D4D4D4] whitespace-pre-wrap">{post.body}</p>
       {post.media_url && post.post_type !== "text" && (
-        <p className="mt-2 text-[10px] text-[#5A5A5A]">
-          📎 {post.post_type} {post.filter_preset ? `· ${post.filter_preset} filter` : ""}
-        </p>
+        <div className="mt-3 overflow-hidden rounded-lg border border-[#2A2A2A]">
+          {post.media_url.startsWith("data:video") || post.post_type === "reel" ? (
+            <video
+              src={post.media_url}
+              controls
+              playsInline
+              className="w-full max-h-80 object-cover bg-black"
+            />
+          ) : post.media_url.startsWith("data:image") ? (
+            <img src={post.media_url} alt="" className="w-full max-h-80 object-cover" />
+          ) : (
+            <p className="p-3 text-[10px] text-[#5A5A5A]">
+              📎 {post.post_type} {post.filter_preset ? `· ${post.filter_preset} filter` : ""}
+            </p>
+          )}
+        </div>
       )}
       <div className="mt-4 flex items-center gap-4 border-t border-[#1F1F1F] pt-3">
         <button
@@ -145,6 +163,10 @@ export function Feed() {
   const [composing, setComposing] = useState(false);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [aiComposing, setAiComposing] = useState(false);
+  const [usedAi, setUsedAi] = useState(false);
+  const [hideAiTag, setHideAiTag] = useState(false);
+  const [canHideAiTag, setCanHideAiTag] = useState(false);
   const [insights, setInsights] = useState<{ label: string; value: string }[]>([]);
 
   const loadFeed = useCallback(async () => {
@@ -180,11 +202,32 @@ export function Feed() {
     loadFeed();
   }, [loadFeed]);
 
+  useEffect(() => {
+    getMe(session.accessToken)
+      .then((me) => setCanHideAiTag(!!me.can_hide_ai_tag))
+      .catch(() => setCanHideAiTag(false));
+  }, [session.accessToken]);
+
   async function handleReport(postId: string) {
     try {
       await reportPost(session.accessToken, postId, "inappropriate", "User report from feed");
     } catch {
       /* silent */
+    }
+  }
+
+  async function handleAiCompose() {
+    if (!body.trim()) return;
+    setAiComposing(true);
+    try {
+      const result = await composeWithAI(session.accessToken, body.trim(), {
+        tone: viewContext === "professional" ? "professional" : "friendly",
+        context: viewContext === "professional" ? "professional" : "social",
+      });
+      setBody(result.composed);
+      setUsedAi(true);
+    } finally {
+      setAiComposing(false);
     }
   }
 
@@ -195,8 +238,12 @@ export function Feed() {
       await createPost(session.accessToken, {
         body: body.trim(),
         context: viewContext,
+        ai_assisted: usedAi,
+        hide_ai_tag: usedAi && canHideAiTag && hideAiTag,
       });
       setBody("");
+      setUsedAi(false);
+      setHideAiTag(false);
       setComposing(false);
       await loadFeed();
     } finally {
@@ -257,11 +304,23 @@ export function Feed() {
         </div>
       )}
 
-      <Panel open={composing} title="Compose" onClose={() => setComposing(false)}>
+      <Panel
+        open={composing}
+        title="Compose"
+        subtitle={usedAi ? "Tagged NEXSOCIO AI unless you hide it (Premium/Business)" : undefined}
+        onClose={() => {
+          setComposing(false);
+          setUsedAi(false);
+          setHideAiTag(false);
+        }}
+      >
         <div className="space-y-4">
           <textarea
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) => {
+              setBody(e.target.value);
+              if (usedAi) setUsedAi(false);
+            }}
             placeholder={
               viewContext === "professional"
                 ? "Share professional insight..."
@@ -270,13 +329,51 @@ export function Feed() {
             rows={4}
             className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#00E5FF]/20"
           />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setComposing(false)}>
-              Cancel
+          {usedAi && (
+            <div className="flex items-center gap-2 rounded-md border border-[#7C4DFF]/30 bg-[#7C4DFF]/5 px-3 py-2">
+              <span className="text-[10px] uppercase tracking-wider text-[#7C4DFF]">NEXSOCIO AI</span>
+              {canHideAiTag ? (
+                <label className="ml-auto flex items-center gap-2 text-xs text-[#8A8A8A] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hideAiTag}
+                    onChange={(e) => setHideAiTag(e.target.checked)}
+                    className="accent-[#7C4DFF]"
+                  />
+                  Hide tag (Premium/Business)
+                </label>
+              ) : (
+                <span className="ml-auto text-[10px] text-[#8A8A8A]">
+                  Visible to all · upgrade to hide
+                </span>
+              )}
+            </div>
+          )}
+          <div className="flex flex-wrap justify-between gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={aiComposing}
+              disabled={!body.trim()}
+              onClick={handleAiCompose}
+            >
+              Compose with NEXSOCIO AI
             </Button>
-            <Button loading={submitting} disabled={!body.trim()} onClick={handlePost}>
-              Publish
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setComposing(false);
+                  setUsedAi(false);
+                  setHideAiTag(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button loading={submitting} disabled={!body.trim()} onClick={handlePost}>
+                Publish
+              </Button>
+            </div>
           </div>
         </div>
       </Panel>

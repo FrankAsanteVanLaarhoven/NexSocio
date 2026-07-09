@@ -38,6 +38,14 @@ export default function SettingsPage() {
               <p className="text-xs text-[#8A8A8A] mt-1">Voice · UI · locale · notifications</p>
             </div>
 
+            <Panel open title="NEXSOCIO AI" subtitle="Compose & video tagging">
+              <p className="text-xs text-[#8A8A8A] leading-relaxed">
+                AI-assisted posts show a <span className="text-[#7C4DFF]">NEXSOCIO AI</span> badge for
+                transparency. Premium and Business users can hide the tag when publishing ads or branded
+                content. Founding members get Premium; Professional mode unlocks Business.
+              </p>
+            </Panel>
+
             <Panel open title="Voice Control" subtitle="Alexa / Siri-class device control">
               <div className="space-y-3">
                 <Toggle

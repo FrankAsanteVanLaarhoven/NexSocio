@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     safety_service_url: str = "http://localhost:8005"
     content_service_url: str = "http://localhost:8003"
+    did_api_key: str | None = None
+    did_api_url: str = "https://api.d-id.com"
     cors_origins: list[str] = ["http://localhost:3000"]
 
     # Safety-certified command allowlist

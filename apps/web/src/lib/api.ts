@@ -18,6 +18,8 @@ import type {
   DigitalTwin,
   FeatureFlags,
   PostType,
+  AIComposeResult,
+  AvatarVideoJob,
   TwinBriefing,
   TwinMessage,
   ProfessionalDashboard,
@@ -329,6 +331,22 @@ export async function searchUsers(query: string): Promise<PublicUser[]> {
   );
 }
 
+export async function composeWithAI(
+  token: string,
+  draft: string,
+  opts: { tone?: string; context?: string } = {}
+): Promise<AIComposeResult> {
+  return request<AIComposeResult>(CONTENT_URL, "/api/v1/ai/compose", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({
+      draft,
+      tone: opts.tone ?? "friendly",
+      context: opts.context ?? "social",
+    }),
+  });
+}
+
 export async function createPost(token: string, data: CreatePostRequest): Promise<Post> {
   return request<Post>(CONTENT_URL, "/api/v1/posts", {
     method: "POST",
@@ -511,6 +529,49 @@ export async function getComments(postId: string): Promise<Comment[]> {
   return request<Comment[]>(CONTENT_URL, `/api/v1/comments/${postId}`);
 }
 
+export async function uploadTwinAvatar(
+  token: string,
+  agentId: string,
+  imageData: string
+): Promise<DigitalTwin> {
+  return request<DigitalTwin>(ROBOT_URL, `/api/v1/twins/${agentId}/avatar`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ image_data: imageData }),
+  });
+}
+
+export async function generateTwinAvatarVideo(
+  token: string,
+  agentId: string,
+  script: string,
+  voiceId = "en-US-JennyNeural"
+): Promise<AvatarVideoJob> {
+  return request<AvatarVideoJob>(ROBOT_URL, `/api/v1/twins/${agentId}/avatar/video`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ script, voice_id: voiceId }),
+  });
+}
+
+export async function twinVideoPost(
+  token: string,
+  agentId: string,
+  data: {
+    script: string;
+    video_url: string;
+    context?: string;
+    ai_assisted?: boolean;
+    hide_ai_tag?: boolean;
+  }
+): Promise<Post> {
+  return request<Post>(ROBOT_URL, `/api/v1/twins/${agentId}/video-post`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
 export async function createMediaPost(
   token: string,
   data: {
@@ -519,6 +580,8 @@ export async function createMediaPost(
     media_url?: string;
     filter_preset?: string;
     context?: ViewContext;
+    ai_assisted?: boolean;
+    hide_ai_tag?: boolean;
   }
 ): Promise<Post> {
   return request<Post>(CONTENT_URL, "/api/v1/posts", {

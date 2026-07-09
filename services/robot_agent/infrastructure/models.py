@@ -25,6 +25,10 @@ class DigitalTwinModel(Base):
     owner_display_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     persona_greeting: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    avatar_image: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_video_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_script: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

@@ -55,6 +55,8 @@ class UserResponse(BaseModel):
     skills: str | None = None
     company: str | None = None
     beta_cohort: str | None = "public_beta"
+    subscription_tier: str = "free"
+    can_hide_ai_tag: bool = False
     created_at: datetime | None = None
 
 

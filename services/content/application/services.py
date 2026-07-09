@@ -7,7 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.domain.enums import ContentVisibility, FeedType, UserMode, ViewContext
 from nexus_common.safety.moderation import ModerationEngine
+from services.content.application.ai_compose import compose_with_ai
 from services.content.application.dtos import (
+    AIComposeRequest,
+    AIComposeResponse,
     CommentResponse,
     CreateCommentRequest,
     CreatePostRequest,
@@ -39,16 +42,39 @@ class ContentService:
         except httpx.HTTPError:
             pass
 
+    async def _can_hide_ai_tag(self, token: str) -> bool:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(
+                    f"{self.settings.identity_service_url}/api/v1/users/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if res.status_code == 200:
+                    data = res.json().get("data", {})
+                    return bool(data.get("can_hide_ai_tag"))
+        except httpx.HTTPError:
+            pass
+        return False
+
+    async def compose_ai(self, request: AIComposeRequest) -> AIComposeResponse:
+        composed = compose_with_ai(request.draft, request.tone, request.context)
+        return AIComposeResponse(composed=composed)
+
     async def create_post(
         self,
         author_id: UUID,
         author_name: str,
         mode: UserMode,
         request: CreatePostRequest,
+        token: str | None = None,
     ) -> PostResponse:
         post_id = uuid4()
         body = request.body
         display_name = author_name
+        is_ai = request.ai_assisted
+        hide_tag = False
+        if is_ai:
+            hide_tag = request.hide_ai_tag and token and await self._can_hide_ai_tag(token)
         if request.is_twin_post and request.owner_display_name:
             display_name = f"🤖 Twin of {request.owner_display_name}"
             if not body.startswith("🤖"):
@@ -73,6 +99,8 @@ class ContentService:
             filter_preset=request.filter_preset,
             is_twin_post=request.is_twin_post,
             twin_agent_id=request.twin_agent_id,
+            is_ai_generated=is_ai,
+            hide_ai_tag=hide_tag,
         )
         self.db.add(post)
         await self.db.commit()
@@ -187,5 +215,8 @@ class ContentService:
             filter_preset=getattr(post, "filter_preset", None),
             is_twin_post=getattr(post, "is_twin_post", False) or False,
             twin_agent_id=getattr(post, "twin_agent_id", None),
+            is_ai_generated=getattr(post, "is_ai_generated", False) or False,
+            show_ai_tag=(getattr(post, "is_ai_generated", False) or False)
+            and not (getattr(post, "hide_ai_tag", False) or False),
             created_at=post.created_at,
         )

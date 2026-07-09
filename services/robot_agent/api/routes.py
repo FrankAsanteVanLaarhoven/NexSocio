@@ -12,15 +12,19 @@ from services.robot_agent.api.deps import (
 )
 from services.robot_agent.application.dtos import (
     ActivateTwinRequest,
+    AvatarVideoResponse,
     CommandRequest,
     CommandResponse,
     CreateTwinRequest,
     DigitalTwinResponse,
+    GenerateAvatarVideoRequest,
     RobotDashboardResponse,
     TwinBriefingResponse,
     TwinMessageRequest,
     TwinMessageResponse,
     TwinPostRequest,
+    TwinVideoPostRequest,
+    UploadAvatarRequest,
 )
 from services.robot_agent.application.services import RobotAgentService
 from services.robot_agent.infrastructure.config import Settings
@@ -93,6 +97,40 @@ async def twin_post(
     service: Annotated[RobotAgentService, Depends(get_robot_service)],
 ) -> ApiResponse[dict]:
     post = await service.twin_post(user_id, agent_id, request, token)
+    return ApiResponse(data=post)
+
+
+@router.post("/twins/{agent_id}/avatar", response_model=ApiResponse[DigitalTwinResponse])
+async def upload_twin_avatar(
+    agent_id: str,
+    request: UploadAvatarRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[DigitalTwinResponse]:
+    twin = await service.upload_avatar(user_id, agent_id, request)
+    return ApiResponse(data=twin)
+
+
+@router.post("/twins/{agent_id}/avatar/video", response_model=ApiResponse[AvatarVideoResponse])
+async def generate_twin_avatar_video(
+    agent_id: str,
+    request: GenerateAvatarVideoRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[AvatarVideoResponse]:
+    result = await service.generate_avatar_video(user_id, agent_id, request)
+    return ApiResponse(data=result)
+
+
+@router.post("/twins/{agent_id}/video-post", response_model=ApiResponse[dict])
+async def twin_video_post(
+    agent_id: str,
+    request: TwinVideoPostRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    token: Annotated[str, Depends(get_token)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[dict]:
+    post = await service.twin_video_post(user_id, agent_id, request, token)
     return ApiResponse(data=post)
 
 

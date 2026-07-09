@@ -1,4 +1,5 @@
 export type UserMode = "kids" | "prime" | "professional";
+export type SubscriptionTier = "free" | "premium" | "business";
 export type ViewContext = "personal" | "professional";
 export type FeedType = "global" | "connections" | "professional";
 export type VerificationStatus = "pending" | "verified" | "failed";
@@ -61,6 +62,8 @@ export interface UserProfile {
   headline?: string | null;
   skills?: string | null;
   company?: string | null;
+  subscription_tier?: SubscriptionTier;
+  can_hide_ai_tag?: boolean;
   created_at?: string | null;
 }
 
@@ -94,6 +97,8 @@ export interface CreatePostRequest {
   is_twin_post?: boolean;
   twin_agent_id?: string | null;
   owner_display_name?: string | null;
+  ai_assisted?: boolean;
+  hide_ai_tag?: boolean;
 }
 
 export type PostType = "text" | "reel" | "photo" | "live";
@@ -112,6 +117,8 @@ export interface Post {
   filter_preset?: string | null;
   is_twin_post?: boolean;
   twin_agent_id?: string | null;
+  is_ai_generated?: boolean;
+  show_ai_tag?: boolean;
   created_at: string;
 }
 
@@ -196,6 +203,26 @@ export interface DigitalTwin {
   owner_display_name?: string | null;
   persona_greeting?: string | null;
   is_active?: boolean;
+  avatar_image?: string | null;
+  avatar_video_url?: string | null;
+  avatar_script?: string | null;
+  avatar_provider?: string | null;
+}
+
+export interface AvatarVideoJob {
+  agent_id: string;
+  provider: string;
+  talk_id: string;
+  video_url?: string | null;
+  avatar_image?: string | null;
+  script: string;
+  status: string;
+  instructions?: string | null;
+}
+
+export interface AIComposeResult {
+  composed: string;
+  tagged_as: string;
 }
 
 export interface TwinMessage {

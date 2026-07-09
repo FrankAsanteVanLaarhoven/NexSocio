@@ -37,7 +37,18 @@ class IdentityService:
             return UserMode.KIDS
         return UserMode.PRIME
 
+    def _resolve_subscription_tier(self, user: UserModel) -> str:
+        tier = getattr(user, "subscription_tier", None) or "free"
+        if tier in ("premium", "business"):
+            return tier
+        if UserMode(user.mode) == UserMode.PROFESSIONAL:
+            return "business"
+        if (user.beta_cohort or "") in ("founding", "early_access"):
+            return "premium"
+        return "free"
+
     def _to_user_response(self, user: UserModel) -> UserResponse:
+        tier = self._resolve_subscription_tier(user)
         return UserResponse(
             id=user.id,
             email=user.email,
@@ -49,6 +60,8 @@ class IdentityService:
             skills=user.skills,
             company=user.company,
             beta_cohort=user.beta_cohort or "public_beta",
+            subscription_tier=tier,
+            can_hide_ai_tag=tier in ("premium", "business"),
             created_at=user.created_at,
         )
 

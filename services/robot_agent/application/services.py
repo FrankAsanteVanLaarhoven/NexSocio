@@ -6,17 +6,22 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from services.robot_agent.application.avatar_engine import AvatarEngine
 from services.robot_agent.application.dtos import (
     ActivateTwinRequest,
+    AvatarVideoResponse,
     CommandRequest,
     CommandResponse,
     CreateTwinRequest,
     DigitalTwinResponse,
+    GenerateAvatarVideoRequest,
     RobotDashboardResponse,
     TwinBriefingResponse,
     TwinMessageRequest,
     TwinMessageResponse,
     TwinPostRequest,
+    TwinVideoPostRequest,
+    UploadAvatarRequest,
 )
 from services.robot_agent.infrastructure.config import Settings
 from services.robot_agent.infrastructure.models import (
@@ -88,6 +93,86 @@ class RobotAgentService:
         await self.db.commit()
         await self.db.refresh(twin)
         return self._to_twin(twin)
+
+    async def upload_avatar(
+        self, owner_id: UUID, agent_id: str, request: UploadAvatarRequest
+    ) -> DigitalTwinResponse:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        image = request.image_data.strip()
+        if not image.startswith("data:image/"):
+            raise HTTPException(status_code=400, detail="Upload a valid image (JPEG/PNG)")
+        twin.avatar_image = image[:500_000]
+        twin.avatar_provider = "uploaded"
+        await self._log_activity(agent_id, "avatar", "Avatar photo uploaded for talking-head")
+        await self.db.commit()
+        await self.db.refresh(twin)
+        return self._to_twin(twin)
+
+    async def generate_avatar_video(
+        self, owner_id: UUID, agent_id: str, request: GenerateAvatarVideoRequest
+    ) -> AvatarVideoResponse:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        if not twin.avatar_image:
+            raise HTTPException(status_code=400, detail="Upload or capture your photo first")
+
+        engine = AvatarEngine(did_api_key=self.settings.did_api_key, did_api_url=self.settings.did_api_url)
+        result = await engine.generate(twin.avatar_image, request.script, request.voice_id)
+
+        twin.avatar_script = request.script
+        twin.avatar_provider = result.get("provider")
+        if result.get("video_url"):
+            twin.avatar_video_url = result["video_url"]
+        await self._log_activity(agent_id, "avatar_video", f"Talking avatar: {request.script[:60]}")
+        await self.db.commit()
+        await self.db.refresh(twin)
+
+        return AvatarVideoResponse(
+            agent_id=agent_id,
+            provider=result.get("provider", "nexsocio-lipsync"),
+            talk_id=result.get("talk_id", ""),
+            video_url=result.get("video_url"),
+            avatar_image=result.get("avatar_image") or twin.avatar_image[:500],
+            script=request.script,
+            status=result.get("status", "ready"),
+            instructions=result.get("instructions"),
+        )
+
+    async def twin_video_post(
+        self, owner_id: UUID, agent_id: str, request: TwinVideoPostRequest, token: str
+    ) -> dict:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        owner = twin.owner_display_name or "User"
+        body = (
+            f"🤖 Digital twin of {owner} — {owner} is busy right now.\n\n"
+            f"{request.script}"
+        )
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                res = await client.post(
+                    f"{self.settings.content_service_url}/api/v1/posts",
+                    headers={"Authorization": f"Bearer {token}"},
+                    json={
+                        "body": body,
+                        "context": request.context,
+                        "is_twin_post": True,
+                        "twin_agent_id": agent_id,
+                        "owner_display_name": owner,
+                        "post_type": "reel",
+                        "media_url": request.video_url[:500_000],
+                        "ai_assisted": request.ai_assisted,
+                        "hide_ai_tag": request.hide_ai_tag,
+                    },
+                )
+                if res.status_code not in (200, 201):
+                    raise HTTPException(status_code=502, detail="Failed to publish twin video")
+                data = res.json().get("data", {})
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail="Content service unavailable") from e
+
+        twin.avatar_video_url = request.video_url[:500_000]
+        await self._log_activity(agent_id, "post", f"AI talking video for {owner}")
+        await self.db.commit()
+        return data
 
     async def deactivate_twin(self, owner_id: UUID, agent_id: str) -> DigitalTwinResponse:
         twin = await self._get_owned_twin(owner_id, agent_id)
@@ -330,6 +415,10 @@ class RobotAgentService:
             owner_display_name=twin.owner_display_name,
             persona_greeting=twin.persona_greeting,
             is_active=twin.is_active,
+            avatar_image=twin.avatar_image,
+            avatar_video_url=twin.avatar_video_url,
+            avatar_script=twin.avatar_script,
+            avatar_provider=twin.avatar_provider,
         )
 
     def _to_message(self, msg: TwinMessageModel) -> TwinMessageResponse:

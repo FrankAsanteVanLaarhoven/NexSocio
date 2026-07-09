@@ -20,6 +20,7 @@ async def init_db(engine) -> None:
             ("skills", "TEXT"),
             ("company", "VARCHAR(128)"),
             ("beta_cohort", "VARCHAR(64)"),
+            ("subscription_tier", "VARCHAR(16) DEFAULT 'free'"),
         ]:
             await conn.execute(
                 text(f"ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS {col} {col_type}")

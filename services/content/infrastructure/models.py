@@ -21,12 +21,14 @@ class PostModel(Base):
     mode: Mapped[str] = mapped_column(String(32), nullable=False)
     context: Mapped[str] = mapped_column(String(32), nullable=False, default="personal")
     visibility: Mapped[str] = mapped_column(String(32), nullable=False, default="public")
-    media_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    media_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     moderation_status: Mapped[str] = mapped_column(String(32), nullable=False, default="approved")
     post_type: Mapped[str] = mapped_column(String(16), nullable=False, default="text")
     filter_preset: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_twin_post: Mapped[bool] = mapped_column(Boolean, default=False)
     twin_agent_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    is_ai_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+    hide_ai_tag: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

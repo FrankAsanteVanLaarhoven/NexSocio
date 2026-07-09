@@ -22,6 +22,9 @@ async def init_db(engine) -> None:
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS filter_preset VARCHAR(64)",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS is_twin_post BOOLEAN DEFAULT FALSE",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS twin_agent_id VARCHAR(64)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS is_ai_generated BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS hide_ai_tag BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE content.posts ALTER COLUMN media_url TYPE TEXT",
         ]:
             await conn.execute(text(stmt))
 

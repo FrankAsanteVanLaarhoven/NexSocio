@@ -1,12 +1,13 @@
 "use client";
 
 import { Button, Input, Panel } from "@nexus/ui";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
-import { createMediaPost } from "@/lib/api";
+import { composeWithAI, createMediaPost, getMe } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
 
 const FILTERS = [
   { id: "none", label: "Original" },
@@ -17,18 +18,36 @@ const FILTERS = [
   { id: "vintage", label: "Vintage", css: "sepia(0.6) contrast(0.9)" },
 ];
 
+type StudioMode = "reel" | "photo" | "ai_video";
+
 export default function StudioPage() {
   const session = useAuthStore((s) => s.session);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState("none");
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
-  const [mode, setMode] = useState<"reel" | "photo">("reel");
+  const [avatarPhoto, setAvatarPhoto] = useState<string | null>(null);
+  const [aiScript, setAiScript] = useState("");
+  const [mode, setMode] = useState<StudioMode>("reel");
   const [loading, setLoading] = useState(false);
+  const [usedAi, setUsedAi] = useState(false);
+  const [hideAiTag, setHideAiTag] = useState(false);
+  const [canHideAiTag, setCanHideAiTag] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!session) return;
+    getMe(session.accessToken)
+      .then((me) => setCanHideAiTag(!!me.can_hide_ai_tag))
+      .catch(() => setCanHideAiTag(false));
+  }, [session]);
+
   async function startCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: mode === "reel" });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: mode === "reel",
+    });
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
@@ -45,7 +64,50 @@ export default function StudioPage() {
     const f = FILTERS.find((x) => x.id === filter);
     ctx.filter = f?.css || "none";
     ctx.drawImage(videoRef.current, 0, 0);
-    setPreview(canvas.toDataURL("image/jpeg", 0.9));
+    const data = canvas.toDataURL("image/jpeg", 0.9);
+    setPreview(data);
+    if (mode === "ai_video") setAvatarPhoto(data);
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const data = await readFileAsDataUrl(file);
+    if (mode === "ai_video") {
+      setAvatarPhoto(data);
+      setPreview(null);
+    } else {
+      setPreview(data);
+    }
+  }
+
+  async function handleAiCaption() {
+    if (!session || !caption.trim()) return;
+    setLoading(true);
+    try {
+      const result = await composeWithAI(session.accessToken, caption.trim());
+      setCaption(result.composed);
+      setUsedAi(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function generateAiVideo() {
+    if (!avatarPhoto || !aiScript.trim()) return;
+    setLoading(true);
+    setMsg(null);
+    try {
+      const result = await renderTalkingAvatar(avatarPhoto, aiScript.trim());
+      setPreview(result.videoDataUrl);
+      setCaption(aiScript.trim());
+      setUsedAi(true);
+      setMsg("Talking avatar ready — publish when you're happy.");
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function publish() {
@@ -53,15 +115,21 @@ export default function StudioPage() {
     setLoading(true);
     try {
       await createMediaPost(session.accessToken, {
-        body: caption || (mode === "reel" ? "New reel 🎬" : "New photo 📸"),
-        post_type: mode,
-        media_url: preview.slice(0, 200) + "...",
-        filter_preset: filter,
+        body: caption || (mode === "reel" ? "New reel" : mode === "photo" ? "New photo" : aiScript),
+        post_type: mode === "ai_video" ? "reel" : mode,
+        media_url: preview,
+        filter_preset: mode === "ai_video" ? "ai-talking-head" : filter,
         context: session.viewContext ?? "personal",
+        ai_assisted: usedAi || mode === "ai_video",
+        hide_ai_tag: (usedAi || mode === "ai_video") && canHideAiTag && hideAiTag,
       });
-      setMsg("Published! (media stub — full CDN in production)");
+      setMsg("Published!");
       setCaption("");
       setPreview(null);
+      setAvatarPhoto(null);
+      setAiScript("");
+      setUsedAi(false);
+      setHideAiTag(false);
     } finally {
       setLoading(false);
     }
@@ -76,64 +144,146 @@ export default function StudioPage() {
           <div className="mx-auto max-w-lg space-y-6">
             <div>
               <h1 className="text-xl font-semibold text-[#F5F5F5]">Studio</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">Reels · photos · TikTok-class filters</p>
+              <p className="text-xs text-[#8A8A8A] mt-1">
+                Reels · photos · cinematic filters · AI talking avatars
+              </p>
             </div>
             <div className="flex gap-2">
-              {(["reel", "photo"] as const).map((m) => (
+              {(["reel", "photo", "ai_video"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
-                  onClick={() => setMode(m)}
+                  onClick={() => {
+                    setMode(m);
+                    setPreview(null);
+                    setMsg(null);
+                  }}
                   className={`flex-1 py-2 text-xs uppercase tracking-wider rounded-md border ${
-                    mode === m ? "border-[#00E5FF]/50 bg-[#00E5FF]/10 text-[#00E5FF]" : "border-[#2A2A2A] text-[#8A8A8A]"
+                    mode === m
+                      ? "border-[#00E5FF]/50 bg-[#00E5FF]/10 text-[#00E5FF]"
+                      : "border-[#2A2A2A] text-[#8A8A8A]"
                   }`}
                 >
-                  {m}
+                  {m === "ai_video" ? "AI Avatar" : m}
                 </button>
               ))}
             </div>
-            <Panel open title="Camera & Filters">
-              <div className="space-y-4">
-                <div className="relative aspect-[9/16] max-h-[420px] mx-auto overflow-hidden rounded-xl border border-[#2A2A2A] bg-black">
-                  {preview ? (
-                    <img src={preview} alt="Preview" className="h-full w-full object-cover" />
-                  ) : (
-                    <video
-                      ref={videoRef}
-                      playsInline
-                      muted
-                      className="h-full w-full object-cover"
-                      style={{ filter: FILTERS.find((f) => f.id === filter)?.css || "none" }}
-                    />
+
+            {mode === "ai_video" ? (
+              <Panel open title="Talking Avatar" subtitle="Photo + speech → realistic lip-sync video">
+                <div className="space-y-4">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleUpload}
+                  />
+                  <div className="relative aspect-[9/16] max-h-[420px] mx-auto overflow-hidden rounded-xl border border-[#2A2A2A] bg-black">
+                    {preview?.startsWith("data:video") ? (
+                      <video src={preview} controls playsInline className="h-full w-full object-cover" />
+                    ) : avatarPhoto ? (
+                      <img src={avatarPhoto} alt="Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1" variant="secondary" onClick={() => fileRef.current?.click()}>
+                      Upload Photo
+                    </Button>
+                    <Button className="flex-1" variant="secondary" onClick={startCamera}>
+                      Capture
+                    </Button>
+                    <Button className="flex-1" onClick={capture}>
+                      Use Frame
+                    </Button>
+                  </div>
+                  <Input
+                    label="Script (what your avatar says)"
+                    value={aiScript}
+                    onChange={(e) => setAiScript(e.target.value)}
+                    placeholder="Hi, I'm here while favl is busy..."
+                  />
+                  <Button className="w-full" loading={loading} disabled={!avatarPhoto || !aiScript.trim()} onClick={generateAiVideo}>
+                    Generate Talking Video
+                  </Button>
+                  {usedAi && (
+                    <label className="flex items-center gap-2 text-xs text-[#8A8A8A]">
+                      <input
+                        type="checkbox"
+                        checked={hideAiTag}
+                        disabled={!canHideAiTag}
+                        onChange={(e) => setHideAiTag(e.target.checked)}
+                        className="accent-[#7C4DFF]"
+                      />
+                      {canHideAiTag ? "Hide NEXSOCIO AI tag" : "NEXSOCIO AI tag shown (upgrade to hide)"}
+                    </label>
                   )}
+                  <Button className="w-full" loading={loading} disabled={!preview} onClick={publish}>
+                    Publish AI Video
+                  </Button>
                 </div>
-                <div className="flex gap-1.5 overflow-x-auto pb-1">
-                  {FILTERS.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setFilter(f.id)}
-                      className={`shrink-0 px-3 py-1.5 text-[10px] rounded-full border ${
-                        filter === f.id ? "border-[#00E5FF] text-[#00E5FF]" : "border-[#2A2A2A] text-[#8A8A8A]"
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+              </Panel>
+            ) : (
+              <Panel open title="Camera & Filters">
+                <div className="space-y-4">
+                  <div className="relative aspect-[9/16] max-h-[420px] mx-auto overflow-hidden rounded-xl border border-[#2A2A2A] bg-black">
+                    {preview ? (
+                      <img src={preview} alt="Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <video
+                        ref={videoRef}
+                        playsInline
+                        muted
+                        className="h-full w-full object-cover"
+                        style={{ filter: FILTERS.find((f) => f.id === filter)?.css || "none" }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                    {FILTERS.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFilter(f.id)}
+                        className={`shrink-0 px-3 py-1.5 text-[10px] rounded-full border ${
+                          filter === f.id ? "border-[#00E5FF] text-[#00E5FF]" : "border-[#2A2A2A] text-[#8A8A8A]"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                  <Button className="w-full" variant="secondary" onClick={startCamera}>
+                    Start Camera
+                  </Button>
+                  <Button className="w-full" onClick={capture}>
+                    Capture {mode === "reel" ? "Frame" : "Photo"}
+                  </Button>
+                  <Input label="Caption" value={caption} onChange={(e) => setCaption(e.target.value)} />
+                  <Button className="w-full" variant="secondary" disabled={!caption.trim()} onClick={handleAiCaption}>
+                    Polish caption with NEXSOCIO AI
+                  </Button>
+                  {usedAi && (
+                    <label className="flex items-center gap-2 text-xs text-[#8A8A8A]">
+                      <input
+                        type="checkbox"
+                        checked={hideAiTag}
+                        disabled={!canHideAiTag}
+                        onChange={(e) => setHideAiTag(e.target.checked)}
+                        className="accent-[#7C4DFF]"
+                      />
+                      {canHideAiTag ? "Hide NEXSOCIO AI tag" : "NEXSOCIO AI tag shown"}
+                    </label>
+                  )}
+                  <Button className="w-full" loading={loading} disabled={!preview} onClick={publish}>
+                    Publish {mode}
+                  </Button>
                 </div>
-                <Button className="w-full" variant="secondary" onClick={startCamera}>
-                  Start Camera
-                </Button>
-                <Button className="w-full" onClick={capture}>
-                  Capture {mode === "reel" ? "Frame" : "Photo"}
-                </Button>
-                <Input label="Caption" value={caption} onChange={(e) => setCaption(e.target.value)} />
-                <Button className="w-full" loading={loading} disabled={!preview} onClick={publish}>
-                  Publish {mode}
-                </Button>
-                {msg && <p className="text-xs text-[#00C853]">{msg}</p>}
-              </div>
-            </Panel>
+              </Panel>
+            )}
+            {msg && <p className="text-xs text-[#00C853]">{msg}</p>}
           </div>
         )}
       </AuthHydrationGate>

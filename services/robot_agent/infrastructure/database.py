@@ -18,6 +18,10 @@ async def init_db(engine) -> None:
             ("owner_display_name", "VARCHAR(64)"),
             ("persona_greeting", "TEXT"),
             ("is_active", "BOOLEAN DEFAULT FALSE"),
+            ("avatar_image", "TEXT"),
+            ("avatar_video_url", "TEXT"),
+            ("avatar_script", "TEXT"),
+            ("avatar_provider", "VARCHAR(32)"),
         ]:
             await conn.execute(
                 text(f"ALTER TABLE robot_agent.digital_twins ADD COLUMN IF NOT EXISTS {col} {col_type}")

@@ -13,6 +13,8 @@ from services.content.api.deps import (
     get_token,
 )
 from services.content.application.dtos import (
+    AIComposeRequest,
+    AIComposeResponse,
     CommentResponse,
     CreateCommentRequest,
     CreatePostRequest,
@@ -30,10 +32,21 @@ async def health(settings: Annotated[Settings, Depends(get_settings)]) -> Health
     return HealthResponse(service=settings.service_name)
 
 
+@router.post("/ai/compose", response_model=ApiResponse[AIComposeResponse])
+async def ai_compose(
+    request: AIComposeRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[ContentService, Depends(get_content_service)],
+) -> ApiResponse[AIComposeResponse]:
+    result = await service.compose_ai(request)
+    return ApiResponse(data=result)
+
+
 @router.post("/posts", response_model=ApiResponse[PostResponse])
 async def create_post(
     request: CreatePostRequest,
     auth: Annotated[AuthContext, Depends(get_auth_context)],
+    token: Annotated[str, Depends(get_token)],
     service: Annotated[ContentService, Depends(get_content_service)],
 ) -> ApiResponse[PostResponse]:
     result = await service.create_post(
@@ -41,6 +54,7 @@ async def create_post(
         author_name=auth.display_name,
         mode=auth.mode,
         request=request,
+        token=token,
     )
     return ApiResponse(data=result)
 
