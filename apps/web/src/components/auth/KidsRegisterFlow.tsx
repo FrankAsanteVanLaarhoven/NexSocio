@@ -30,7 +30,7 @@ export function KidsRegisterFlow() {
       });
       applyAuthLogin(result);
       setStep("done");
-      router.push("/");
+      router.push("/feed");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Registration failed");
     } finally {

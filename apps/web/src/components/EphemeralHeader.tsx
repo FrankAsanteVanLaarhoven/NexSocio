@@ -11,7 +11,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useSettingsStore } from "@/lib/settings-store";
 
 const DOCK: { href: string; labelKey: string; icon: AppIconName }[] = [
-  { href: "/", labelKey: "nav.feed", icon: "feed" },
+  { href: "/feed", labelKey: "nav.feed", icon: "feed" },
   { href: "/twin", labelKey: "nav.twin", icon: "twin" },
   { href: "/studio", labelKey: "nav.studio", icon: "studio" },
   { href: "/live", labelKey: "nav.live", icon: "live" },

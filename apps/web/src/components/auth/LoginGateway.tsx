@@ -82,7 +82,7 @@ export function LoginGateway() {
     try {
       const result = await loginPassword(email, password);
       applyAuthLogin(result);
-      router.push("/");
+      router.push("/feed");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("auth.loginFailed"));
     } finally {
@@ -97,7 +97,7 @@ export function LoginGateway() {
     try {
       const result = await loginPin(email, pin);
       applyAuthLogin(result);
-      router.push("/");
+      router.push("/feed");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("auth.invalidPin"));
       setPin("");
@@ -114,7 +114,7 @@ export function LoginGateway() {
       const { credentialId, challenge } = await browserWebAuthnLogin(options);
       const result = await loginWebAuthn(credentialId, challenge, email);
       applyAuthLogin(result);
-      router.push("/");
+      router.push("/feed");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("auth.biometricFailed"));
     } finally {
@@ -132,7 +132,7 @@ export function LoginGateway() {
     try {
       const result = await loginBiometric(email, factorType, templateHash, voiceCommand);
       applyAuthLogin(result);
-      router.push("/");
+      router.push("/feed");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("auth.verificationFailed"));
     } finally {
@@ -146,7 +146,7 @@ export function LoginGateway() {
     try {
       const result = await loginKidsFace(kidsName, templateHash);
       applyAuthLogin(result);
-      router.push("/");
+      router.push("/feed");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("auth.faceIdFailed"));
     } finally {
