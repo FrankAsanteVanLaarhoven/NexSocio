@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "تصدیق کی خرابی",
     "email": "ای میل",
     "password": "پاس ورڈ",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "آپ کا پاس ورڈ",
     "passwordSignIn": "پاس ورڈ سے سائن ان",
     "signIn": "سائن ان",

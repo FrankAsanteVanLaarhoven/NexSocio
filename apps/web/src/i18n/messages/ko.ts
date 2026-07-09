@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "인증 오류",
     "email": "이메일",
     "password": "비밀번호",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "비밀번호",
     "passwordSignIn": "비밀번호 로그인",
     "signIn": "로그인",

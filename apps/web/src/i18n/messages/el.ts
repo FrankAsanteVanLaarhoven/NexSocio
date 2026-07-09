@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Σφάλμα ταυτοποίησης",
     "email": "Email",
     "password": "Κωδικός πρόσβασης",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Ο κωδικός σας",
     "passwordSignIn": "Σύνδεση με κωδικό",
     "signIn": "Σύνδεση",

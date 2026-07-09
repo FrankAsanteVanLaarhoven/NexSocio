@@ -143,7 +143,7 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="alex@nexsocio.io"
+              placeholder="alex@nexsocio.com"
             />
             <Input
               label="Password"

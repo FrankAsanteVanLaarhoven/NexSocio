@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/PwaRegister";
+import { SITE_DOMAIN, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -17,15 +18,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NEXSOCIO",
-  description: "World-Leading SOTA Socio-Technical Platform",
-  applicationName: "NEXSOCIO",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description:
+    "Production social platform for feeds, WebRTC calls & meetings, push inbox, marketplace, digital twins, and safety moderation.",
+  applicationName: SITE_NAME,
+  openGraph: {
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    type: "website",
+  },
+  alternates: {
+    canonical: "/",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "NEXSOCIO",
+    title: SITE_NAME,
   },
   formatDetection: { telephone: false },
+  keywords: ["NexSocio", SITE_DOMAIN, "social network", "WebRTC", "marketplace"],
 };
 
 export const viewport: Viewport = {

@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "身份验证错误",
     "email": "电子邮箱",
     "password": "密码",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "您的密码",
     "passwordSignIn": "密码登录",
     "signIn": "登录",

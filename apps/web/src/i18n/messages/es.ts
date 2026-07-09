@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Error de autenticación",
     "email": "Correo",
     "password": "Contraseña",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Tu contraseña",
     "passwordSignIn": "Ingresar con contraseña",
     "signIn": "Ingresar",

@@ -64,7 +64,7 @@ export class NexusKmsSecrets extends Construct {
       description: `WebRTC TURN credentials (${environment})`,
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
-          urls: "turn:turn.nexsocio.app:3478?transport=udp,turn:turn.nexsocio.app:3478?transport=tcp",
+          urls: "turn:turn.nexsocio.com:3478?transport=udp,turn:turn.nexsocio.com:3478?transport=tcp",
           username: "nexus",
         }),
         generateStringKey: "password",
@@ -81,7 +81,7 @@ export class NexusKmsSecrets extends Construct {
         JSON.stringify({
           public_key: "REPLACE_WITH_VAPID_PUBLIC_KEY",
           private_key: "REPLACE_WITH_VAPID_PRIVATE_KEY",
-          email: "mailto:admin@nexsocio.app",
+          email: "mailto:admin@nexsocio.com",
         })
       ),
     });

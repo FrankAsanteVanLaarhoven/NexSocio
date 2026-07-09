@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Błąd uwierzytelniania",
     "email": "E-mail",
     "password": "Hasło",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Twoje hasło",
     "passwordSignIn": "Logowanie hasłem",
     "signIn": "Zaloguj się",

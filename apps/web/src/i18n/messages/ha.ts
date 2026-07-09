@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Kuskuren Tabbatarwa",
     "email": "Imel",
     "password": "Kalmar sirri",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Kalmar sirrinka",
     "passwordSignIn": "Shiga da Kalmar Sirri",
     "signIn": "Shiga",

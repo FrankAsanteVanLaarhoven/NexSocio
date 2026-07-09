@@ -41,11 +41,16 @@ from services.identity.infrastructure.models import (
 
 
 class AuthService:
-    RP_ID = "localhost"
-
-    def __init__(self, db: AsyncSession, jwt_secret: str, zkp_verifier: ZKPVerifier | None = None):
+    def __init__(
+        self,
+        db: AsyncSession,
+        jwt_secret: str,
+        webauthn_rp_id: str = "localhost",
+        zkp_verifier: ZKPVerifier | None = None,
+    ):
         self.db = db
         self.jwt_secret = jwt_secret
+        self.RP_ID = webauthn_rp_id
         self.zkp = zkp_verifier or ZKPVerifier()
 
     def _hash_password(self, password: str) -> str:

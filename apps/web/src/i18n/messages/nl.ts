@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Authenticatiefout",
     "email": "E-mail",
     "password": "Wachtwoord",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Uw wachtwoord",
     "passwordSignIn": "Inloggen met wachtwoord",
     "signIn": "Inloggen",

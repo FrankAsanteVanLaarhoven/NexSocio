@@ -9,3 +9,5 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     zkp_verification_mode: str = "stub"
     cors_origins: list[str] = ["http://localhost:3000"]
+    public_site_url: str = "http://localhost:3000"
+    webauthn_rp_id: str = "localhost"

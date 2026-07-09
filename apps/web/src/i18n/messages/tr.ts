@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Kimlik Doğrulama Hatası",
     "email": "E-posta",
     "password": "Şifre",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Şifreniz",
     "passwordSignIn": "Şifre ile Giriş",
     "signIn": "Giriş Yap",

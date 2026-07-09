@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Kesalahan Autentikasi",
     "email": "Email",
     "password": "Kata Sandi",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Kata sandi Anda",
     "passwordSignIn": "Masuk dengan Kata Sandi",
     "signIn": "Masuk",

@@ -1,5 +1,6 @@
 # NEXSOCIO
 
+**Live domain:** [nexsocio.com](https://nexsocio.com)  
 **Repository:** [github.com/FrankAsanteVanLaarhoven/NExsocio](https://github.com/FrankAsanteVanLaarhoven/NExsocio)
 
 **Production socio-technical platform** for social networking, professional/personal feeds, WebRTC voice & video calls, multi-party meetings, push notifications, marketplace commerce, digital twins, and safety moderation — delivered as a multilingual Next.js PWA backed by 10 FastAPI microservices with zero-trust JWT, ZKP age modes, and AWS/K8s deployment.
@@ -121,13 +122,21 @@ Logs: `.dev-logs/`
 
 ### Environment
 
-Copy `.env.example` to `.env`. Frontend defaults to `localhost` service URLs via `apps/web/src/lib/api.ts`. Optional:
+Copy `.env.example` to `.env` for local development. Production URLs for **nexsocio.com** are in `apps/web/.env.production.example`:
 
 ```bash
-NEXT_PUBLIC_IDENTITY_URL=http://localhost:8001
-NEXT_PUBLIC_COLLABORATION_URL=http://localhost:8009
-NEXT_PUBLIC_NOTIFICATION_URL=http://localhost:8010
+# Production web
+NEXT_PUBLIC_SITE_URL=https://nexsocio.com
+NEXT_PUBLIC_IDENTITY_URL=https://identity.nexsocio.com
+NEXT_PUBLIC_COLLABORATION_URL=https://collaboration.nexsocio.com
+NEXT_PUBLIC_NOTIFICATION_URL=https://notification.nexsocio.com
+# …see .env.production.example for all services
+
+# Identity WebAuthn (production)
+WEBAUTHN_RP_ID=nexsocio.com
 ```
+
+Local dev defaults to `localhost` in `apps/web/src/lib/api.ts` and `apps/web/src/lib/site.ts`.
 
 ---
 

@@ -2,9 +2,12 @@
 
 import { Panel } from "@nexus/ui";
 import { SettingsSectionShell } from "@/components/settings/SettingsSectionShell";
+import { inviteUrl } from "@/lib/site";
+import { useAuthStore } from "@/lib/auth-store";
 
 export default function ShareSettingsPage() {
-  const inviteLink = "https://nexsocio.app/invite/favl";
+  const userId = useAuthStore((s) => s.session?.userId ?? "invite");
+  const inviteLink = inviteUrl(userId.slice(0, 8));
 
   return (
     <SettingsSectionShell section="share">

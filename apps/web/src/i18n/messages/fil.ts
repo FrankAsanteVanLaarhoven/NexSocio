@@ -66,7 +66,7 @@ const messages: Messages = {
     "authError": "Error sa Authentication",
     "email": "Email",
     "password": "Password",
-    "emailPlaceholder": "you@nexsocio.io",
+    "emailPlaceholder": "you@nexsocio.com",
     "passwordPlaceholder": "Iyong password",
     "passwordSignIn": "Sign In gamit ang Password",
     "signIn": "Mag-sign In",

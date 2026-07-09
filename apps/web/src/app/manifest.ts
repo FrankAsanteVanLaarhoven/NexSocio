@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NEXSOCIO",
-    short_name: "NEXSOCIO",
-    description: "World-Leading SOTA Socio-Technical Platform",
+    id: "/",
+    name: SITE_NAME,
+    short_name: SITE_NAME,
+    description: `NexSocio — social platform at ${SITE_URL.replace("https://", "")}`,
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

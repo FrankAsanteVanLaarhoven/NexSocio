@@ -54,7 +54,7 @@ async def get_auth_service(
     db: Annotated[AsyncSession, Depends(get_db)],
     cfg: Annotated[Settings, Depends(get_settings)],
 ) -> AuthService:
-    return AuthService(db, cfg.jwt_secret)
+    return AuthService(db, cfg.jwt_secret, webauthn_rp_id=cfg.webauthn_rp_id)
 
 
 security = HTTPBearer()
