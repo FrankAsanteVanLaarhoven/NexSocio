@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Panel } from "@nexus/ui";
 import { SettingsSectionShell } from "@/components/settings/SettingsSectionShell";
 import { inviteUrl } from "@/lib/site";
@@ -17,9 +18,24 @@ export default function ShareSettingsPage() {
         <button type="button" className="mt-2 text-xs text-[#F5F5F5] hover:text-[#00E5FF]">Copy link</button>
       </Panel>
       <Panel open title="QR invite">
-        <div className="mx-auto h-32 w-32 rounded-lg border border-dashed border-[#2A2A2A] flex items-center justify-center text-[#5A5A5A] text-xs">
-          QR Code
+        <p className="text-xs text-[#8A8A8A] mb-3">Scan to open NexSocio on mobile.</p>
+        <div className="mx-auto w-fit rounded-lg border border-[#2A2A2A] bg-white p-2">
+          <Image
+            src="/qr-invite.png"
+            alt="QR code for nexsocio.com"
+            width={160}
+            height={160}
+            className="h-40 w-40"
+            priority
+          />
         </div>
+        <a
+          href="/qr-invite.png"
+          download="nexsocio-invite-qr.png"
+          className="mt-3 block text-center text-xs text-[#F5F5F5] hover:text-[#00E5FF]"
+        >
+          Download QR
+        </a>
       </Panel>
     </SettingsSectionShell>
   );

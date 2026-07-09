@@ -1,0 +1,11 @@
+services/
+infrastructure/
+uploads/
+.dev-logs/
+.venv/
+venv/
+__pycache__/
+*.py
+docker-compose*.yml
+scripts/dev-*.sh
+scripts/deploy-staging.sh

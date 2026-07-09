@@ -140,6 +140,33 @@ Local dev defaults to `localhost` in `apps/web/src/lib/api.ts` and `apps/web/src
 
 ---
 
+## Vercel deployment (nexsocio.com)
+
+The **Next.js PWA** deploys to Vercel; FastAPI microservices stay on AWS/K8s (or another host).
+
+1. **Import repo** in [Vercel](https://vercel.com/new) → GitHub `NExsocio`
+2. **Root Directory:** `apps/web` (Framework: Next.js — auto-detected)
+3. **Environment variables:** copy from `apps/web/.env.production.example` (or run `./scripts/vercel-env-sync.sh` after `vercel link`)
+4. **Deploy**, then add domains: `nexsocio.com` and `www.nexsocio.com`
+
+```bash
+npm install -g vercel
+cd apps/web && vercel link
+./scripts/vercel-env-sync.sh    # push NEXT_PUBLIC_* to Vercel
+./scripts/deploy-vercel.sh      # production deploy
+```
+
+**DNS** (at your registrar):
+
+| Type  | Name | Value                |
+|-------|------|----------------------|
+| A     | `@`  | `76.76.21.21`        |
+| CNAME | `www`| `cname.vercel-dns.com` |
+
+`www` redirects to apex via `apps/web/vercel.json`. API subdomains (`identity.nexsocio.com`, etc.) point to your backend ingress, not Vercel.
+
+---
+
 ## Staging deployment
 
 ```bash
