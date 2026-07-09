@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
       clearSession: () => set({ session: null, feedType: "global" }),
     }),
     {
-      name: "nexus-auth",
+      name: "nexsocio-auth",
       partialize: (state) => ({ session: state.session, feedType: state.feedType }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

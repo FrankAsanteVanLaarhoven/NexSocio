@@ -38,7 +38,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
-      CORS_ORIGINS: '["https://nexus.io"]'
+      CORS_ORIGINS: '["https://nexsocio.io"]'
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
       SAFETY_SERVICE_URL: http://safety:8005
-      CORS_ORIGINS: '["https://nexus.io"]'
+      CORS_ORIGINS: '["https://nexsocio.io"]'
     depends_on:
       postgres:
         condition: service_healthy

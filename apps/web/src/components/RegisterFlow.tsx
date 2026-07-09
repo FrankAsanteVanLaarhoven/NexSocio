@@ -93,7 +93,7 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
     <div className="mx-auto max-w-md space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">
-          Join Nexus
+          Join NEXSOCIO
         </h1>
         <p className="mt-2 text-sm text-[#8A8A8A]">
           Zero-trust identity with ZKP age verification
@@ -143,7 +143,7 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="alex@nexus.io"
+              placeholder="alex@nexsocio.io"
             />
             <Input
               label="Password"
@@ -168,7 +168,7 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
           <div className="space-y-4">
             <div className="rounded-md border border-[#2A2A2A] bg-[#0A0A0A] p-4">
               <p className="text-xs text-[#8A8A8A] leading-relaxed">
-                Nexus uses zero-knowledge proofs to verify age without storing personal
+                NEXSOCIO uses zero-knowledge proofs to verify age without storing personal
                 documents. Your biometric and identity data never leaves your device.
               </p>
             </div>
@@ -211,7 +211,7 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
               </button>
             ))}
             <Button className="w-full mt-2" loading={loading} onClick={handleModeConfirm}>
-              Enter Nexus
+              Enter NEXSOCIO
             </Button>
           </div>
         </Panel>

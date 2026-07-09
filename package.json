@@ -2,7 +2,7 @@
   "name": "nexus",
   "version": "1.0.0",
   "private": true,
-  "description": "Nexus - World-Leading SOTA Socio-Technical Platform",
+  "description": "NEXSOCIO - World-Leading SOTA Socio-Technical Platform",
   "workspaces": [
     "apps/*",
     "packages/*",

@@ -56,7 +56,7 @@ export class NexusEksStack extends cdk.Stack {
     new cdk.CfnOutput(this, "NodeGroupName", { value: nodeGroup.nodegroupName });
 
     // Cost attribution tag per bounded context
-    cdk.Tags.of(this).add("Project", "Nexus");
+    cdk.Tags.of(this).add("Project", "NEXSOCIO");
     cdk.Tags.of(this).add("Environment", "production");
     cdk.Tags.of(this).add("ManagedBy", "CDK");
   }

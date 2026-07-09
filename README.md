@@ -1,6 +1,6 @@
-# Nexus
+# NEXSOCIO
 
-**Repository:** [github.com/FrankAsanteVanLaarhoven/NExusio](https://github.com/FrankAsanteVanLaarhoven/NExusio)
+**Repository:** [github.com/FrankAsanteVanLaarhoven/NExsocio](https://github.com/FrankAsanteVanLaarhoven/NExsocio)
 
 **World-Leading SOTA Socio-Technical Platform** — Production-grade monorepo implementing zero-trust security, ZKP-based age-adaptive modes, unified professional-personal context, and architecturally complete Robot/Embodied Agent integration.
 
@@ -134,4 +134,4 @@ locust -f tests/load/locustfile.py --host=http://localhost:8001
 
 ---
 
-All development traces back to the Nexus Technical Blueprint v1.0.
+All development traces back to the NEXSOCIO Technical Blueprint v1.0.

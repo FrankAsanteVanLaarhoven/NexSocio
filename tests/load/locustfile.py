@@ -9,7 +9,7 @@ CONTENT = os.getenv("CONTENT_URL", "http://localhost:8003")
 SAFETY = os.getenv("SAFETY_URL", "http://localhost:8005")
 
 
-class NexusUser(HttpUser):
+class NexsocioUser(HttpUser):
     wait_time = between(0.5, 2.0)
     token: str | None = None
 
@@ -27,7 +27,7 @@ class NexusUser(HttpUser):
     def moderate(self):
         self.client.post(
             f"{SAFETY}/api/v1/moderate",
-            json={"text": "Hello Nexus community!", "author_mode": "prime"},
+            json={"text": "Hello NEXSOCIO community!", "author_mode": "prime"},
             name="safety/moderate",
         )
 

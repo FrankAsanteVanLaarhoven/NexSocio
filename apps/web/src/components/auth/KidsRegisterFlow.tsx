@@ -49,7 +49,7 @@ export function KidsRegisterFlow() {
 
       <div className="rounded-lg border border-[#7C4DFF]/30 bg-[#7C4DFF]/5 px-4 py-3">
         <p className="text-xs text-[#7C4DFF] leading-relaxed">
-          A verified parent or guardian must generate an approval code from their Nexus account
+          A verified parent or guardian must generate an approval code from their NEXSOCIO account
           (Profile → Approve Child). Children under age cannot register without this step.
         </p>
       </div>

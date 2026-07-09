@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
     configure_tracing(settings.service_name)
 
     app = FastAPI(
-        title="Nexus Safety, Moderation & Governance",
+        title="NEXSOCIO Safety, Moderation & Governance",
         description="Multi-layer safety: deterministic rules + ML stub",
         version="1.0.0",
         lifespan=lifespan,

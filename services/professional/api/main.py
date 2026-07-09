@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
     configure_logging(settings.service_name)
 
     app = FastAPI(
-        title="Nexus Professional Networking Service",
+        title="NEXSOCIO Professional Networking Service",
         description="Professional networking and knowledge",
         version="1.0.0",
         lifespan=lifespan,

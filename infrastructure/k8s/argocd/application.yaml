@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/FrankAsanteVanLaarhoven/NExusio.git
+    repoURL: https://github.com/FrankAsanteVanLaarhoven/NExsocio.git
     targetRevision: main
     path: infrastructure/k8s
   destination:

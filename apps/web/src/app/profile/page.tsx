@@ -72,7 +72,7 @@ export default function ProfilePage() {
       <div className="mx-auto max-w-lg space-y-6">
         <div>
           <h1 className="text-xl font-semibold text-[#F5F5F5]">Profile & Settings</h1>
-          <p className="text-xs text-[#8A8A8A] mt-1">Manage your Nexus identity</p>
+          <p className="text-xs text-[#8A8A8A] mt-1">Manage your NEXSOCIO identity</p>
         </div>
 
         {loading ? (
@@ -95,7 +95,7 @@ export default function ProfilePage() {
 
               <Input label="Display Name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
               <Input label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell your story..." />
-              <Input label="Headline" value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="Senior Engineer @ Nexus" />
+              <Input label="Headline" value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="Senior Engineer @ NEXSOCIO" />
               <Input label="Company" value={company} onChange={(e) => setCompany(e.target.value)} />
               <Input label="Skills" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Rust, ML, Robotics" />
 

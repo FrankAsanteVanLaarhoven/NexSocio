@@ -128,8 +128,8 @@ export function MethodSetup({ email, method, onEnrolled }: MethodSetupProps) {
           loading={loading}
           onCapture={(_hash, cmd) => {
             const normalized = cmd.toLowerCase().replace(/[.,!?]/g, "").trim();
-            if (!normalized.includes("nexus") || !normalized.includes("unlock")) {
-              setError('Say "Nexus unlock" clearly');
+            if (!normalized.includes("nexsocio") || !normalized.includes("unlock")) {
+              setError('Say "Nexsocio unlock" clearly');
               return;
             }
             enroll(async () => {

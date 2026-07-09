@@ -155,7 +155,7 @@ export function LoginGateway() {
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Sign in to Nexus</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">Sign in to NEXSOCIO</h1>
         <p className="mt-2 text-sm text-[#8A8A8A]">
           Tap a method to sign in or set it up for testing
         </p>
@@ -200,7 +200,7 @@ export function LoginGateway() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@nexus.io"
+          placeholder="you@nexsocio.io"
         />
       )}
 
@@ -357,7 +357,7 @@ export function LoginGateway() {
       )}
 
       <p className="text-center text-xs text-[#5A5A5A]">
-        New to Nexus?{" "}
+        New to NEXSOCIO?{" "}
         <Link href="/register" className="text-[#00E5FF] hover:underline">
           Create account
         </Link>

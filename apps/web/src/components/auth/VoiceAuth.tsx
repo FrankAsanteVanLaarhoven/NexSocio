@@ -10,7 +10,7 @@ interface VoiceAuthProps {
   loading?: boolean;
 }
 
-const COMMAND = "Nexus unlock";
+const COMMAND = "Nexsocio unlock";
 
 export function VoiceAuth({ onCapture, onError, loading }: VoiceAuthProps) {
   const [listening, setListening] = useState(false);

@@ -172,7 +172,7 @@ export function Feed() {
             placeholder={
               viewContext === "professional"
                 ? "Share professional insight..."
-                : "Share something with Nexus..."
+                : "Share something with NEXSOCIO..."
             }
             rows={4}
             className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#00E5FF]/20"

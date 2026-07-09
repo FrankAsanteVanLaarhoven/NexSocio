@@ -121,7 +121,7 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Biometric verification failed")
 
         if request.factor_type == "voice" and request.voice_command:
-            expected = "nexus unlock"
+            expected = "nexsocio unlock"
             if request.voice_command.strip().lower() != expected:
                 raise HTTPException(status_code=401, detail="Voice command not recognized")
 
@@ -400,7 +400,7 @@ class AuthService:
             )
 
         user_id = uuid4()
-        email = f"kid-{user_id.hex[:12]}@nexus.kids"
+        email = f"kid-{user_id.hex[:12]}@nexsocio.kids"
         password = secrets.token_urlsafe(16)
 
         user = UserModel(

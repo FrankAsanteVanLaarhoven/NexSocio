@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Nexus Identity & Verification API
+  title: NEXSOCIO Identity & Verification API
   version: 1.0.0
   description: ZKP age verification, registration, and mode selection
 servers:

@@ -10,7 +10,7 @@ new NexusStagingStack(app, "NexusStagingStack", {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || "us-east-1",
   },
-  description: "Nexus staging EKS cluster with ECR repositories",
+  description: "NEXSOCIO staging EKS cluster with ECR repositories",
 });
 
 new NexusEksStack(app, "NexusEksStack", {
@@ -18,5 +18,5 @@ new NexusEksStack(app, "NexusEksStack", {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || "us-east-1",
   },
-  description: "Nexus platform EKS cluster with zero-trust baseline",
+  description: "NEXSOCIO platform EKS cluster with zero-trust baseline",
 });

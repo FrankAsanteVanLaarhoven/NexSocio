@@ -1,4 +1,4 @@
-# Nexus Load Tests
+# NEXSOCIO Load Tests
 
 Target: **p95 < 120ms** for core actions at 1000 concurrent users.
 

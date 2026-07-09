@@ -23,7 +23,7 @@ def create_app() -> FastAPI:
     configure_logging(settings.service_name)
 
     app = FastAPI(
-        title="Nexus Social Graph Service",
+        title="NEXSOCIO Social Graph Service",
         description="Social graph and relationships",
         version="1.0.0",
         lifespan=lifespan,

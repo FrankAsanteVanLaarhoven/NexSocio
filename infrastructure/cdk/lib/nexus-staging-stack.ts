@@ -41,7 +41,7 @@ export class NexusStagingStack extends cdk.Stack {
     new cdk.CfnOutput(this, "StagingClusterName", { value: cluster.clusterName });
     new cdk.CfnOutput(this, "StagingVpcId", { value: vpc.vpcId });
 
-    cdk.Tags.of(this).add("Project", "Nexus");
+    cdk.Tags.of(this).add("Project", "NEXSOCIO");
     cdk.Tags.of(this).add("Environment", "staging");
   }
 }

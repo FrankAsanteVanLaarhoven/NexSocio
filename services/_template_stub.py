@@ -16,7 +16,7 @@ def create_stub_app(service_name: str, description: str, port: int) -> FastAPI:
     async def lifespan(_app: FastAPI):
         yield
 
-    app = FastAPI(title=f"Nexus {service_name}", description=description, version="1.0.0", lifespan=lifespan)
+    app = FastAPI(title=f"NEXSOCIO {service_name}", description=description, version="1.0.0", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
     app.add_middleware(RequestLoggingMiddleware)
 

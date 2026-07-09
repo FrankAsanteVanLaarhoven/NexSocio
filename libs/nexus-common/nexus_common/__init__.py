@@ -1,4 +1,4 @@
-"""Nexus shared libraries for bounded contexts."""
+"""NEXSOCIO shared libraries for bounded contexts."""
 
 from nexus_common.domain.enums import UserMode
 from nexus_common.domain.models import ApiResponse, HealthResponse

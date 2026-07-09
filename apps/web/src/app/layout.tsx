@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus",
+  title: "NEXSOCIO",
   description: "World-Leading SOTA Socio-Technical Platform",
 };
 

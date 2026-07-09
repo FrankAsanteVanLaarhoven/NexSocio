@@ -30,10 +30,10 @@ export function Header() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded border border-[#00E5FF]/30 bg-[#00E5FF]/10">
-              <span className="text-xs font-bold text-[#00E5FF]">N</span>
+              <span className="text-[10px] font-bold text-[#00E5FF]">NS</span>
             </div>
-            <span className="text-sm font-semibold tracking-[0.2em] uppercase text-[#F5F5F5]">
-              Nexus
+            <span className="text-sm font-semibold tracking-[0.15em] uppercase text-[#F5F5F5]">
+              NEXSOCIO
             </span>
           </Link>
 

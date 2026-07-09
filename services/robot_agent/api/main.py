@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
     configure_tracing(settings.service_name)
 
     app = FastAPI(
-        title="Nexus Robot & Embodied Agent Layer",
+        title="NEXSOCIO Robot & Embodied Agent Layer",
         description="Digital twins, safety-certified command channels, social presence",
         version="1.0.0",
         lifespan=lifespan,

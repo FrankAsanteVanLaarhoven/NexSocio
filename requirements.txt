@@ -1,4 +1,4 @@
-# Nexus Python dependencies (local development)
+# NEXSOCIO Python dependencies (local development)
 -e libs/nexus-common
 fastapi>=0.115.0
 uvicorn[standard]>=0.34.0

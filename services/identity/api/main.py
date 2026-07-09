@@ -23,7 +23,7 @@ def create_app() -> FastAPI:
     configure_logging(settings.service_name)
 
     app = FastAPI(
-        title="Nexus Identity & Verification Service",
+        title="NEXSOCIO Identity & Verification Service",
         description="ZKP age verification, credentials, and user identity",
         version="1.0.0",
         lifespan=lifespan,

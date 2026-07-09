@@ -60,8 +60,8 @@ export async function capturePalmHash(
   return hashData(`${base}:${grid.join("")}`);
 }
 
-/** Fixed voice print for the "Nexus unlock" command. */
-export const VOICE_COMMAND = "nexus unlock";
+/** Fixed voice print for the "Nexsocio unlock" command. */
+export const VOICE_COMMAND = "nexsocio unlock";
 
 export async function voiceTemplateHash(): Promise<string> {
   return hashData(VOICE_COMMAND);
@@ -107,11 +107,11 @@ export async function registerWebAuthn(
   const credential = (await navigator.credentials.create({
     publicKey: {
       challenge: textToBuffer(options.challenge),
-      rp: { name: "Nexus", id: options.rp_id },
+      rp: { name: "NEXSOCIO", id: options.rp_id },
       user: {
         id: textToBuffer(options.user_id || ""),
         name: options.user_name || "user",
-        displayName: options.user_display_name || "Nexus User",
+        displayName: options.user_display_name || "NEXSOCIO User",
       },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },
