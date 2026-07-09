@@ -17,9 +17,12 @@ import type {
   CommandResponse,
   DigitalTwin,
   FeatureFlags,
+  ArticlePreview,
+  DirectionsResult,
   HubDashboard,
   MarketHistory,
   MarketQuote,
+  PlaceResult,
   PostType,
   AIComposeResult,
   AvatarVideoJob,
@@ -422,6 +425,48 @@ export async function getHubDashboard(token?: string): Promise<HubDashboard> {
 export async function getHubMarkets(symbols?: string): Promise<MarketQuote[]> {
   const qs = symbols ? `?symbols=${encodeURIComponent(symbols)}` : "";
   return request<MarketQuote[]>(HUB_URL, `/api/v1/markets${qs}`);
+}
+
+export async function readArticleInApp(url: string): Promise<ArticlePreview> {
+  return request<ArticlePreview>(
+    HUB_URL,
+    `/api/v1/read?url=${encodeURIComponent(url)}`
+  );
+}
+
+export async function searchPlaces(
+  query: string,
+  lat?: number,
+  lng?: number
+): Promise<PlaceResult[]> {
+  const params = new URLSearchParams({ q: query });
+  if (lat != null) params.set("lat", String(lat));
+  if (lng != null) params.set("lng", String(lng));
+  return request<PlaceResult[]>(HUB_URL, `/api/v1/places/search?${params}`);
+}
+
+export async function nearbyPlaces(
+  lat: number,
+  lng: number,
+  type = "restaurant"
+): Promise<PlaceResult[]> {
+  return request<PlaceResult[]>(
+    HUB_URL,
+    `/api/v1/places/nearby?lat=${lat}&lng=${lng}&type=${type}`
+  );
+}
+
+export async function getDirections(
+  originLat: number,
+  originLng: number,
+  destLat: number,
+  destLng: number,
+  mode = "driving"
+): Promise<DirectionsResult> {
+  return request<DirectionsResult>(
+    HUB_URL,
+    `/api/v1/places/directions?origin_lat=${originLat}&origin_lng=${originLng}&dest_lat=${destLat}&dest_lng=${destLng}&mode=${mode}`
+  );
 }
 
 export async function getMarketHistory(

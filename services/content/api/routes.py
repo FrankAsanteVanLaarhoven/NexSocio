@@ -95,6 +95,14 @@ async def create_comment(
     return ApiResponse(data=result)
 
 
+@router.get("/places/posts", response_model=ApiResponse[list[dict]])
+async def placed_posts(
+    service: Annotated[ContentService, Depends(get_content_service)],
+) -> ApiResponse[list[dict]]:
+    data = await service.get_placed_posts()
+    return ApiResponse(data=data)
+
+
 @router.get("/comments/{post_id}", response_model=ApiResponse[list[CommentResponse]])
 async def list_comments(
     post_id: UUID,

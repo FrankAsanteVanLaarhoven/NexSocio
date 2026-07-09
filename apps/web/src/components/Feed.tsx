@@ -3,6 +3,7 @@
 import type { Comment, Post } from "@nexus/types";
 import { Button, Input, ModeBadge, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   composeWithAI,
   createComment,
@@ -12,9 +13,12 @@ import {
   getMe,
   getProfessionalDashboard,
   reportPost,
+  searchPlaces,
 } from "@/lib/api";
+import { inAppMapUrl } from "@/components/InAppLink";
 import { useAuthStore } from "@/lib/auth-store";
 import { useSettingsStore } from "@/lib/settings-store";
+import type { PlaceResult } from "@nexus/types";
 
 function PostCard({
   post,
@@ -71,6 +75,27 @@ function PostCard({
         </div>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-[#D4D4D4] whitespace-pre-wrap">{post.body}</p>
+      {post.place_name && post.place_lat != null && post.place_lng != null && (
+        <Link
+          href={inAppMapUrl({
+            lat: post.place_lat,
+            lng: post.place_lng,
+            name: post.place_name,
+            placeId: post.place_id || undefined,
+            navigate: true,
+          })}
+          className="mt-3 flex items-center gap-3 rounded-lg border border-[#FFB300]/30 bg-[#FFB300]/5 px-3 py-2.5 hover:border-[#FFB300]/50 transition-colors"
+        >
+          <span className="text-lg">📍</span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-[#F5F5F5]">{post.place_name}</p>
+            {post.place_address && (
+              <p className="text-[10px] text-[#8A8A8A] truncate">{post.place_address}</p>
+            )}
+            <p className="text-[10px] text-[#00E5FF] mt-0.5">Get directions in app →</p>
+          </div>
+        </Link>
+      )}
       {post.media_url && post.post_type !== "text" && (
         <div className="mt-3 overflow-hidden rounded-lg border border-[#2A2A2A]">
           {post.media_url.startsWith("data:video") || post.post_type === "reel" ? (
@@ -107,9 +132,23 @@ function PostCard({
         >
           Comment
         </button>
-        <button type="button" className="text-xs text-[#5A5A5A] hover:text-[#FFB300]">
-          Promote
-        </button>
+        {post.place_lat != null ? (
+          <Link
+            href={inAppMapUrl({
+              lat: post.place_lat!,
+              lng: post.place_lng!,
+              name: post.place_name || "Place",
+              navigate: true,
+            })}
+            className="text-xs text-[#FFB300] hover:underline"
+          >
+            Promote · Map
+          </Link>
+        ) : (
+          <button type="button" className="text-xs text-[#5A5A5A] hover:text-[#FFB300]">
+            Promote
+          </button>
+        )}
       </div>
       {showComments && (
         <div className="mt-3 space-y-2">
@@ -168,6 +207,10 @@ export function Feed() {
   const [hideAiTag, setHideAiTag] = useState(false);
   const [canHideAiTag, setCanHideAiTag] = useState(false);
   const [insights, setInsights] = useState<{ label: string; value: string }[]>([]);
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeResults, setPlaceResults] = useState<PlaceResult[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
+  const [searchingPlace, setSearchingPlace] = useState(false);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -231,6 +274,17 @@ export function Feed() {
     }
   }
 
+  async function handleSearchPlace() {
+    if (!placeQuery.trim()) return;
+    setSearchingPlace(true);
+    try {
+      const results = await searchPlaces(placeQuery.trim());
+      setPlaceResults(results);
+    } finally {
+      setSearchingPlace(false);
+    }
+  }
+
   async function handlePost() {
     if (!body.trim()) return;
     setSubmitting(true);
@@ -240,10 +294,18 @@ export function Feed() {
         context: viewContext,
         ai_assisted: usedAi,
         hide_ai_tag: usedAi && canHideAiTag && hideAiTag,
+        place_id: selectedPlace?.place_id,
+        place_name: selectedPlace?.name,
+        place_address: selectedPlace?.address,
+        place_lat: selectedPlace?.lat ?? undefined,
+        place_lng: selectedPlace?.lng ?? undefined,
       });
       setBody("");
       setUsedAi(false);
       setHideAiTag(false);
+      setPlaceQuery("");
+      setPlaceResults([]);
+      setSelectedPlace(null);
       setComposing(false);
       await loadFeed();
     } finally {
@@ -329,6 +391,45 @@ export function Feed() {
             rows={4}
             className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#00E5FF]/20"
           />
+          <div className="rounded-md border border-[#1F1F1F] p-3 space-y-2">
+            <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">Tag a place (optional)</p>
+            <div className="flex gap-2">
+              <Input
+                className="flex-1"
+                value={placeQuery}
+                onChange={(e) => setPlaceQuery(e.target.value)}
+                placeholder="Restaurant, landmark, venue…"
+              />
+              <Button size="sm" variant="secondary" loading={searchingPlace} onClick={handleSearchPlace}>
+                Find
+              </Button>
+            </div>
+            {selectedPlace && (
+              <p className="text-xs text-[#00E5FF]">
+                📍 {selectedPlace.name} — {selectedPlace.address}
+                <button type="button" className="ml-2 text-[#5A5A5A]" onClick={() => setSelectedPlace(null)}>
+                  ✕
+                </button>
+              </p>
+            )}
+            {placeResults.length > 0 && !selectedPlace && (
+              <div className="max-h-28 overflow-y-auto space-y-1">
+                {placeResults.map((p) => (
+                  <button
+                    key={p.place_id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlace(p);
+                      setPlaceResults([]);
+                    }}
+                    className="w-full text-left text-xs py-1.5 px-2 rounded hover:bg-[#1A1A1A] text-[#8A8A8A]"
+                  >
+                    {p.name} · {p.address}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {usedAi && (
             <div className="flex items-center gap-2 rounded-md border border-[#7C4DFF]/30 bg-[#7C4DFF]/5 px-3 py-2">
               <span className="text-[10px] uppercase tracking-wider text-[#7C4DFF]">NEXSOCIO AI</span>

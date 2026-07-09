@@ -18,6 +18,11 @@ class CreatePostRequest(BaseModel):
     owner_display_name: str | None = None
     ai_assisted: bool = False
     hide_ai_tag: bool = False
+    place_id: str | None = None
+    place_name: str | None = None
+    place_address: str | None = None
+    place_lat: float | None = None
+    place_lng: float | None = None
 
 
 class AIComposeRequest(BaseModel):
@@ -47,6 +52,23 @@ class PostResponse(BaseModel):
     twin_agent_id: str | None = None
     is_ai_generated: bool = False
     show_ai_tag: bool = False
+    place_id: str | None = None
+    place_name: str | None = None
+    place_address: str | None = None
+    place_lat: float | None = None
+    place_lng: float | None = None
+    created_at: datetime
+
+
+class PlacePostResponse(BaseModel):
+    post_id: str
+    author_name: str
+    place_id: str | None = None
+    place_name: str | None = None
+    place_address: str | None = None
+    place_lat: float | None = None
+    place_lng: float | None = None
+    body: str
     created_at: datetime
 
 

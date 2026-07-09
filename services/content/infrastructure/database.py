@@ -25,6 +25,11 @@ async def init_db(engine) -> None:
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS is_ai_generated BOOLEAN DEFAULT FALSE",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS hide_ai_tag BOOLEAN DEFAULT FALSE",
             "ALTER TABLE content.posts ALTER COLUMN media_url TYPE TEXT",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_id VARCHAR(128)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_name VARCHAR(256)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_address VARCHAR(512)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_lat DOUBLE PRECISION",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_lng DOUBLE PRECISION",
         ]:
             await conn.execute(text(stmt))
 

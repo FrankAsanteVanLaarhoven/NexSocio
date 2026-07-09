@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -29,6 +29,11 @@ class PostModel(Base):
     twin_agent_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_ai_generated: Mapped[bool] = mapped_column(Boolean, default=False)
     hide_ai_tag: Mapped[bool] = mapped_column(Boolean, default=False)
+    place_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    place_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    place_address: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    place_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    place_lng: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

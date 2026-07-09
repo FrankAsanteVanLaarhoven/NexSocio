@@ -99,6 +99,11 @@ export interface CreatePostRequest {
   owner_display_name?: string | null;
   ai_assisted?: boolean;
   hide_ai_tag?: boolean;
+  place_id?: string | null;
+  place_name?: string | null;
+  place_address?: string | null;
+  place_lat?: number | null;
+  place_lng?: number | null;
 }
 
 export type PostType = "text" | "reel" | "photo" | "live";
@@ -119,6 +124,11 @@ export interface Post {
   twin_agent_id?: string | null;
   is_ai_generated?: boolean;
   show_ai_tag?: boolean;
+  place_id?: string | null;
+  place_name?: string | null;
+  place_address?: string | null;
+  place_lat?: number | null;
+  place_lng?: number | null;
   created_at: string;
 }
 
@@ -286,12 +296,42 @@ export interface DeviceStatus {
   last_seen?: string | null;
 }
 
+export interface PlaceResult {
+  place_id: string;
+  name: string;
+  address: string;
+  lat?: number | null;
+  lng?: number | null;
+  rating?: number | null;
+  types?: string[];
+  open_now?: boolean | null;
+  source?: string;
+  post_id?: string | null;
+  promoted_by?: string | null;
+}
+
+export interface DirectionsResult {
+  summary: string;
+  distance: string;
+  duration: string;
+  steps: { instruction: string; distance: string }[];
+  polyline?: string | null;
+}
+
+export interface ArticlePreview {
+  title: string;
+  content_html: string;
+  source_url: string;
+  publisher: string;
+}
+
 export interface HubDashboard {
   markets: MarketQuote[];
   trending: TrendingItem[];
   news: HubNewsItem[];
   events: MapEvent[];
   devices: DeviceStatus[];
+  promoted_places?: PlaceResult[];
   updated_at: string;
   source: string;
 }

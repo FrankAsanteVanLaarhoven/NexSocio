@@ -10,3 +10,5 @@ class Settings(BaseSettings):
     safety_service_url: str = "http://localhost:8005"
     cors_origins: list[str] = ["http://localhost:3000"]
     yahoo_user_agent: str = "Mozilla/5.0 (compatible; NEXSOCIO-Hub/1.0)"
+    google_maps_api_key: str | None = None
+    content_service_url: str = "http://localhost:8003"

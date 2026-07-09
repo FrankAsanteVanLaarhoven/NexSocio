@@ -27,6 +27,9 @@ export function parseVoiceCommand(transcript: string): VoiceAction {
   if (t.includes("open hub") || t.includes("world clock") || t.includes("weather")) {
     return { type: "navigate", path: "/hub" };
   }
+  if (t.includes("open map") || t.includes("directions") || t.includes("navigation")) {
+    return { type: "navigate", path: "/map" };
+  }
   if (t.includes("stock market") || t.includes("open markets") || t.includes("yahoo finance")) {
     return { type: "navigate", path: "/hub" };
   }

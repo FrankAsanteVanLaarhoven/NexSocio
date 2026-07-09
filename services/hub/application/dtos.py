@@ -62,11 +62,41 @@ class DeviceStatus(BaseModel):
     last_seen: str | None = None
 
 
+class PlaceResult(BaseModel):
+    place_id: str
+    name: str
+    address: str
+    lat: float | None = None
+    lng: float | None = None
+    rating: float | None = None
+    types: list[str] = []
+    open_now: bool | None = None
+    source: str = "google"
+    post_id: str | None = None
+    promoted_by: str | None = None
+
+
+class DirectionsResult(BaseModel):
+    summary: str
+    distance: str
+    duration: str
+    steps: list[dict]
+    polyline: str | None = None
+
+
+class ArticlePreview(BaseModel):
+    title: str
+    content_html: str
+    source_url: str
+    publisher: str
+
+
 class HubDashboardResponse(BaseModel):
     markets: list[MarketQuote]
     trending: list[TrendingItem]
     news: list[NewsItem]
     events: list[MapEvent]
     devices: list[DeviceStatus]
+    promoted_places: list[PlaceResult] = []
     updated_at: str
     source: str = "yahoo_finance"

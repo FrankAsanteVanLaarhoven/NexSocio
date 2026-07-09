@@ -101,6 +101,11 @@ class ContentService:
             twin_agent_id=request.twin_agent_id,
             is_ai_generated=is_ai,
             hide_ai_tag=hide_tag,
+            place_id=request.place_id,
+            place_name=request.place_name,
+            place_address=request.place_address,
+            place_lat=request.place_lat,
+            place_lng=request.place_lng,
         )
         self.db.add(post)
         await self.db.commit()
@@ -218,5 +223,35 @@ class ContentService:
             is_ai_generated=getattr(post, "is_ai_generated", False) or False,
             show_ai_tag=(getattr(post, "is_ai_generated", False) or False)
             and not (getattr(post, "hide_ai_tag", False) or False),
+            place_id=getattr(post, "place_id", None),
+            place_name=getattr(post, "place_name", None),
+            place_address=getattr(post, "place_address", None),
+            place_lat=getattr(post, "place_lat", None),
+            place_lng=getattr(post, "place_lng", None),
             created_at=post.created_at,
         )
+
+    async def get_placed_posts(self, limit: int = 50) -> list[dict]:
+        from services.content.application.dtos import PlacePostResponse
+
+        result = await self.db.execute(
+            select(PostModel)
+            .where(PostModel.place_lat.isnot(None), PostModel.place_lng.isnot(None))
+            .order_by(PostModel.created_at.desc())
+            .limit(limit)
+        )
+        posts = result.scalars().all()
+        return [
+            PlacePostResponse(
+                post_id=str(p.id),
+                author_name=p.author_name,
+                place_id=p.place_id,
+                place_name=p.place_name,
+                place_address=p.place_address,
+                place_lat=p.place_lat,
+                place_lng=p.place_lng,
+                body=p.body[:200],
+                created_at=p.created_at,
+            ).model_dump()
+            for p in posts
+        ]

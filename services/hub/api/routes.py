@@ -5,12 +5,15 @@ from nexus_common.domain.models import ApiResponse, HealthResponse
 
 from services.hub.api.deps import get_hub_service, get_settings, get_valid_token
 from services.hub.application.dtos import (
+    ArticlePreview,
     DeviceStatus,
+    DirectionsResult,
     HubDashboardResponse,
     MapEvent,
     MarketHistory,
     MarketQuote,
     NewsItem,
+    PlaceResult,
     TrendingItem,
 )
 from services.hub.application.services import HubService
@@ -75,6 +78,50 @@ async def events(
     service: Annotated[HubService, Depends(get_hub_service)],
 ) -> ApiResponse[list[MapEvent]]:
     return ApiResponse(data=service.get_events())
+
+
+@router.get("/places/search", response_model=ApiResponse[list[PlaceResult]])
+async def search_places(
+    service: Annotated[HubService, Depends(get_hub_service)],
+    q: str = Query(..., min_length=2),
+    lat: float | None = None,
+    lng: float | None = None,
+) -> ApiResponse[list[PlaceResult]]:
+    data = await service.search_places(q, lat, lng)
+    return ApiResponse(data=data)
+
+
+@router.get("/places/nearby", response_model=ApiResponse[list[PlaceResult]])
+async def nearby_places(
+    service: Annotated[HubService, Depends(get_hub_service)],
+    lat: float = Query(...),
+    lng: float = Query(...),
+    type: str = Query(default="restaurant"),
+) -> ApiResponse[list[PlaceResult]]:
+    data = await service.nearby_places(lat, lng, type)
+    return ApiResponse(data=data)
+
+
+@router.get("/places/directions", response_model=ApiResponse[DirectionsResult])
+async def place_directions(
+    service: Annotated[HubService, Depends(get_hub_service)],
+    origin_lat: float = Query(...),
+    origin_lng: float = Query(...),
+    dest_lat: float = Query(...),
+    dest_lng: float = Query(...),
+    mode: str = Query(default="driving"),
+) -> ApiResponse[DirectionsResult]:
+    data = await service.get_directions(origin_lat, origin_lng, dest_lat, dest_lng, mode)
+    return ApiResponse(data=data)
+
+
+@router.get("/read", response_model=ApiResponse[ArticlePreview])
+async def read_article(
+    service: Annotated[HubService, Depends(get_hub_service)],
+    url: str = Query(..., min_length=10),
+) -> ApiResponse[ArticlePreview]:
+    data = await service.read_article(url)
+    return ApiResponse(data=data)
 
 
 @router.get("/devices", response_model=ApiResponse[list[DeviceStatus]])

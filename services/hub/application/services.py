@@ -4,15 +4,20 @@ from uuid import UUID
 import httpx
 from fastapi import HTTPException
 
+from services.hub.application.article_proxy import ArticleProxy
 from services.hub.application.dtos import (
+    ArticlePreview,
     DeviceStatus,
+    DirectionsResult,
     HubDashboardResponse,
     MapEvent,
     MarketHistory,
     MarketQuote,
     NewsItem,
+    PlaceResult,
     TrendingItem,
 )
+from services.hub.application.google_places import GooglePlacesClient
 from services.hub.application.yahoo_client import YahooFinanceClient
 from services.hub.infrastructure.config import Settings
 
@@ -29,6 +34,8 @@ class HubService:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.yahoo = YahooFinanceClient(settings.yahoo_user_agent)
+        self.places = GooglePlacesClient(settings.google_maps_api_key)
+        self.articles = ArticleProxy(settings.yahoo_user_agent)
 
     async def get_markets(self, symbols: list[str] | None = None) -> list[MarketQuote]:
         raw = await self.yahoo.fetch_quotes(symbols)
@@ -130,14 +137,76 @@ class HubService:
 
         return devices
 
+    async def get_promoted_places(self, token: str | None = None) -> list[PlaceResult]:
+        if not token:
+            return []
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(
+                    f"{self.settings.content_service_url}/api/v1/places/posts",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if res.status_code == 200:
+                    rows = res.json().get("data", [])
+                    return [
+                        PlaceResult(
+                            place_id=p.get("place_id") or f"post-{p.get('post_id')}",
+                            name=p.get("place_name", "Place"),
+                            address=p.get("place_address", ""),
+                            lat=p.get("place_lat"),
+                            lng=p.get("place_lng"),
+                            source="nexsocio_post",
+                            post_id=p.get("post_id"),
+                            promoted_by=p.get("author_name"),
+                        )
+                        for p in rows
+                        if p.get("place_lat") is not None and p.get("place_lng") is not None
+                    ]
+        except httpx.HTTPError:
+            pass
+        return []
+
+    async def search_places(
+        self, query: str, lat: float | None = None, lng: float | None = None
+    ) -> list[PlaceResult]:
+        raw = await self.places.text_search(query, lat, lng)
+        return [PlaceResult(**p, source="google") for p in raw]
+
+    async def nearby_places(
+        self, lat: float, lng: float, place_type: str = "restaurant"
+    ) -> list[PlaceResult]:
+        raw = await self.places.nearby(lat, lng, place_type)
+        return [PlaceResult(**p, source="google") for p in raw]
+
+    async def get_directions(
+        self,
+        origin_lat: float,
+        origin_lng: float,
+        dest_lat: float,
+        dest_lng: float,
+        mode: str = "driving",
+    ) -> DirectionsResult:
+        raw = await self.places.directions(origin_lat, origin_lng, dest_lat, dest_lng, mode)
+        return DirectionsResult(**raw)
+
+    async def read_article(self, url: str) -> ArticlePreview:
+        try:
+            raw = await self.articles.fetch(url)
+            return ArticlePreview(**raw)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail="Failed to load article") from e
+
     async def get_dashboard(self, token: str | None = None) -> HubDashboardResponse:
-        markets, trending, news, events, devices = await self._gather_dashboard(token)
+        markets, trending, news, events, devices, promoted = await self._gather_dashboard(token)
         return HubDashboardResponse(
             markets=markets,
             trending=trending,
             news=news,
             events=events,
             devices=devices,
+            promoted_places=promoted,
             updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -148,12 +217,13 @@ class HubService:
         trending_task = self.get_trending()
         news_task = self.get_news()
         devices_task = self.get_devices(token)
+        places_task = self.get_promoted_places(token)
         events = self.get_events()
 
-        markets, trending, news, devices = await asyncio.gather(
-            markets_task, trending_task, news_task, devices_task
+        markets, trending, news, devices, promoted = await asyncio.gather(
+            markets_task, trending_task, news_task, devices_task, places_task
         )
-        return markets, trending, news, events, devices
+        return markets, trending, news, events, devices, promoted
 
     async def get_history_or_404(self, symbol: str, range_key: str) -> MarketHistory:
         hist = await self.get_history(symbol, range_key)

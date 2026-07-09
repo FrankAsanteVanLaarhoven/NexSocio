@@ -5,8 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
-import { HubMap } from "@/components/hub/HubMap";
+import { InAppLink } from "@/components/InAppLink";
+import { GoogleMapExplorer } from "@/components/maps/GoogleMapExplorer";
 import { StockChart } from "@/components/hub/StockChart";
+import Link from "next/link";
 import { getHubDashboard, getMarketHistory } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { useSettingsStore } from "@/lib/settings-store";
@@ -334,12 +336,10 @@ export default function HubPage() {
                     <Panel open title="News Feed" subtitle="Yahoo Finance headlines">
                       <div className="space-y-3 max-h-80 overflow-y-auto">
                         {dash.news.map((n) => (
-                          <a
+                          <InAppLink
                             key={n.id}
                             href={n.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block rounded-lg border border-[#1F1F1F] px-3 py-2.5 hover:border-[#7C4DFF]/30 transition-colors"
+                            className="block w-full text-left rounded-lg border border-[#1F1F1F] px-3 py-2.5 hover:border-[#7C4DFF]/30 transition-colors"
                           >
                             <p className="text-xs text-[#F5F5F5] leading-relaxed">{n.title}</p>
                             <p className="text-[10px] text-[#5A5A5A] mt-1">
@@ -347,13 +347,14 @@ export default function HubPage() {
                               {n.published_at
                                 ? ` · ${new Date(n.published_at * 1000).toLocaleString(locale)}`
                                 : ""}
+                              <span className="ml-2 text-[#7C4DFF]">· read in app</span>
                             </p>
                             {n.related_tickers.length > 0 && (
                               <p className="text-[9px] text-[#00E5FF] mt-1">
                                 {n.related_tickers.join(" · ")}
                               </p>
                             )}
-                          </a>
+                          </InAppLink>
                         ))}
                       </div>
                     </Panel>
@@ -362,21 +363,42 @@ export default function HubPage() {
 
                 {activeTab === "map" && dash && (
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <Panel open title="Events Map" subtitle="Markets · social · NEXSOCIO live">
-                      <HubMap events={dash.events} />
+                    <Panel open title="Google Maps" subtitle="Satellite · navigation · nearby places">
+                      <GoogleMapExplorer promotedPlaces={dash.promoted_places || []} />
+                      <Link
+                        href="/map"
+                        className="mt-3 inline-block text-xs text-[#00E5FF] hover:underline"
+                      >
+                        Open full-screen map →
+                      </Link>
                       <div className="mt-3 space-y-2">
                         {dash.events.map((e) => (
-                          <div
+                          <Link
                             key={e.id}
-                            className="flex items-center justify-between text-xs border-b border-[#1F1F1F] pb-2"
+                            href={`/map?lat=${e.lat}&lng=${e.lng}&name=${encodeURIComponent(e.title)}&navigate=1`}
+                            className="flex items-center justify-between text-xs border-b border-[#1F1F1F] pb-2 hover:text-[#00E5FF]"
                           >
                             <span className="text-[#F5F5F5]">{e.title}</span>
                             <span className="text-[#5A5A5A]">
                               {e.city} · <span className="text-[#00E5FF]">{e.status}</span>
                             </span>
-                          </div>
+                          </Link>
                         ))}
                       </div>
+                      {(dash.promoted_places || []).length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-[#1F1F1F]">
+                          <p className="text-[10px] uppercase text-[#5A5A5A] mb-2">Promoted from feed</p>
+                          {(dash.promoted_places || []).map((p) => (
+                            <Link
+                              key={p.place_id}
+                              href={`/map?lat=${p.lat}&lng=${p.lng}&name=${encodeURIComponent(p.name)}&navigate=1`}
+                              className="block text-xs text-[#FFB300] py-1 hover:underline"
+                            >
+                              📍 {p.name} — by {p.promoted_by}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </Panel>
 
                     <Panel open title="Device Status" subtitle="Twins · safety · live feeds">
