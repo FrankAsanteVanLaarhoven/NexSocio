@@ -15,6 +15,12 @@ export function parseVoiceCommand(transcript: string): VoiceAction {
   if (t.includes("open settings") || t.includes("go to settings")) {
     return { type: "navigate", path: "/settings" };
   }
+  if (t.includes("open wallet")) {
+    return { type: "navigate", path: "/wallet" };
+  }
+  if (t.includes("open inbox")) {
+    return { type: "navigate", path: "/inbox" };
+  }
   if (t.includes("open twin") || t.includes("digital twin")) {
     return { type: "navigate", path: "/twin" };
   }

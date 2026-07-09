@@ -3,6 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type ProfileVisibility = "public" | "connections" | "private";
+
 export interface UserSettings {
   voiceControlEnabled: boolean;
   ephemeralNav: boolean;
@@ -16,6 +18,17 @@ export interface UserSettings {
   wishlist: string[];
   likes: string[];
   hubHistory: { symbol: string; viewedAt: string }[];
+  profileVisibility: ProfileVisibility;
+  showProfileViewers: boolean;
+  shareAnalytics: boolean;
+  personalizedAds: boolean;
+  offlineDownloads: boolean;
+  wifiOnlyDownloads: boolean;
+  connectors: Record<string, boolean>;
+  stripeConnected: boolean;
+  paypalConnected: boolean;
+  bonusCoins: number;
+  scheduledPosts: { id: string; body: string; at: string }[];
 }
 
 interface SettingsState extends UserSettings {
@@ -23,6 +36,8 @@ interface SettingsState extends UserSettings {
   addWishlist: (item: string) => void;
   toggleLike: (postId: string) => void;
   addHubHistory: (symbol: string) => void;
+  toggleConnector: (id: string) => void;
+  addScheduledPost: (body: string, at: string) => void;
   update: (partial: Partial<UserSettings>) => void;
 }
 
@@ -39,6 +54,17 @@ const defaults: UserSettings = {
   wishlist: [],
   likes: [],
   hubHistory: [],
+  profileVisibility: "connections",
+  showProfileViewers: true,
+  shareAnalytics: true,
+  personalizedAds: false,
+  offlineDownloads: true,
+  wifiOnlyDownloads: true,
+  connectors: {},
+  stripeConnected: false,
+  paypalConnected: false,
+  bonusCoins: 120,
+  scheduledPosts: [],
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -63,6 +89,14 @@ export const useSettingsStore = create<SettingsState>()(
         ].slice(0, 20);
         set({ hubHistory });
       },
+      toggleConnector: (id) => {
+        const c = get().connectors;
+        set({ connectors: { ...c, [id]: !c[id] } });
+      },
+      addScheduledPost: (body, at) => {
+        const post = { id: `sched-${Date.now()}`, body, at };
+        set({ scheduledPosts: [post, ...get().scheduledPosts].slice(0, 30) });
+      },
       update: (partial) => set(partial),
     }),
     {
@@ -80,6 +114,17 @@ export const useSettingsStore = create<SettingsState>()(
         wishlist: s.wishlist,
         likes: s.likes,
         hubHistory: s.hubHistory,
+        profileVisibility: s.profileVisibility,
+        showProfileViewers: s.showProfileViewers,
+        shareAnalytics: s.shareAnalytics,
+        personalizedAds: s.personalizedAds,
+        offlineDownloads: s.offlineDownloads,
+        wifiOnlyDownloads: s.wifiOnlyDownloads,
+        connectors: s.connectors,
+        stripeConnected: s.stripeConnected,
+        paypalConnected: s.paypalConnected,
+        bonusCoins: s.bonusCoins,
+        scheduledPosts: s.scheduledPosts,
       }),
     }
   )

@@ -462,8 +462,8 @@ export default function HubPage() {
 
                   <Panel open title="Calendar" subtitle={now.toLocaleDateString(locale, { month: "long", year: "numeric" })}>
                     <div className="grid grid-cols-7 gap-1 text-center text-[10px]">
-                      {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
-                        <span key={d} className="text-[#5A5A5A] py-1">{d}</span>
+                      {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                        <span key={`cal-hdr-${i}`} className="text-[#5A5A5A] py-1">{d}</span>
                       ))}
                       {Array.from({ length: firstDay }).map((_, i) => (
                         <span key={`e-${i}`} />
