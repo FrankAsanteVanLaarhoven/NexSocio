@@ -88,7 +88,15 @@ export interface CreatePostRequest {
   body: string;
   visibility?: ContentVisibility;
   context?: ViewContext;
+  media_url?: string | null;
+  post_type?: PostType;
+  filter_preset?: string | null;
+  is_twin_post?: boolean;
+  twin_agent_id?: string | null;
+  owner_display_name?: string | null;
 }
+
+export type PostType = "text" | "reel" | "photo" | "live";
 
 export interface Post {
   id: string;
@@ -100,6 +108,20 @@ export interface Post {
   visibility: ContentVisibility;
   media_url?: string | null;
   moderation_status?: string;
+  post_type?: PostType;
+  filter_preset?: string | null;
+  is_twin_post?: boolean;
+  twin_agent_id?: string | null;
+  created_at: string;
+}
+
+export interface Comment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  author_name: string;
+  body: string;
+  moderation_status: string;
   created_at: string;
 }
 
@@ -170,12 +192,38 @@ export interface DigitalTwin {
   safety_channel: string;
   social_status: string;
   capabilities?: string | null;
+  owner_id?: string;
+  owner_display_name?: string | null;
+  persona_greeting?: string | null;
+  is_active?: boolean;
+}
+
+export interface TwinMessage {
+  id: string;
+  twin_agent_id: string;
+  from_name: string;
+  body: string;
+  direction: string;
+  created_at: string;
+}
+
+export interface TwinBriefing {
+  agent_id: string;
+  twin_name: string;
+  owner_display_name: string;
+  greeting: string;
+  message_count: number;
+  post_count: number;
+  activities: { type: string; summary: string; at: string }[];
+  messages: TwinMessage[];
+  voice_summary: string;
 }
 
 export interface RobotDashboard {
   twins: DigitalTwin[];
   recent_commands: { agent_id: string; command: string; safety_check: string; created_at: string }[];
   safety_channel_status: string;
+  active_twin?: DigitalTwin | null;
 }
 
 export interface CommandResponse {

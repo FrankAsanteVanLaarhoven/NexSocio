@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Text, func
+from sqlalchemy import Boolean, DateTime, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -22,6 +22,33 @@ class DigitalTwinModel(Base):
     safety_channel: Mapped[str] = mapped_column(String(64), nullable=False, default="certified_stub_v1")
     social_status: Mapped[str] = mapped_column(String(32), nullable=False, default="available")
     capabilities: Mapped[str | None] = mapped_column(Text, nullable=True)
+    owner_display_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    persona_greeting: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TwinMessageModel(Base):
+    __tablename__ = "twin_messages"
+    __table_args__ = {"schema": "robot_agent"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_agent_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    from_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    from_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    direction: Mapped[str] = mapped_column(String(16), nullable=False, default="inbound")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TwinActivityModel(Base):
+    __tablename__ = "twin_activities"
+    __table_args__ = {"schema": "robot_agent"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_agent_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    activity_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

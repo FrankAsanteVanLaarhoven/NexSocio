@@ -18,6 +18,10 @@ async def init_db(engine) -> None:
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS context VARCHAR(32) DEFAULT 'personal'",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS media_url VARCHAR(512)",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS moderation_status VARCHAR(32) DEFAULT 'approved'",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS post_type VARCHAR(16) DEFAULT 'text'",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS filter_preset VARCHAR(64)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS is_twin_post BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS twin_agent_id VARCHAR(64)",
         ]:
             await conn.execute(text(stmt))
 

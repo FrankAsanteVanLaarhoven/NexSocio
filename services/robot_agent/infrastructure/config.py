@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://nexus:nexus@localhost:5432/nexus"
     jwt_secret: str = "change-me-in-production"
     safety_service_url: str = "http://localhost:8005"
+    content_service_url: str = "http://localhost:8003"
     cors_origins: list[str] = ["http://localhost:3000"]
 
     # Safety-certified command allowlist

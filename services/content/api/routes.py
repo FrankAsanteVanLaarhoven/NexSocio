@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from nexus_common.domain.enums import FeedType, UserMode, ViewContext
@@ -11,7 +12,13 @@ from services.content.api.deps import (
     get_settings,
     get_token,
 )
-from services.content.application.dtos import CreatePostRequest, FeedResponse, PostResponse
+from services.content.application.dtos import (
+    CommentResponse,
+    CreateCommentRequest,
+    CreatePostRequest,
+    FeedResponse,
+    PostResponse,
+)
 from services.content.application.services import ContentService
 from services.content.infrastructure.config import Settings
 
@@ -57,3 +64,27 @@ async def get_feed(
         limit=limit,
     )
     return ApiResponse(data=result)
+
+
+@router.post("/comments", response_model=ApiResponse[CommentResponse])
+async def create_comment(
+    request: CreateCommentRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[ContentService, Depends(get_content_service)],
+) -> ApiResponse[CommentResponse]:
+    result = await service.create_comment(
+        author_id=auth.user_id,
+        author_name=auth.display_name,
+        mode=auth.mode,
+        request=request,
+    )
+    return ApiResponse(data=result)
+
+
+@router.get("/comments/{post_id}", response_model=ApiResponse[list[CommentResponse]])
+async def list_comments(
+    post_id: UUID,
+    service: Annotated[ContentService, Depends(get_content_service)],
+) -> ApiResponse[list[CommentResponse]]:
+    comments = await service.get_comments(post_id)
+    return ApiResponse(data=comments)

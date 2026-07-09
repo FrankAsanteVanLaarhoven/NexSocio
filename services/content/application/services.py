@@ -7,9 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.domain.enums import ContentVisibility, FeedType, UserMode, ViewContext
 from nexus_common.safety.moderation import ModerationEngine
-from services.content.application.dtos import CreatePostRequest, FeedResponse, PostResponse
+from services.content.application.dtos import (
+    CommentResponse,
+    CreateCommentRequest,
+    CreatePostRequest,
+    FeedResponse,
+    PostResponse,
+)
 from services.content.infrastructure.config import Settings
-from services.content.infrastructure.models import PostModel
+from services.content.infrastructure.models import CommentModel, PostModel
 
 
 class ContentService:
@@ -41,18 +47,32 @@ class ContentService:
         request: CreatePostRequest,
     ) -> PostResponse:
         post_id = uuid4()
-        await self._moderate(request.body, mode, post_id)
+        body = request.body
+        display_name = author_name
+        if request.is_twin_post and request.owner_display_name:
+            display_name = f"🤖 Twin of {request.owner_display_name}"
+            if not body.startswith("🤖"):
+                body = (
+                    f"🤖 Digital twin of {request.owner_display_name} — "
+                    f"{request.owner_display_name} is busy right now. I'm here to help.\n\n{body}"
+                )
+
+        await self._moderate(body, mode, post_id)
 
         post = PostModel(
             id=post_id,
             author_id=author_id,
-            author_name=author_name,
-            body=request.body,
+            author_name=display_name,
+            body=body,
             mode=mode.value,
             context=request.context.value,
             visibility=request.visibility.value,
             media_url=request.media_url,
             moderation_status="approved",
+            post_type=request.post_type,
+            filter_preset=request.filter_preset,
+            is_twin_post=request.is_twin_post,
+            twin_agent_id=request.twin_agent_id,
         )
         self.db.add(post)
         await self.db.commit()
@@ -110,6 +130,48 @@ class ContentService:
             context=context.value,
         )
 
+    async def create_comment(
+        self,
+        author_id: UUID,
+        author_name: str,
+        mode: UserMode,
+        request: CreateCommentRequest,
+    ) -> CommentResponse:
+        self._moderator.analyze(request.body, mode.value)
+        status = "pending"
+
+        comment = CommentModel(
+            id=uuid4(),
+            post_id=request.post_id,
+            author_id=author_id,
+            author_name=author_name,
+            body=request.body,
+            moderation_status=status,
+        )
+        self.db.add(comment)
+        await self.db.commit()
+        await self.db.refresh(comment)
+        return self._to_comment(comment)
+
+    async def get_comments(self, post_id: UUID, include_pending: bool = False) -> list[CommentResponse]:
+        query = select(CommentModel).where(CommentModel.post_id == post_id)
+        if not include_pending:
+            query = query.where(CommentModel.moderation_status == "approved")
+        query = query.order_by(CommentModel.created_at.asc())
+        result = await self.db.execute(query)
+        return [self._to_comment(c) for c in result.scalars().all()]
+
+    def _to_comment(self, comment: CommentModel) -> CommentResponse:
+        return CommentResponse(
+            id=comment.id,
+            post_id=comment.post_id,
+            author_id=comment.author_id,
+            author_name=comment.author_name,
+            body=comment.body,
+            moderation_status=comment.moderation_status,
+            created_at=comment.created_at,
+        )
+
     def _to_response(self, post: PostModel) -> PostResponse:
         return PostResponse(
             id=post.id,
@@ -121,5 +183,9 @@ class ContentService:
             visibility=ContentVisibility(post.visibility),
             media_url=post.media_url,
             moderation_status=post.moderation_status,
+            post_type=getattr(post, "post_type", None) or "text",
+            filter_preset=getattr(post, "filter_preset", None),
+            is_twin_post=getattr(post, "is_twin_post", False) or False,
+            twin_agent_id=getattr(post, "twin_agent_id", None),
             created_at=post.created_at,
         )

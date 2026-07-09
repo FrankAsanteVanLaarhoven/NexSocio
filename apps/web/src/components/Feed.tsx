@@ -1,12 +1,35 @@
 "use client";
 
-import type { Post } from "@nexus/types";
-import { Button, ModeBadge, Panel } from "@nexus/ui";
+import type { Comment, Post } from "@nexus/types";
+import { Button, Input, ModeBadge, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
-import { createPost, getFeed, getProfessionalDashboard, reportPost } from "@/lib/api";
+import {
+  createComment,
+  createPost,
+  getComments,
+  getFeed,
+  getProfessionalDashboard,
+  reportPost,
+} from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useSettingsStore } from "@/lib/settings-store";
 
-function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => void }) {
+function PostCard({
+  post,
+  token,
+  onReport,
+}: {
+  post: Post;
+  token: string;
+  onReport: (id: string) => void;
+}) {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [showComments, setShowComments] = useState(false);
+  const [commentMsg, setCommentMsg] = useState<string | null>(null);
+  const likes = useSettingsStore((s) => s.likes);
+  const toggleLike = useSettingsStore((s) => s.toggleLike);
+  const liked = likes.includes(post.id);
   const time = new Date(post.created_at).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -23,7 +46,13 @@ function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => vo
           </div>
           <div>
             <p className="text-sm font-medium text-[#F5F5F5]">{post.author_name}</p>
-            <p className="text-[10px] text-[#5A5A5A]">{time}</p>
+            <p className="text-[10px] text-[#5A5A5A]">
+              {time}
+              {post.post_type && post.post_type !== "text" && (
+                <span className="ml-2 text-[#7C4DFF]">· {post.post_type}</span>
+              )}
+              {post.is_twin_post && <span className="ml-2 text-[#00E5FF]">· twin</span>}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -37,6 +66,70 @@ function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => vo
         </div>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-[#D4D4D4] whitespace-pre-wrap">{post.body}</p>
+      {post.media_url && post.post_type !== "text" && (
+        <p className="mt-2 text-[10px] text-[#5A5A5A]">
+          📎 {post.post_type} {post.filter_preset ? `· ${post.filter_preset} filter` : ""}
+        </p>
+      )}
+      <div className="mt-4 flex items-center gap-4 border-t border-[#1F1F1F] pt-3">
+        <button
+          type="button"
+          onClick={() => toggleLike(post.id)}
+          className={`text-xs transition-colors ${liked ? "text-[#FF5252]" : "text-[#5A5A5A] hover:text-[#F5F5F5]"}`}
+        >
+          {liked ? "♥ Liked" : "♡ Like"}
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            setShowComments(!showComments);
+            if (!showComments) setComments(await getComments(post.id));
+          }}
+          className="text-xs text-[#5A5A5A] hover:text-[#F5F5F5]"
+        >
+          Comment
+        </button>
+        <button type="button" className="text-xs text-[#5A5A5A] hover:text-[#FFB300]">
+          Promote
+        </button>
+      </div>
+      {showComments && (
+        <div className="mt-3 space-y-2">
+          {comments.map((c) => (
+            <p key={c.id} className="text-xs text-[#8A8A8A] pl-2 border-l border-[#2A2A2A]">
+              <span className="text-[#F5F5F5]">{c.author_name}:</span> {c.body}
+              {c.moderation_status === "pending" && (
+                <span className="ml-2 text-[#FFB300]">· pending review</span>
+              )}
+            </p>
+          ))}
+          <div className="flex gap-2">
+            <Input
+              className="flex-1"
+              value={commentBody}
+              onChange={(e) => setCommentBody(e.target.value)}
+              placeholder="Add comment (moderated before publish)..."
+            />
+            <Button
+              size="sm"
+              onClick={async () => {
+                if (!commentBody.trim()) return;
+                const c = await createComment(token, post.id, commentBody.trim());
+                setCommentMsg(
+                  c.moderation_status === "pending"
+                    ? "Comment submitted for review"
+                    : "Comment posted"
+                );
+                setCommentBody("");
+                setComments(await getComments(post.id));
+              }}
+            >
+              Send
+            </Button>
+          </div>
+          {commentMsg && <p className="text-[10px] text-[#8A8A8A]">{commentMsg}</p>}
+        </div>
+      )}
     </article>
   );
 }
@@ -199,7 +292,7 @@ export function Feed() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onReport={handleReport} />
+              <PostCard key={post.id} post={post} token={session.accessToken} onReport={handleReport} />
           ))}
         </div>
       )}

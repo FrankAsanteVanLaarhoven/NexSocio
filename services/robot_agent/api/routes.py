@@ -11,11 +11,16 @@ from services.robot_agent.api.deps import (
     get_token,
 )
 from services.robot_agent.application.dtos import (
+    ActivateTwinRequest,
     CommandRequest,
     CommandResponse,
     CreateTwinRequest,
     DigitalTwinResponse,
     RobotDashboardResponse,
+    TwinBriefingResponse,
+    TwinMessageRequest,
+    TwinMessageResponse,
+    TwinPostRequest,
 )
 from services.robot_agent.application.services import RobotAgentService
 from services.robot_agent.infrastructure.config import Settings
@@ -30,9 +35,10 @@ async def health(settings: Annotated[Settings, Depends(get_settings)]) -> Health
 
 @router.get("/twins", response_model=ApiResponse[list[DigitalTwinResponse]])
 async def list_twins(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
     service: Annotated[RobotAgentService, Depends(get_robot_service)],
 ) -> ApiResponse[list[DigitalTwinResponse]]:
-    twins = await service.list_twins()
+    twins = await service.list_twins(owner_id=user_id)
     return ApiResponse(data=twins)
 
 
@@ -44,6 +50,60 @@ async def create_twin(
 ) -> ApiResponse[DigitalTwinResponse]:
     twin = await service.create_twin(user_id, request)
     return ApiResponse(data=twin)
+
+
+@router.post("/twins/{agent_id}/activate", response_model=ApiResponse[DigitalTwinResponse])
+async def activate_twin(
+    agent_id: str,
+    request: ActivateTwinRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[DigitalTwinResponse]:
+    twin = await service.activate_twin(user_id, agent_id, request)
+    return ApiResponse(data=twin)
+
+
+@router.post("/twins/{agent_id}/deactivate", response_model=ApiResponse[DigitalTwinResponse])
+async def deactivate_twin(
+    agent_id: str,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[DigitalTwinResponse]:
+    twin = await service.deactivate_twin(user_id, agent_id)
+    return ApiResponse(data=twin)
+
+
+@router.post("/twins/{agent_id}/messages", response_model=ApiResponse[TwinMessageResponse])
+async def send_twin_message(
+    agent_id: str,
+    request: TwinMessageRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[TwinMessageResponse]:
+    msg = await service.receive_message(agent_id, request, from_user_id=user_id)
+    return ApiResponse(data=msg)
+
+
+@router.post("/twins/{agent_id}/post", response_model=ApiResponse[dict])
+async def twin_post(
+    agent_id: str,
+    request: TwinPostRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    token: Annotated[str, Depends(get_token)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[dict]:
+    post = await service.twin_post(user_id, agent_id, request, token)
+    return ApiResponse(data=post)
+
+
+@router.get("/twins/{agent_id}/briefing", response_model=ApiResponse[TwinBriefingResponse])
+async def twin_briefing(
+    agent_id: str,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[RobotAgentService, Depends(get_robot_service)],
+) -> ApiResponse[TwinBriefingResponse]:
+    briefing = await service.get_briefing(user_id, agent_id)
+    return ApiResponse(data=briefing)
 
 
 @router.post("/commands", response_model=ApiResponse[CommandResponse])

@@ -13,8 +13,13 @@ import type {
   ModeSelectResponse,
   ParentalApprovalResponse,
   Post,
+  Comment,
   CommandResponse,
+  DigitalTwin,
   FeatureFlags,
+  PostType,
+  TwinBriefing,
+  TwinMessage,
   ProfessionalDashboard,
   ProfessionalProfile,
   RobotDashboard,
@@ -427,10 +432,98 @@ export async function issueRobotCommand(
   });
 }
 
-export async function createRobotTwin(token: string, name: string): Promise<void> {
-  await request(ROBOT_URL, "/api/v1/twins", {
+export async function createRobotTwin(
+  token: string,
+  name: string,
+  ownerDisplayName?: string
+): Promise<DigitalTwin> {
+  return request<DigitalTwin>(ROBOT_URL, "/api/v1/twins", {
     method: "POST",
     headers: authHeaders(token),
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, owner_display_name: ownerDisplayName }),
+  });
+}
+
+export async function activateTwin(
+  token: string,
+  agentId: string,
+  ownerDisplayName: string
+): Promise<DigitalTwin> {
+  return request<DigitalTwin>(ROBOT_URL, `/api/v1/twins/${agentId}/activate`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ owner_display_name: ownerDisplayName }),
+  });
+}
+
+export async function deactivateTwin(token: string, agentId: string): Promise<DigitalTwin> {
+  return request<DigitalTwin>(ROBOT_URL, `/api/v1/twins/${agentId}/deactivate`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function sendTwinMessage(
+  token: string,
+  agentId: string,
+  fromName: string,
+  body: string
+): Promise<TwinMessage> {
+  return request<TwinMessage>(ROBOT_URL, `/api/v1/twins/${agentId}/messages`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ from_name: fromName, body }),
+  });
+}
+
+export async function twinPost(
+  token: string,
+  agentId: string,
+  body: string,
+  context = "personal"
+): Promise<Post> {
+  return request<Post>(ROBOT_URL, `/api/v1/twins/${agentId}/post`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ body, context }),
+  });
+}
+
+export async function getTwinBriefing(token: string, agentId: string): Promise<TwinBriefing> {
+  return request<TwinBriefing>(ROBOT_URL, `/api/v1/twins/${agentId}/briefing`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function createComment(
+  token: string,
+  postId: string,
+  body: string
+): Promise<Comment> {
+  return request<Comment>(CONTENT_URL, "/api/v1/comments", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ post_id: postId, body }),
+  });
+}
+
+export async function getComments(postId: string): Promise<Comment[]> {
+  return request<Comment[]>(CONTENT_URL, `/api/v1/comments/${postId}`);
+}
+
+export async function createMediaPost(
+  token: string,
+  data: {
+    body: string;
+    post_type: PostType;
+    media_url?: string;
+    filter_preset?: string;
+    context?: ViewContext;
+  }
+): Promise<Post> {
+  return request<Post>(CONTENT_URL, "/api/v1/posts", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
   });
 }

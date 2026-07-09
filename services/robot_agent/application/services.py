@@ -3,20 +3,37 @@ from uuid import UUID, uuid4
 
 import httpx
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.robot_agent.application.dtos import (
+    ActivateTwinRequest,
     CommandRequest,
     CommandResponse,
     CreateTwinRequest,
     DigitalTwinResponse,
     RobotDashboardResponse,
+    TwinBriefingResponse,
+    TwinMessageRequest,
+    TwinMessageResponse,
+    TwinPostRequest,
 )
 from services.robot_agent.infrastructure.config import Settings
-from services.robot_agent.infrastructure.models import CommandLogModel, DigitalTwinModel
+from services.robot_agent.infrastructure.models import (
+    CommandLogModel,
+    DigitalTwinModel,
+    TwinActivityModel,
+    TwinMessageModel,
+)
 
 DANGEROUS_COMMANDS = {"override_safety", "disable_limits", "force_move", "raw_actuator"}
+
+
+def _default_greeting(owner: str, twin_name: str) -> str:
+    return (
+        f"Hi — I'm the digital twin of {owner}. {owner} is busy right now, "
+        f"but I'm here to help answer your questions and pass messages along."
+    )
 
 
 class RobotAgentService:
@@ -33,18 +50,169 @@ class RobotAgentService:
 
     async def create_twin(self, owner_id: UUID, request: CreateTwinRequest) -> DigitalTwinResponse:
         agent_id = f"twin-{secrets.token_hex(4)}"
+        owner_name = request.owner_display_name or "User"
         twin = DigitalTwinModel(
             id=uuid4(),
             agent_id=agent_id,
             owner_id=owner_id,
             name=request.name,
             status="standby",
-            capabilities=request.capabilities,
+            capabilities=request.capabilities or "posting,messaging,voice",
+            owner_display_name=owner_name,
+            persona_greeting=_default_greeting(owner_name, request.name),
+            is_active=False,
         )
         self.db.add(twin)
         await self.db.commit()
         await self.db.refresh(twin)
         return self._to_twin(twin)
+
+    async def activate_twin(
+        self, owner_id: UUID, agent_id: str, request: ActivateTwinRequest
+    ) -> DigitalTwinResponse:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        await self.db.execute(
+            select(DigitalTwinModel).where(DigitalTwinModel.owner_id == owner_id)
+        )
+        all_twins = await self.db.execute(
+            select(DigitalTwinModel).where(DigitalTwinModel.owner_id == owner_id)
+        )
+        for t in all_twins.scalars().all():
+            t.is_active = t.agent_id == agent_id
+            t.status = "online" if t.agent_id == agent_id else "standby"
+            t.social_status = "representing" if t.agent_id == agent_id else "available"
+
+        twin.owner_display_name = request.owner_display_name
+        twin.persona_greeting = _default_greeting(request.owner_display_name, twin.name)
+        await self._log_activity(agent_id, "activated", f"{request.owner_display_name} went busy — twin now representing")
+        await self.db.commit()
+        await self.db.refresh(twin)
+        return self._to_twin(twin)
+
+    async def deactivate_twin(self, owner_id: UUID, agent_id: str) -> DigitalTwinResponse:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        twin.is_active = False
+        twin.status = "standby"
+        twin.social_status = "available"
+        await self._log_activity(agent_id, "deactivated", f"{twin.owner_display_name or 'Owner'} is back online")
+        await self.db.commit()
+        await self.db.refresh(twin)
+        return self._to_twin(twin)
+
+    async def receive_message(
+        self, agent_id: str, request: TwinMessageRequest, from_user_id: UUID | None = None
+    ) -> TwinMessageResponse:
+        twin = await self._get_twin(agent_id)
+        if not twin.is_active:
+            raise HTTPException(status_code=400, detail="This digital twin is not currently representing its owner")
+
+        msg = TwinMessageModel(
+            id=uuid4(),
+            twin_agent_id=agent_id,
+            from_user_id=from_user_id,
+            from_name=request.from_name,
+            body=request.body,
+            direction="inbound",
+        )
+        self.db.add(msg)
+
+        reply = TwinMessageModel(
+            id=uuid4(),
+            twin_agent_id=agent_id,
+            from_user_id=None,
+            from_name=twin.name,
+            body=(
+                f"Thanks {request.from_name}! I've noted your message for "
+                f"{twin.owner_display_name or 'the owner'}. They'll see this when they're back."
+            ),
+            direction="outbound",
+        )
+        self.db.add(reply)
+        await self._log_activity(
+            agent_id, "message", f"Message from {request.from_name}: {request.body[:80]}"
+        )
+        await self.db.commit()
+        await self.db.refresh(msg)
+        return self._to_message(msg)
+
+    async def twin_post(
+        self, owner_id: UUID, agent_id: str, request: TwinPostRequest, token: str
+    ) -> dict:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        if not twin.is_active:
+            raise HTTPException(status_code=400, detail="Activate your twin before posting")
+
+        owner = twin.owner_display_name or "User"
+        prefixed = (
+            f"🤖 Digital twin of {owner} — {owner} is busy right now. "
+            f"I'm here to help.\n\n{request.body}"
+        )
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    f"{self.settings.content_service_url}/api/v1/posts",
+                    headers={"Authorization": f"Bearer {token}"},
+                    json={
+                        "body": prefixed,
+                        "context": request.context,
+                        "is_twin_post": True,
+                        "twin_agent_id": agent_id,
+                        "owner_display_name": owner,
+                        "post_type": "text",
+                    },
+                )
+                if res.status_code not in (200, 201):
+                    raise HTTPException(status_code=502, detail="Failed to publish twin post")
+                data = res.json().get("data", {})
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail="Content service unavailable") from e
+
+        await self._log_activity(agent_id, "post", f"Posted on behalf of {owner}: {request.body[:60]}")
+        await self.db.commit()
+        return data
+
+    async def get_briefing(self, owner_id: UUID, agent_id: str) -> TwinBriefingResponse:
+        twin = await self._get_owned_twin(owner_id, agent_id)
+        msgs = await self.db.execute(
+            select(TwinMessageModel)
+            .where(TwinMessageModel.twin_agent_id == agent_id)
+            .order_by(TwinMessageModel.created_at.desc())
+            .limit(20)
+        )
+        messages = [self._to_message(m) for m in msgs.scalars().all()]
+
+        acts = await self.db.execute(
+            select(TwinActivityModel)
+            .where(TwinActivityModel.twin_agent_id == agent_id)
+            .order_by(TwinActivityModel.created_at.desc())
+            .limit(15)
+        )
+        activities = [
+            {"type": a.activity_type, "summary": a.summary, "at": a.created_at.isoformat()}
+            for a in acts.scalars().all()
+        ]
+
+        inbound = sum(1 for m in messages if m.direction == "inbound")
+        posts = sum(1 for a in activities if a["type"] == "post")
+        owner = twin.owner_display_name or "you"
+
+        voice_summary = (
+            f"Welcome back, {owner}. While you were away, your twin {twin.name} "
+            f"handled {inbound} message{'s' if inbound != 1 else ''} and made {posts} post{'s' if posts != 1 else ''}. "
+            f"Say 'read messages' for details."
+        )
+
+        return TwinBriefingResponse(
+            agent_id=agent_id,
+            twin_name=twin.name,
+            owner_display_name=owner,
+            greeting=twin.persona_greeting or _default_greeting(owner, twin.name),
+            message_count=inbound,
+            post_count=posts,
+            activities=activities,
+            messages=messages,
+            voice_summary=voice_summary,
+        )
 
     async def issue_command(
         self, user_id: UUID, request: CommandRequest, token: str
@@ -60,7 +228,6 @@ class RobotAgentService:
             message = f"Command '{cmd}' not in certified allowlist"
             status = "rejected"
         else:
-            # Verify via safety service
             safety_check = await self._safety_verify(cmd, token)
             if safety_check == "passed":
                 status = "accepted"
@@ -88,7 +255,7 @@ class RobotAgentService:
         )
 
     async def get_dashboard(self, user_id: UUID) -> RobotDashboardResponse:
-        twins = await self.list_twins(owner_id=None)
+        twins = await self.list_twins(owner_id=user_id)
         recent = await self.db.execute(
             select(CommandLogModel)
             .where(CommandLogModel.issued_by == user_id)
@@ -96,6 +263,7 @@ class RobotAgentService:
             .limit(10)
         )
         logs = recent.scalars().all()
+        active = next((t for t in twins if t.is_active), None)
         return RobotDashboardResponse(
             twins=twins,
             recent_commands=[
@@ -108,6 +276,32 @@ class RobotAgentService:
                 for l in logs
             ],
             safety_channel_status="certified_stub_v1 — operational",
+            active_twin=active,
+        )
+
+    async def _get_twin(self, agent_id: str) -> DigitalTwinModel:
+        result = await self.db.execute(
+            select(DigitalTwinModel).where(DigitalTwinModel.agent_id == agent_id)
+        )
+        twin = result.scalar_one_or_none()
+        if not twin:
+            raise HTTPException(status_code=404, detail="Digital twin not found")
+        return twin
+
+    async def _get_owned_twin(self, owner_id: UUID, agent_id: str) -> DigitalTwinModel:
+        twin = await self._get_twin(agent_id)
+        if twin.owner_id != owner_id:
+            raise HTTPException(status_code=403, detail="Not your digital twin")
+        return twin
+
+    async def _log_activity(self, agent_id: str, activity_type: str, summary: str) -> None:
+        self.db.add(
+            TwinActivityModel(
+                id=uuid4(),
+                twin_agent_id=agent_id,
+                activity_type=activity_type,
+                summary=summary,
+            )
         )
 
     async def _safety_verify(self, command: str, token: str) -> str:
@@ -133,4 +327,17 @@ class RobotAgentService:
             social_status=twin.social_status,
             capabilities=twin.capabilities,
             owner_id=twin.owner_id,
+            owner_display_name=twin.owner_display_name,
+            persona_greeting=twin.persona_greeting,
+            is_active=twin.is_active,
+        )
+
+    def _to_message(self, msg: TwinMessageModel) -> TwinMessageResponse:
+        return TwinMessageResponse(
+            id=msg.id,
+            twin_agent_id=msg.twin_agent_id,
+            from_name=msg.from_name,
+            body=msg.body,
+            direction=msg.direction,
+            created_at=msg.created_at,
         )

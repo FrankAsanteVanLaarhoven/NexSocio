@@ -14,6 +14,14 @@ async def init_db(engine) -> None:
     async with engine.begin() as conn:
         await conn.execute(text("CREATE SCHEMA IF NOT EXISTS robot_agent"))
         await conn.run_sync(Base.metadata.create_all)
+        for col, col_type in [
+            ("owner_display_name", "VARCHAR(64)"),
+            ("persona_greeting", "TEXT"),
+            ("is_active", "BOOLEAN DEFAULT FALSE"),
+        ]:
+            await conn.execute(
+                text(f"ALTER TABLE robot_agent.digital_twins ADD COLUMN IF NOT EXISTS {col} {col_type}")
+            )
         # Seed default twins if empty
         await conn.execute(text("""
             INSERT INTO robot_agent.digital_twins (id, agent_id, owner_id, name, status, safety_channel, social_status, capabilities)
