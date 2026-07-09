@@ -1,14 +1,10 @@
 "use client";
 
 import { useReducedMotion } from "framer-motion";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-type SplashVideoProps = {
-  className?: string;
-  variant?: "hero" | "phone";
-};
-
-export function SplashVideo({ className = "", variant = "hero" }: SplashVideoProps) {
+export function SplashVideo() {
   const reduceMotion = useReducedMotion();
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -17,30 +13,39 @@ export function SplashVideo({ className = "", variant = "hero" }: SplashVideoPro
     if (!video || reduceMotion) return;
 
     const play = () => {
-      void video.play().catch(() => {
-        /* autoplay may be blocked until user gesture */
-      });
+      void video.play().catch(() => {});
     };
 
     play();
-    video.addEventListener("loadeddata", play);
-    return () => video.removeEventListener("loadeddata", play);
+    video.addEventListener("canplay", play);
+    return () => video.removeEventListener("canplay", play);
   }, [reduceMotion]);
 
-  const isPhone = variant === "phone";
-
   return (
-    <video
-      ref={videoRef}
-      className={`block h-full w-full ${isPhone ? "object-cover" : "object-contain"} ${className}`}
-      src="/splash-nexsocio.mp4"
-      poster="/brand-splash-reference.jpg"
-      autoPlay={!reduceMotion}
-      loop={!reduceMotion}
-      muted
-      playsInline
-      preload="auto"
-      aria-label="NexSocio liquid logo animation"
-    />
+    <div className="absolute inset-0">
+      {reduceMotion ? (
+        <Image
+          src="/brand-splash-reference.jpg"
+          alt="NexSocio splash"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+      ) : (
+        <video
+          ref={videoRef}
+          className="h-full w-full object-cover"
+          src="/splash-nexsocio.mp4"
+          poster="/brand-splash-reference.jpg"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-label="NexSocio splash animation"
+        />
+      )}
+    </div>
   );
 }
