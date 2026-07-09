@@ -18,7 +18,7 @@ function RegisterContent() {
 
   return (
     <div className="space-y-4">
-      <RegisterFlow onComplete={() => window.location.assign("/")} />
+      <RegisterFlow onComplete={() => window.location.assign("/feed")} />
       <p className="text-center text-xs text-[#5A5A5A]">
         Registering a child?{" "}
         <Link href="/register?kids=1" className="text-[#7C4DFF] hover:underline">

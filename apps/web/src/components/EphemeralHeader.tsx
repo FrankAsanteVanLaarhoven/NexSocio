@@ -4,6 +4,7 @@ import { ModeBadge } from "@nexus/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { AppIcon, type AppIconName } from "@/components/icons/AppIcon";
 import { useTranslation } from "@/i18n";
 import { useAuthHydrated } from "@/hooks/useAuthHydrated";
@@ -69,18 +70,11 @@ export function EphemeralHeader() {
       style={showNav ? { backgroundColor: "var(--color-header-bg)" } : undefined}
     >
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="flex h-7 w-7 items-center justify-center rounded border border-accent bg-accent-muted">
-            <span className="text-[10px] font-bold text-accent">NS</span>
-          </div>
-          <span
-            className={`text-sm font-semibold tracking-[0.15em] uppercase text-primary transition-opacity duration-500 ${
-              showNav ? "opacity-100" : "opacity-70"
-            }`}
-          >
-            NEXSOCIO
-          </span>
-        </Link>
+        <BrandLogo
+          href="/"
+          variant="header"
+          className={`transition-opacity duration-500 ${showNav ? "opacity-100" : "opacity-80"}`}
+        />
 
         {hydrated && session && (
           <nav

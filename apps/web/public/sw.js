@@ -1,4 +1,4 @@
-const CACHE = "nexus-pwa-v2";
+const CACHE = "nexus-pwa-v3";
 const PRECACHE = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {

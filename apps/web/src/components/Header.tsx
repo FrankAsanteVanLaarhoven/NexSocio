@@ -2,6 +2,7 @@
 
 import { ModeBadge } from "@nexus/ui";
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 
 import { usePathname } from "next/navigation";
 import { useAuthHydrated } from "@/hooks/useAuthHydrated";
@@ -28,14 +29,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-[#1F1F1F] bg-[#0A0A0A]/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded border border-[#00E5FF]/30 bg-[#00E5FF]/10">
-              <span className="text-[10px] font-bold text-[#00E5FF]">NS</span>
-            </div>
-            <span className="text-sm font-semibold tracking-[0.15em] uppercase text-[#F5F5F5]">
-              NEXSOCIO
-            </span>
-          </Link>
+          <BrandLogo href="/" variant="header" />
 
           {hydrated && session && (
             <nav className="hidden sm:flex items-center gap-1">
