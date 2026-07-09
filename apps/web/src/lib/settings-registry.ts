@@ -99,7 +99,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
       { id: "podcast", label: "Podcast", href: "/studio", sector: "personal", icon: "🎙" },
       { id: "vlog", label: "Vlog", href: "/studio", sector: "personal", icon: "📹" },
       { id: "live", label: "Live streams", href: "/live", sector: "both", icon: "●" },
-      { id: "uploads", label: "Media uploads", description: "TikTok/Reels formats · MP4 · JPG · WebP", href: "/studio", sector: "both", icon: "⬆" },
+      { id: "uploads", label: "Media uploads", description: "Video & photo · MP4 · JPG · WebP", href: "/studio", sector: "both", icon: "⬆" },
       { id: "offline", label: "Offline video & downloads", href: "/settings/media", sector: "personal", icon: "⬇" },
     ],
   },

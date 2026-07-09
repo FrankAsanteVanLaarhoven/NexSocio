@@ -11,17 +11,15 @@ export interface MediaFormatSpec {
   platforms: string;
 }
 
-/** TikTok, Instagram, YouTube Shorts aligned limits */
 export const MEDIA_SPECS: Record<MediaContext, MediaFormatSpec> = {
   reel: {
     id: "reel",
-    label: "Reel / Short",
+    label: "Video",
     accept: "video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm,.m4v",
     extensions: [".mp4", ".mov", ".webm", ".m4v", ".avi"],
     maxBytes: 287 * 1024 * 1024,
     maxDurationSec: 600,
-    aspectHint: "9:16 vertical · 1080×1920",
-    platforms: "TikTok · Reels · Shorts",
+    platforms: "NexSocio Studio",
   },
   photo: {
     id: "photo",

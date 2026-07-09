@@ -3,7 +3,6 @@
 import { Button } from "@nexus/ui";
 import { useCallback, useRef, useState } from "react";
 import {
-  formatFileSize,
   getMediaSpec,
   isImageUrl,
   isVideoUrl,
@@ -115,19 +114,8 @@ export function MediaUploader({
               : "border-[#2A2A2A] hover:border-[#3A3A3A] bg-[#0A0A0A]/50"
           }`}
         >
-          <p className="text-sm text-[#F5F5F5]">{label || `Upload ${spec.label}`}</p>
-          <p className="text-[10px] text-[#5A5A5A] mt-1">
-            {spec.extensions.join(" · ")} · max {formatFileSize(spec.maxBytes)}
-          </p>
-          <p className="text-[10px] text-[#7C4DFF] mt-1">{spec.platforms}</p>
-          {spec.aspectHint && (
-            <p className="text-[10px] text-[#5A5A5A] mt-0.5">{spec.aspectHint}</p>
-          )}
-          {spec.maxDurationSec && (
-            <p className="text-[10px] text-[#5A5A5A]">
-              Max {Math.floor(spec.maxDurationSec / 60)} min video
-            </p>
-          )}
+          <p className="text-sm text-primary">{label || `Upload ${spec.label}`}</p>
+          <p className="mt-1 text-xs text-muted">Drag and drop or choose a file</p>
         </div>
       )}
 
