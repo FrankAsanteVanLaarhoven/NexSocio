@@ -21,7 +21,7 @@ export default function ShareSettingsPage() {
         <p className="text-xs text-[#8A8A8A] mb-3">Scan to open NexSocio on mobile.</p>
         <div className="mx-auto w-fit rounded-lg border border-[#2A2A2A] bg-white p-2">
           <Image
-            src="/qr-invite.png"
+            src="/qr-nexsocio.png"
             alt="QR code for nexsocio.com"
             width={160}
             height={160}
@@ -30,8 +30,8 @@ export default function ShareSettingsPage() {
           />
         </div>
         <a
-          href="/qr-invite.png"
-          download="nexsocio-invite-qr.png"
+          href="/qr-nexsocio.png"
+          download="nexsocio-qr.png"
           className="mt-3 block text-center text-xs text-[#F5F5F5] hover:text-[#00E5FF]"
         >
           Download QR
