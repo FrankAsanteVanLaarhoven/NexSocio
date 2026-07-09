@@ -2,135 +2,233 @@
 
 **Repository:** [github.com/FrankAsanteVanLaarhoven/NExsocio](https://github.com/FrankAsanteVanLaarhoven/NExsocio)
 
-**World-Leading SOTA Socio-Technical Platform** — Production-grade monorepo implementing zero-trust security, ZKP-based age-adaptive modes, unified professional-personal context, and architecturally complete Robot/Embodied Agent integration.
+**World-Leading SOTA Socio-Technical Platform** — Production-grade monorepo with zero-trust security, ZKP age-adaptive modes, unified professional/personal context, real-time collaboration, push notifications, multi-party WebRTC, full i18n, theming, and embodied AI integration.
 
-*Blueprint Version 1.0 | 09 July 2026*
+*Blueprint Version 1.0 | Updated 09 July 2026*
+
+---
 
 ## Architecture
 
 ```
 nexus/
-├── apps/web/           # Next.js 15 + React 19 (Ephemeral Precision UI)
-├── packages/ui/        # Shared design system
-├── packages/types/     # Shared TypeScript types
-├── packages/contracts/ # OpenAPI contracts
-├── services/           # FastAPI bounded contexts (DDD structure)
-├── libs/nexus-common/  # Shared Python libraries
-├── infrastructure/     # AWS CDK + Kubernetes + Istio
-└── tests/              # Contract & integration tests
+├── apps/web/              # Next.js 15 + React 19 (Ephemeral Precision UI)
+├── packages/ui/           # Shared design system (Framer Motion, panels, buttons)
+├── packages/types/        # Shared TypeScript contracts
+├── packages/contracts/    # OpenAPI specs
+├── services/              # FastAPI bounded contexts (DDD)
+├── libs/nexus-common/     # Shared Python (JWT, ZKP, health)
+├── infrastructure/        # AWS CDK, K8s, Istio, External Secrets
+├── scripts/               # dev.sh, dev-start-all.sh, i18n, deploy-staging
+└── tests/                 # Contract, integration, load tests
 ```
 
-## Bounded Contexts
+---
 
-| Service | Port | Status |
-|---------|------|--------|
-| Identity & Verification | 8001 | **MVP** — ZKP, registration, profiles, search |
-| Social Graph | 8002 | **MVP** — Connect, accept, connection feed |
-| Content & Media | 8003 | **MVP** — Posts, global/connections/professional feeds |
-| Professional Networking | 8004 | **MVP** — Dashboard, professional profile |
-| Safety & Moderation | 8005 | **MVP** — Moderation engine, reports, dashboard |
-| Robot & Embodied Agent | 8006 | **MVP** — Digital twins, safety commands |
+## Services (10 bounded contexts)
 
-## Quick Start
+| Service | Port | Capabilities |
+|---------|------|--------------|
+| **Identity** | 8001 | Auth (password, PIN, WebAuthn, Face, Voice, Kids), ZKP, profiles, search |
+| **Social Graph** | 8002 | Connections, requests, graph feed |
+| **Content** | 8003 | Posts, reels, global/connections/professional feeds, media upload |
+| **Professional** | 8004 | Professional dashboard, headline, networking context |
+| **Safety** | 8005 | Moderation engine, reports, governance dashboard |
+| **Robot Agent** | 8006 | Digital twins, safety-certified commands, talking avatar |
+| **Hub** | 8007 | Markets, news, maps, device status, world clocks |
+| **Commerce** | 8008 | Marketplace, cart, wallet checkout, seller listings |
+| **Collaboration** | 8009 | Teams, meetings, calls, status, contacts, WebRTC signaling, ICE/TURN |
+| **Notification** | 8009 | Inbox, WebSocket push, Web Push (VAPID), activity delivery |
+
+---
+
+## Frontend features
+
+### Core
+- **Ephemeral Precision UI** — tactical grid, context-aware nav, personal/professional toggle
+- **PWA** — manifest, service worker, offline page, PNG icons (`npm run pwa:icons`)
+- **TanStack Query** — optimistic updates on calls, contacts, meetings, inbox, teams, status
+
+### Real-time
+- **WebRTC calls** — voice/video peer connection with signaling (`/calls`)
+- **Multi-party meetings** — mesh rooms, `MeetingRoomView`, room codes (`/meetings`)
+- **Push notifications** — VAPID subscribe, SW handlers, enable banner
+- **Live inbox** — WebSocket notification stream + activity history
+
+### Inbox hub (`/inbox`)
+- **Activity** — full notification history with archive, spam, block, report actions
+- **People** — online/offline from status feed, favorite follows, recently viewed profiles
+- **Library** — liked videos, favorite sounds, collections, archives
+- **Controls** — 40+ shortcuts: mentions, repost, privacy, wellbeing, family pairing, playback, accessibility, data saver, offline videos, plan/ads, help center, switch account, connected apps
+
+### Internationalization (20 languages)
+English, German, French, Dutch, Greek, Polish, Russian, Arabic (RTL), Chinese, Portuguese, Italian, Urdu (RTL), Turkish, Spanish (AR), Indonesian, Japanese, Korean, Filipino, Hausa, Yoruba.
+
+Settings → Account → Language. Messages in `apps/web/src/i18n/messages/`.
+
+### Theming
+- **Dark / Light / System** modes
+- **12 accent presets** + custom colour picker
+- CSS variable theming (`--color-accent`, surfaces, borders)
+- **Lucide icons** — professional stroke icons across nav and settings
+
+### Settings hub
+40+ grouped settings across personal & professional sectors: security, privacy, wallet, marketplace, analytics, jobs, monetization, location finder, connectors, legal, help.
+
+---
+
+## Quick start
 
 ### Prerequisites
-
 - Node.js 20+
-- Python 3.11+
-- Docker & Docker Compose
+- Python 3.11+ (`.venv` in repo)
+- Docker Desktop (Postgres + Redis)
 
-### 1. Install dependencies
+### Start everything (recommended)
 
 ```bash
 cd nexus
 npm install
 pip install -r requirements.txt
-cp .env.example .env
+
+# Start Docker Desktop, then:
+./scripts/dev-start-all.sh
 ```
 
-### 2. Start infrastructure
+Opens:
+- **Web:** http://localhost:3000
+- **API docs:** http://localhost:8001/docs … :8010/docs
+
+Stop: `./scripts/dev-stop-all.sh`  
+Logs: `.dev-logs/`
+
+### Manual start
 
 ```bash
-chmod +x scripts/dev.sh
-./scripts/dev.sh infra
+./scripts/dev.sh infra          # Postgres + Redis
+./scripts/dev.sh identity       # 8001
+./scripts/dev.sh social         # 8002
+./scripts/dev.sh content        # 8003
+./scripts/dev.sh professional   # 8004
+./scripts/dev.sh safety         # 8005
+./scripts/dev.sh robot          # 8006
+./scripts/dev.sh hub            # 8007
+./scripts/dev.sh commerce       # 8008
+./scripts/dev.sh collaboration  # 8009
+./scripts/dev.sh notification   # 8010
+./scripts/dev.sh web            # 3000
 ```
 
-### 3. Start services (separate terminals)
+### Environment
+
+Copy `.env.example` to `.env`. Frontend defaults to `localhost` service URLs via `apps/web/src/lib/api.ts`. Optional:
 
 ```bash
-./scripts/dev.sh identity      # port 8001
-./scripts/dev.sh social        # port 8002
-./scripts/dev.sh content       # port 8003
-./scripts/dev.sh professional  # port 8004
-./scripts/dev.sh web           # port 3000
+NEXT_PUBLIC_IDENTITY_URL=http://localhost:8001
+NEXT_PUBLIC_COLLABORATION_URL=http://localhost:8009
+NEXT_PUBLIC_NOTIFICATION_URL=http://localhost:8010
 ```
 
-### 4. End-to-end flow
+---
 
-1. Open http://localhost:3000
-2. Register → ZKP verify → select mode (Kids/Prime/Professional)
-3. **Feed** — toggle Personal/Professional context; filter Global vs Connections
-4. **Connections** — search users, send/accept connection requests
-5. **Profile** — edit bio, headline, company, skills
-6. **Professional** — switch to Professional context for networking feed + insights
-
-### 5. Deploy to staging (AWS)
+## Staging deployment
 
 ```bash
+./scripts/deploy-staging.sh              # CDK synth + checklist
 cd infrastructure/cdk && npx cdk deploy NexusStagingStack
-kubectl apply -f infrastructure/k8s/argocd/application-staging.yaml
-# GitHub Actions deploy-staging.yml builds images on push to develop
 ```
 
-## Design System: Ephemeral Precision
+Post-deploy: update secrets (DATABASE_URL, VAPID, TURN), `NEXT_PUBLIC_*` URLs, ArgoCD sync `infrastructure/k8s/staging`.
 
-- True black base (`#0A0A0A`) with tactical grid overlay
-- Electric cyan accent (`#00E5FF`)
-- Inter/Geist typography via `next/font`
-- Context-intelligent panels via Framer Motion springs
-- WCAG AAA contrast targets
+---
 
-## Security (Zero-Trust Baseline)
+## Design system
 
-- Istio mTLS policies in `infrastructure/k8s/istio/`
-- JWT authentication across services
-- ZKP age verification stub with production interface in `libs/nexus-common/nexus_common/security/zkp.py`
-- SBOM + Semgrep + cosign in CI pipeline
+- **Base:** `#0A0A0A` dark / `#F4F4F6` light (CSS variables)
+- **Accent:** user-configurable (default `#00E5FF`)
+- **Typography:** Geist / Inter via `next/font`
+- **Motion:** Framer Motion springs (`FadeIn`, `AnimatedList`, `PulseBadge`)
+- **Icons:** Lucide React (stroke, 1.75px)
+- **WCAG:** AAA contrast targets, accessibility toggles in inbox
 
-## Deployment
+---
 
-```bash
-# AWS CDK (EKS cluster)
-cd infrastructure/cdk && npm install && npx cdk synth
+## Security (zero-trust baseline)
 
-# Docker Compose (full stack)
-docker compose up -d
+- JWT across all services
+- ZKP age verification interface (`libs/nexus-common/nexus_common/security/zkp.py`)
+- Istio mTLS policies (`infrastructure/k8s/istio/`)
+- KMS + External Secrets (CDK): DB, JWT, VAPID, TURN
+- SBOM, Semgrep, cosign in CI
 
-# GitOps via ArgoCD
-kubectl apply -f infrastructure/k8s/argocd/
-```
+---
 
 ## Testing
 
 ```bash
+# Contract tests (requires Postgres)
 pytest tests/ -v
-npm run typecheck
-npm run build
+
+# Frontend
+cd apps/web && npm run typecheck && npm run build
+
+# Load
+k6 run tests/load/k6-core-flow.js
 ```
 
-## Roadmap
+---
 
-- **Phase 0** (Weeks 1-4): Foundations — ✅ Complete
-- **Phase 1** (Weeks 5-16): Core MVP — ✅ Identity, Content, UI, Profiles, Social Graph
-- **Phase 2** (Weeks 17-24): Differentiation — ✅ Robot layer, Safety, Load tests
-- **Phase 3** (Weeks 25-32): Production — ✅ Hardening overlay, public beta cohorts, observability
-
-## Load Testing
+## i18n maintenance
 
 ```bash
-k6 run tests/load/k6-core-flow.js
-locust -f tests/load/locustfile.py --host=http://localhost:8001
+node scripts/merge-i18n-overrides.mjs    # sync new en keys → all locales
+node scripts/generate-i18n-locales.mjs   # rebuild .ts locale files
 ```
+
+---
+
+## Key routes
+
+| Route | Feature |
+|-------|---------|
+| `/` | Feed (personal/professional, global/connections) |
+| `/inbox` | Activity hub (people, library, controls) |
+| `/calls` | WebRTC voice/video |
+| `/meetings` | Schedule + multi-party video |
+| `/contacts` | Sync & share |
+| `/teams` | Business teams |
+| `/status` | 24h status feed |
+| `/twin` | Digital twin + talking avatar |
+| `/studio` | Reels, podcast, vlog, AI video |
+| `/live` | Live stream |
+| `/hub` | Markets, news, maps |
+| `/marketplace` | Buy/sell + wallet checkout |
+| `/settings` | Full settings hub |
+| `/settings/account` | Language, theme, accent, voice |
+
+---
+
+## Roadmap status
+
+| Phase | Status |
+|-------|--------|
+| Phase 0 — Foundations | ✅ Complete |
+| Phase 1 — Core MVP | ✅ Identity, Social, Content, UI, Profiles |
+| Phase 2 — Differentiation | ✅ Robot, Safety, Collaboration, Notification |
+| Phase 3 — Production | ✅ PWA, WebRTC, Push, i18n, Theming, CDK staging |
+| Phase 4 — Operational | 🔄 Staging deploy, E2E multi-browser, security audit |
+
+---
+
+## Recent commits (highlights)
+
+- Full-site i18n (20 languages, RTL)
+- Theme selection (dark/light/system) + accent colour picker
+- Lucide professional icons
+- Inbox activity hub (people, library, controls)
+- React Query hardening (calls, contacts, meetings)
+- Multi-party meeting WebRTC + push notifications
+- `dev-start-all.sh` one-command local stack
 
 ---
 
