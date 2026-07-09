@@ -9,6 +9,10 @@ resources:
   - ../services/content-deployment.yaml
   - ../services/social-graph-deployment.yaml
   - ../services/professional-deployment.yaml
+  - ../services/hub-deployment.yaml
+  - ../services/commerce-deployment.yaml
+  - ../services/collaboration-deployment.yaml
+  - ../services/notification-deployment.yaml
   - ../istio/peer-authentication.yaml
 
 images:
@@ -19,6 +23,14 @@ images:
   - name: ${ECR_REGISTRY}/nexus-social-graph
     newTag: staging
   - name: ${ECR_REGISTRY}/nexus-professional
+    newTag: staging
+  - name: ${ECR_REGISTRY}/nexus-hub
+    newTag: staging
+  - name: ${ECR_REGISTRY}/nexus-commerce
+    newTag: staging
+  - name: ${ECR_REGISTRY}/nexus-collaboration
+    newTag: staging
+  - name: ${ECR_REGISTRY}/nexus-notification
     newTag: staging
 
 patches:

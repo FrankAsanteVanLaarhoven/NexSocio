@@ -25,8 +25,10 @@ case "${1:-help}" in
   professional) run_service "services.professional.api.main:app" 8004 ;;
   safety)     run_service "services.safety.api.main:app" 8005 ;;
   robot)      run_service "services.robot_agent.api.main:app" 8006 ;;
-  hub)        run_service "services.hub.api.main:app" 8007 ;;
-  commerce)   run_service "services.commerce.api.main:app" 8008 ;;
+  hub)            run_service "services.hub.api.main:app" 8007 ;;
+  commerce)       run_service "services.commerce.api.main:app" 8008 ;;
+  collaboration)  run_service "services.collaboration.api.main:app" 8009 ;;
+  notification)   run_service "services.notification.api.main:app" 8010 ;;
   web)
     cd "${ROOT}/apps/web"
     npm run dev
@@ -42,9 +44,11 @@ case "${1:-help}" in
     echo "  ./scripts/dev.sh robot"
     echo "  ./scripts/dev.sh hub"
     echo "  ./scripts/dev.sh commerce"
+    echo "  ./scripts/dev.sh collaboration"
+    echo "  ./scripts/dev.sh notification"
     echo "  ./scripts/dev.sh web"
     ;;
   *)
-    echo "Usage: ./scripts/dev.sh {infra|identity|social|content|professional|safety|robot|hub|commerce|web|all}"
+    echo "Usage: ./scripts/dev.sh {infra|identity|social|content|professional|safety|robot|hub|commerce|collaboration|notification|web|all}"
     ;;
 esac

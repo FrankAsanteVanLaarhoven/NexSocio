@@ -596,3 +596,96 @@ export interface MarketplaceDashboard {
   orders_to_fulfill: number;
   currency: string;
 }
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface InboxSummary {
+  unread_count: number;
+  notifications: Notification[];
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  owner_id: string;
+  sector: string;
+  member_count: number;
+  created_at: string;
+}
+
+export interface TeamMember {
+  user_id: string;
+  display_name: string;
+  role: string;
+}
+
+export interface Meeting {
+  id: string;
+  team_id: string | null;
+  host_id: string;
+  host_name: string;
+  title: string;
+  scheduled_at: string;
+  duration_min: number;
+  room_code: string;
+  status: string;
+  created_at: string;
+}
+
+export interface CallSession {
+  id: string;
+  caller_id: string;
+  caller_name: string;
+  callee_id: string;
+  callee_name: string;
+  call_type: "voice" | "video";
+  status: string;
+  room_code: string;
+  started_at: string;
+  ended_at?: string | null;
+}
+
+export interface StatusUpdate {
+  id: string;
+  user_id: string;
+  display_name: string;
+  text: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface Contact {
+  id: string;
+  contact_user_id: string | null;
+  display_name: string;
+  email: string | null;
+  phone: string | null;
+  source: string;
+  created_at: string;
+}
+
+export interface PodcastEpisode {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  media_url: string | null;
+  episode_type: "podcast" | "vlog" | "tv";
+  published_at: string | null;
+  created_at: string;
+}
+
+export interface ShareResult {
+  shared_count: number;
+  contact_ids: string[];
+}

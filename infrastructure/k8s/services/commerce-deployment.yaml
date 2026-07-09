@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commerce
+  namespace: nexus
+  labels:
+    app: commerce
+    bounded-context: commerce
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: commerce
+  template:
+    metadata:
+      labels:
+        app: commerce
+        version: v1
+    spec:
+      containers:
+        - name: commerce
+          image: ${ECR_REGISTRY}/nexus-commerce:latest
+          ports:
+            - containerPort: 8008
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-db
+                  key: url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-jwt
+                  key: secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8008
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8008
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: commerce
+  namespace: nexus
+spec:
+  selector:
+    app: commerce
+  ports:
+    - port: 8008
+      targetPort: 8008

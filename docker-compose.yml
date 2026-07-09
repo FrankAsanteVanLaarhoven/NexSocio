@@ -88,5 +88,67 @@ services:
       identity:
         condition: service_started
 
+  hub:
+    build:
+      context: .
+      dockerfile: services/hub/Dockerfile
+    ports:
+      - "8007:8007"
+    environment:
+      JWT_SECRET: dev-secret-change-in-production
+      CONTENT_SERVICE_URL: http://content:8003
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      content:
+        condition: service_started
+
+  commerce:
+    build:
+      context: .
+      dockerfile: services/commerce/Dockerfile
+    ports:
+      - "8008:8008"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      JWT_SECRET: dev-secret-change-in-production
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  collaboration:
+    build:
+      context: .
+      dockerfile: services/collaboration/Dockerfile
+    ports:
+      - "8009:8009"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      JWT_SECRET: dev-secret-change-in-production
+      SOCIAL_GRAPH_SERVICE_URL: http://social-graph:8002
+      NOTIFICATION_SERVICE_URL: http://notification:8010
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      social-graph:
+        condition: service_started
+      notification:
+        condition: service_started
+
+  notification:
+    build:
+      context: .
+      dockerfile: services/notification/Dockerfile
+    ports:
+      - "8010:8010"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      JWT_SECRET: dev-secret-change-in-production
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:

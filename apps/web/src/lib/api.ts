@@ -52,6 +52,16 @@ import type {
   WalletTransaction,
   WebAuthnChallenge,
   ZKPAgeProof,
+  InboxSummary,
+  Notification,
+  Team,
+  TeamMember,
+  Meeting,
+  CallSession,
+  StatusUpdate,
+  Contact,
+  PodcastEpisode,
+  ShareResult,
 } from "@nexus/types";
 
 const IDENTITY_URL = process.env.NEXT_PUBLIC_IDENTITY_URL || "http://localhost:8001";
@@ -62,6 +72,8 @@ const SAFETY_URL = process.env.NEXT_PUBLIC_SAFETY_URL || "http://localhost:8005"
 const ROBOT_URL = process.env.NEXT_PUBLIC_ROBOT_URL || "http://localhost:8006";
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL || "http://localhost:8007";
 const COMMERCE_URL = process.env.NEXT_PUBLIC_COMMERCE_URL || "http://localhost:8008";
+const COLLABORATION_URL = process.env.NEXT_PUBLIC_COLLABORATION_URL || "http://localhost:8009";
+const NOTIFICATION_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL || "http://localhost:8010";
 
 async function request<T>(
   baseUrl: string,
@@ -808,6 +820,203 @@ export async function getOrders(token: string): Promise<Order[]> {
 
 export async function getSalesOrders(token: string): Promise<Order[]> {
   return request<Order[]>(COMMERCE_URL, "/api/v1/orders/sales", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getInbox(token: string): Promise<InboxSummary> {
+  return request<InboxSummary>(NOTIFICATION_URL, "/api/v1/inbox", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function markNotificationRead(
+  token: string,
+  notificationId: string
+): Promise<Notification> {
+  return request<Notification>(
+    NOTIFICATION_URL,
+    `/api/v1/notifications/${notificationId}/read`,
+    { method: "POST", headers: authHeaders(token) }
+  );
+}
+
+export function notificationWsUrl(token: string): string {
+  const base = NOTIFICATION_URL.replace(/^http/, "ws");
+  return `${base}/api/v1/ws?token=${encodeURIComponent(token)}`;
+}
+
+export async function listTeams(token: string): Promise<Team[]> {
+  return request<Team[]>(COLLABORATION_URL, "/api/v1/teams", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function createTeam(
+  token: string,
+  data: { name: string; sector?: "business" | "professional" }
+): Promise<Team> {
+  return request<Team>(COLLABORATION_URL, "/api/v1/teams", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getTeamMembers(token: string, teamId: string): Promise<TeamMember[]> {
+  return request<TeamMember[]>(COLLABORATION_URL, `/api/v1/teams/${teamId}/members`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function listMeetings(token: string): Promise<Meeting[]> {
+  return request<Meeting[]>(COLLABORATION_URL, "/api/v1/meetings", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function listUpcomingMeetings(token: string): Promise<Meeting[]> {
+  return request<Meeting[]>(COLLABORATION_URL, "/api/v1/meetings/upcoming", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function createMeeting(
+  token: string,
+  data: {
+    title: string;
+    scheduled_at: string;
+    duration_min?: number;
+    team_id?: string;
+  }
+): Promise<Meeting> {
+  return request<Meeting>(COLLABORATION_URL, "/api/v1/meetings", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function startCall(
+  token: string,
+  data: {
+    callee_id: string;
+    callee_name: string;
+    call_type?: "voice" | "video";
+  }
+): Promise<CallSession> {
+  return request<CallSession>(COLLABORATION_URL, "/api/v1/calls", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getRecentCalls(token: string): Promise<CallSession[]> {
+  return request<CallSession[]>(COLLABORATION_URL, "/api/v1/calls/recent", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function answerCall(token: string, callId: string): Promise<CallSession> {
+  return request<CallSession>(COLLABORATION_URL, `/api/v1/calls/${callId}/answer`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function endCall(token: string, callId: string): Promise<CallSession> {
+  return request<CallSession>(COLLABORATION_URL, `/api/v1/calls/${callId}/end`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function postStatus(
+  token: string,
+  data: { text?: string; media_url?: string; media_type?: string }
+): Promise<StatusUpdate> {
+  return request<StatusUpdate>(COLLABORATION_URL, "/api/v1/status", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getStatusFeed(token: string): Promise<StatusUpdate[]> {
+  return request<StatusUpdate[]>(COLLABORATION_URL, "/api/v1/status/feed", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getMyStatus(token: string): Promise<StatusUpdate | null> {
+  return request<StatusUpdate | null>(COLLABORATION_URL, "/api/v1/status/me", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function listContacts(token: string, sync = true): Promise<Contact[]> {
+  const qs = sync ? "?sync=true" : "?sync=false";
+  return request<Contact[]>(COLLABORATION_URL, `/api/v1/contacts${qs}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function addContact(
+  token: string,
+  data: {
+    display_name: string;
+    email?: string;
+    phone?: string;
+    contact_user_id?: string;
+  }
+): Promise<Contact> {
+  return request<Contact>(COLLABORATION_URL, "/api/v1/contacts", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function shareWithContacts(
+  token: string,
+  data: {
+    content_type: "post" | "status" | "meeting" | "product" | "update";
+    content_id?: string;
+    message: string;
+    contact_ids: string[];
+  }
+): Promise<ShareResult> {
+  return request<ShareResult>(COLLABORATION_URL, "/api/v1/share", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createPodcastEpisode(
+  token: string,
+  data: {
+    title: string;
+    description?: string;
+    media_url?: string;
+    episode_type?: "podcast" | "vlog" | "tv";
+    publish?: boolean;
+  }
+): Promise<PodcastEpisode> {
+  return request<PodcastEpisode>(COLLABORATION_URL, "/api/v1/podcast/episodes", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function listPodcastEpisodes(
+  token: string,
+  episodeType?: "podcast" | "vlog" | "tv"
+): Promise<PodcastEpisode[]> {
+  const qs = episodeType ? `?type=${episodeType}` : "";
+  return request<PodcastEpisode[]>(COLLABORATION_URL, `/api/v1/podcast/episodes${qs}`, {
     headers: authHeaders(token),
   });
 }

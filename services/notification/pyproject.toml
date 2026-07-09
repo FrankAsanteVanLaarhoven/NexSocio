@@ -1,0 +1,16 @@
+[project]
+name = "nexus-notification"
+version = "1.0.0"
+requires-python = ">=3.11"
+dependencies = [
+    "nexus-common",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "pydantic-settings>=2.7.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

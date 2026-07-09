@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collaboration
+  namespace: nexus
+  labels:
+    app: collaboration
+    bounded-context: collaboration
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collaboration
+  template:
+    metadata:
+      labels:
+        app: collaboration
+        version: v1
+    spec:
+      containers:
+        - name: collaboration
+          image: ${ECR_REGISTRY}/nexus-collaboration:latest
+          ports:
+            - containerPort: 8009
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-db
+                  key: url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-jwt
+                  key: secret
+            - name: SOCIAL_GRAPH_SERVICE_URL
+              value: http://social-graph:8002
+            - name: NOTIFICATION_SERVICE_URL
+              value: http://notification:8010
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8009
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8009
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: collaboration
+  namespace: nexus
+spec:
+  selector:
+    app: collaboration
+  ports:
+    - port: 8009
+      targetPort: 8009

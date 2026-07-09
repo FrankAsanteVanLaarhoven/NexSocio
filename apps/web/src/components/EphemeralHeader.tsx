@@ -13,11 +13,16 @@ const DOCK = [
   { href: "/twin", label: "Twin", icon: "◎" },
   { href: "/studio", label: "Studio", icon: "▣" },
   { href: "/live", label: "Live", icon: "●" },
+  { href: "/status", label: "Status", icon: "◌" },
+  { href: "/calls", label: "Calls", icon: "☎" },
+  { href: "/teams", label: "Teams", icon: "▤" },
+  { href: "/contacts", label: "Contacts", icon: "☰" },
   { href: "/hub", label: "Hub", icon: "◉" },
   { href: "/marketplace", label: "Market", icon: "🛒" },
   { href: "/map", label: "Map", icon: "⌖" },
   { href: "/find", label: "Find", icon: "⊕" },
   { href: "/connections", label: "Connect", icon: "◇" },
+  { href: "/inbox", label: "Inbox", icon: "✉" },
   { href: "/settings", label: "Settings", icon: "⚙" },
 ];
 

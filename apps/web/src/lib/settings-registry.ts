@@ -37,7 +37,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     sector: "both",
     items: [
       { id: "prefs", label: "General preferences", href: "/settings/account", sector: "both", icon: "⚙" },
-      { id: "inbox", label: "Inbox", description: "Messages, mentions, twin mail", href: "/inbox", sector: "both", icon: "✉", badge: "3" },
+      { id: "inbox", label: "Inbox", description: "Live notifications & mentions", href: "/inbox", sector: "both", icon: "✉" },
       { id: "help", label: "Help & feedback", href: "/settings/help", sector: "both", icon: "💬" },
     ],
   },
@@ -144,6 +144,11 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     title: "Shop & Business",
     sector: "professional",
     items: [
+      { id: "teams", label: "Teams", description: "Business teams & members", href: "/teams", sector: "professional", icon: "▤" },
+      { id: "meetings", label: "Meetings", description: "Schedule & join with room code", href: "/meetings", sector: "professional", icon: "📅" },
+      { id: "calls", label: "Calls", description: "Voice & video like WhatsApp", href: "/calls", sector: "both", icon: "☎" },
+      { id: "contacts", label: "Contacts", description: "Sync & share with selection", href: "/contacts", sector: "both", icon: "☰" },
+      { id: "status", label: "Status feed", description: "24-hour updates", href: "/status", sector: "both", icon: "◌" },
       { id: "shop", label: "Shop & business orders", href: "/shop", sector: "professional", icon: "🛒" },
       { id: "cart", label: "Cart & checkout", href: "/shop#cart", sector: "professional", icon: "🛍" },
       { id: "qr", label: "QR codes", description: "Share shop & payment links", href: "/shop#qr", sector: "professional", icon: "▣" },

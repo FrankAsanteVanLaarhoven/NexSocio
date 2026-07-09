@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: NEXSOCIO Collaboration API
+  version: 1.0.0
+  description: Teams, meetings, calls, status, contacts, podcast
+servers:
+  - url: http://localhost:8009/api/v1
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service healthy
+  /teams:
+    get:
+      summary: List teams for current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Team list
+    post:
+      summary: Create team
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamRequest"
+      responses:
+        "200":
+          description: Team created
+  /meetings:
+    get:
+      summary: List meetings hosted by user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Meeting list
+    post:
+      summary: Schedule meeting
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Meeting created
+  /calls:
+    post:
+      summary: Start voice or video call
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Call session started
+  /status/feed:
+    get:
+      summary: Active status updates (24h)
+      responses:
+        "200":
+          description: Status feed
+  /contacts:
+    get:
+      summary: List contacts (optional sync from social graph)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sync
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Contact list
+  /share:
+    post:
+      summary: Share content with selected contacts
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Share result
+  /podcast/episodes:
+    get:
+      summary: List podcast/vlog/tv episodes
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Episode list
+    post:
+      summary: Create episode
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Episode created
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CreateTeamRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        sector:
+          type: string
+          enum: [business, professional]

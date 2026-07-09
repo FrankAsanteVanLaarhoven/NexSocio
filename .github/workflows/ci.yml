@@ -76,10 +76,21 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
       - uses: aws-actions/amazon-ecr-login@v2
-      - name: Build and push identity
+      - name: Build and push images
         run: |
-          docker build -f services/identity/Dockerfile -t ${{ secrets.ECR_REGISTRY }}/nexus-identity:${{ github.sha }} .
-          docker push ${{ secrets.ECR_REGISTRY }}/nexus-identity:${{ github.sha }}
-      - name: Sign image
-        run: |
-          cosign sign --yes ${{ secrets.ECR_REGISTRY }}/nexus-identity:${{ github.sha }}
+          build_push() {
+            local dir="$1"
+            local image="$2"
+            local tag="${{ secrets.ECR_REGISTRY }}/nexus-${image}:${{ github.sha }}"
+            docker build -f "services/${dir}/Dockerfile" -t "$tag" .
+            docker push "$tag"
+            cosign sign --yes "$tag"
+          }
+          build_push identity identity
+          build_push content content
+          build_push social_graph social-graph
+          build_push professional professional
+          build_push hub hub
+          build_push commerce commerce
+          build_push collaboration collaboration
+          build_push notification notification

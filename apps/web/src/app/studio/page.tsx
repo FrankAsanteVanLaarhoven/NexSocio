@@ -6,7 +6,14 @@ import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { MediaUploader } from "@/components/MediaUploader";
-import { composeWithAI, createMediaPost, getMe } from "@/lib/api";
+import {
+  composeWithAI,
+  createMediaPost,
+  createPodcastEpisode,
+  getMe,
+  listPodcastEpisodes,
+} from "@/lib/api";
+import type { PodcastEpisode } from "@nexus/types";
 import type { UploadedMedia } from "@/lib/media-upload";
 import { useAuthStore } from "@/lib/auth-store";
 import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
@@ -20,7 +27,7 @@ const FILTERS = [
   { id: "vintage", label: "Vintage", css: "sepia(0.6) contrast(0.9)" },
 ];
 
-type StudioMode = "reel" | "photo" | "ai_video";
+type StudioMode = "reel" | "photo" | "ai_video" | "podcast" | "vlog" | "tv";
 
 export default function StudioPage() {
   const session = useAuthStore((s) => s.session);
@@ -38,6 +45,11 @@ export default function StudioPage() {
   const [canHideAiTag, setCanHideAiTag] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [uploadedMedia, setUploadedMedia] = useState<UploadedMedia | null>(null);
+  const [epTitle, setEpTitle] = useState("");
+  const [epDesc, setEpDesc] = useState("");
+  const [episodes, setEpisodes] = useState<PodcastEpisode[]>([]);
+
+  const isBroadcastMode = mode === "podcast" || mode === "vlog" || mode === "tv";
 
   useEffect(() => {
     if (!session) return;
@@ -45,6 +57,13 @@ export default function StudioPage() {
       .then((me) => setCanHideAiTag(!!me.can_hide_ai_tag))
       .catch(() => setCanHideAiTag(false));
   }, [session]);
+
+  useEffect(() => {
+    if (!session || !isBroadcastMode) return;
+    listPodcastEpisodes(session.accessToken, mode)
+      .then(setEpisodes)
+      .catch(() => setEpisodes([]));
+  }, [session, mode, isBroadcastMode]);
 
   async function startCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -113,8 +132,35 @@ export default function StudioPage() {
     }
   }
 
+  async function publishEpisode() {
+    if (!session || !epTitle.trim()) return;
+    setLoading(true);
+    setMsg(null);
+    try {
+      const mediaUrl = uploadedMedia?.url || preview || undefined;
+      await createPodcastEpisode(session.accessToken, {
+        title: epTitle.trim(),
+        description: epDesc.trim(),
+        media_url: mediaUrl,
+        episode_type: mode as "podcast" | "vlog" | "tv",
+        publish: true,
+      });
+      setMsg(`${mode} episode published!`);
+      setEpTitle("");
+      setEpDesc("");
+      setPreview(null);
+      setUploadedMedia(null);
+      const list = await listPodcastEpisodes(session.accessToken, mode as "podcast" | "vlog" | "tv");
+      setEpisodes(list);
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Publish failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function publish() {
-    if (!session || (!preview && !uploadedMedia)) return;
+    if (!session || isBroadcastMode || (!preview && !uploadedMedia)) return;
     setLoading(true);
     try {
       const mediaUrl = uploadedMedia?.url || preview!;
@@ -122,9 +168,11 @@ export default function StudioPage() {
         uploadedMedia?.media_type === "video" || mode === "reel" || mode === "ai_video"
           ? "reel"
           : "photo";
+      const resolvedPostType =
+        mode === "ai_video" ? "reel" : uploadedMedia ? postType : mode === "reel" ? "reel" : "photo";
       await createMediaPost(session.accessToken, {
         body: caption || (mode === "reel" ? "New reel" : mode === "photo" ? "New photo" : aiScript),
-        post_type: mode === "ai_video" ? "reel" : uploadedMedia ? postType : mode,
+        post_type: resolvedPostType,
         media_url: mediaUrl,
         filter_preset: mode === "ai_video" ? "ai-talking-head" : filter,
         context: session.viewContext ?? "personal",
@@ -154,11 +202,11 @@ export default function StudioPage() {
             <div>
               <h1 className="text-xl font-semibold text-[#F5F5F5]">Studio</h1>
               <p className="text-xs text-[#8A8A8A] mt-1">
-                Reels · photos · cinematic filters · AI talking avatars
+                Reels · photos · podcast · vlog · TV · AI avatars
               </p>
             </div>
-            <div className="flex gap-2">
-              {(["reel", "photo", "ai_video"] as const).map((m) => (
+            <div className="flex gap-2 flex-wrap">
+              {(["reel", "photo", "ai_video", "podcast", "vlog", "tv"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
@@ -179,7 +227,61 @@ export default function StudioPage() {
               ))}
             </div>
 
-            {mode === "ai_video" ? (
+            {isBroadcastMode ? (
+              <Panel
+                open
+                title={mode === "podcast" ? "Podcast" : mode === "vlog" ? "Vlog" : "TV Show"}
+                subtitle="Upload media · publish episodes"
+              >
+                <div className="space-y-4">
+                  <MediaUploader
+                    context={mode === "podcast" ? "reel" : "reel"}
+                    token={session.accessToken}
+                    label={`Upload ${mode} media`}
+                    previewUrl={uploadedMedia?.url}
+                    onUploaded={(m) => {
+                      setUploadedMedia(m);
+                      setPreview(null);
+                    }}
+                    onClear={() => setUploadedMedia(null)}
+                    compact
+                  />
+                  <Input
+                    label="Episode title"
+                    value={epTitle}
+                    onChange={(e) => setEpTitle(e.target.value)}
+                  />
+                  <Input
+                    label="Description"
+                    value={epDesc}
+                    onChange={(e) => setEpDesc(e.target.value)}
+                  />
+                  <Button
+                    className="w-full"
+                    loading={loading}
+                    disabled={!epTitle.trim()}
+                    onClick={publishEpisode}
+                  >
+                    Publish {mode}
+                  </Button>
+                  {episodes.length > 0 && (
+                    <div className="space-y-2 border-t border-[#1F1F1F] pt-3">
+                      <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">
+                        Your episodes
+                      </p>
+                      {episodes.map((ep) => (
+                        <div key={ep.id} className="text-xs text-[#8A8A8A] py-1 border-b border-[#1F1F1F]">
+                          <span className="text-[#F5F5F5]">{ep.title}</span>
+                          {ep.published_at && (
+                            <span className="text-[#5A5A5A] ml-2">· live</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Panel>
+            ) : mode === "ai_video" ? (
               <Panel open title="Talking Avatar" subtitle="Photo + speech → realistic lip-sync video">
                 <div className="space-y-4">
                   <input
