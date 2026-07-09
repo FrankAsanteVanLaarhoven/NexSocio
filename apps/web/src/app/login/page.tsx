@@ -2,17 +2,23 @@
 
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
-import { Feed } from "@/components/Feed";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { useAuthStore } from "@/lib/auth-store";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function HomePage() {
+export default function LoginPage() {
   const session = useAuthStore((s) => s.session);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session) router.replace("/");
+  }, [session, router]);
 
   return (
     <AppShell>
       <AuthHydrationGate>
-        {session ? <Feed /> : <LoginGateway />}
+        <LoginGateway />
       </AuthHydrationGate>
     </AppShell>
   );

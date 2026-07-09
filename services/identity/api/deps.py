@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.security.jwt import decode_access_token
+from services.identity.application.auth_service import AuthService
 from services.identity.application.services import IdentityService
 from services.identity.infrastructure.config import Settings
 from services.identity.infrastructure.database import get_session_factory
@@ -40,6 +41,13 @@ async def get_identity_service(
     cfg: Annotated[Settings, Depends(get_settings)],
 ) -> IdentityService:
     return IdentityService(db, cfg.jwt_secret)
+
+
+async def get_auth_service(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    cfg: Annotated[Settings, Depends(get_settings)],
+) -> AuthService:
+    return AuthService(db, cfg.jwt_secret)
 
 
 security = HTTPBearer()

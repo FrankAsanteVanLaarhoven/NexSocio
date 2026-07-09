@@ -195,3 +195,57 @@ export interface AuthSession {
   ageVerified: boolean;
   viewContext: ViewContext;
 }
+
+export type AuthMethod =
+  | "password"
+  | "pin"
+  | "webauthn"
+  | "face"
+  | "palm"
+  | "voice";
+
+export interface AuthLoginResponse {
+  user_id: string;
+  email: string;
+  display_name: string;
+  mode: UserMode;
+  age_verified: boolean;
+  access_token: string;
+  auth_method: string;
+}
+
+export interface AvailableAuthMethods {
+  email: string;
+  methods: AuthMethod[];
+}
+
+export interface WebAuthnChallenge {
+  challenge: string;
+  rp_id: string;
+  user_id?: string;
+  user_name?: string;
+  user_display_name?: string;
+  allow_credentials?: { id: string; type: string }[];
+}
+
+export interface ParentalApprovalResponse {
+  approval_code: string;
+  child_display_name: string;
+  expires_at: string;
+}
+
+export interface KidsRegisterRequest {
+  display_name: string;
+  face_template_hash: string;
+  parental_approval_code: string;
+  age_proof: ZKPAgeProof;
+}
+
+export interface KidsRegisterResponse {
+  user_id: string;
+  display_name: string;
+  mode: UserMode;
+  access_token: string;
+  zkp_result: ZKPVerificationResult;
+  parental_approved: boolean;
+}

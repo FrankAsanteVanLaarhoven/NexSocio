@@ -4,7 +4,7 @@ import { Panel } from "@nexus/ui";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
-import { RegisterFlow } from "@/components/RegisterFlow";
+import { LoginGateway } from "@/components/auth/LoginGateway";
 import { getSafetyDashboard } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import type { SafetyDashboard } from "@nexus/types";
@@ -35,7 +35,7 @@ export default function SafetyPage() {
     <AppShell>
       <AuthHydrationGate>
         {!session ? (
-          <RegisterFlow onComplete={() => window.location.reload()} />
+          <LoginGateway />
         ) : (
       <div className="mx-auto max-w-4xl space-y-6">
         <div>

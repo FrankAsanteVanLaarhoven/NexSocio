@@ -4,7 +4,8 @@ import { Button, Input, ModeBadge, Panel } from "@nexus/ui";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
-import { RegisterFlow } from "@/components/RegisterFlow";
+import { SecuritySetup } from "@/components/auth/SecuritySetup";
+import { LoginGateway } from "@/components/auth/LoginGateway";
 import { getMe, updateProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import type { UserProfile } from "@nexus/types";
@@ -66,7 +67,7 @@ export default function ProfilePage() {
     <AppShell>
       <AuthHydrationGate>
         {!session ? (
-          <RegisterFlow onComplete={() => window.location.reload()} />
+          <LoginGateway />
         ) : (
       <div className="mx-auto max-w-lg space-y-6">
         <div>
@@ -113,6 +114,8 @@ export default function ProfilePage() {
             </div>
           </Panel>
         )}
+
+        <SecuritySetup />
       </div>
         )}
       </AuthHydrationGate>

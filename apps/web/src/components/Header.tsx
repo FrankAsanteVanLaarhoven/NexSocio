@@ -2,6 +2,7 @@
 
 import { ModeBadge } from "@nexus/ui";
 import Link from "next/link";
+
 import { usePathname } from "next/navigation";
 import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import { useAuthStore } from "@/lib/auth-store";
@@ -16,6 +17,7 @@ const NAV = [
 
 export function Header() {
   const pathname = usePathname();
+
   const hydrated = useAuthHydrated();
   const session = useAuthStore((s) => s.session);
   const viewContext = session?.viewContext ?? "personal";
@@ -53,6 +55,23 @@ export function Header() {
             </nav>
           )}
         </div>
+
+        {hydrated && !session && (
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="px-3 py-1.5 text-xs text-[#8A8A8A] hover:text-[#F5F5F5] transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/register"
+              className="px-3 py-1.5 text-xs rounded-md border border-[#00E5FF]/40 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors"
+            >
+              Register
+            </Link>
+          </div>
+        )}
 
         {hydrated && session && (
           <div className="flex items-center gap-3">

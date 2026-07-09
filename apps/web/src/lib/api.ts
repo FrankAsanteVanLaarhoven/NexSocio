@@ -1,11 +1,17 @@
 import type {
   ApiResponse,
+  AuthLoginResponse,
+  AuthMethod,
+  AvailableAuthMethods,
   ConnectionsListResponse,
   CreatePostRequest,
   FeedResponse,
   FeedType,
+  KidsRegisterRequest,
+  KidsRegisterResponse,
   ModeSelectRequest,
   ModeSelectResponse,
+  ParentalApprovalResponse,
   Post,
   CommandResponse,
   FeatureFlags,
@@ -20,6 +26,7 @@ import type {
   UserMode,
   UserProfile,
   ViewContext,
+  WebAuthnChallenge,
   ZKPAgeProof,
 } from "@nexus/types";
 
@@ -78,6 +85,144 @@ async function request<T>(
 function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` };
 }
+
+export async function loginPassword(
+  email: string,
+  password: string
+): Promise<AuthLoginResponse> {
+  return request<AuthLoginResponse>(IDENTITY_URL, "/api/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function loginPin(email: string, pin: string): Promise<AuthLoginResponse> {
+  return request<AuthLoginResponse>(IDENTITY_URL, "/api/v1/auth/login/pin", {
+    method: "POST",
+    body: JSON.stringify({ email, pin }),
+  });
+}
+
+export async function loginBiometric(
+  email: string,
+  factorType: "face" | "palm" | "voice",
+  templateHash: string,
+  voiceCommand?: string
+): Promise<AuthLoginResponse> {
+  return request<AuthLoginResponse>(IDENTITY_URL, "/api/v1/auth/login/biometric", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      factor_type: factorType,
+      template_hash: templateHash,
+      voice_command: voiceCommand,
+    }),
+  });
+}
+
+export async function loginKidsFace(
+  displayName: string,
+  faceTemplateHash: string
+): Promise<AuthLoginResponse> {
+  return request<AuthLoginResponse>(IDENTITY_URL, "/api/v1/auth/login/kids-face", {
+    method: "POST",
+    body: JSON.stringify({
+      display_name: displayName,
+      face_template_hash: faceTemplateHash,
+    }),
+  });
+}
+
+export async function getAuthMethods(email: string): Promise<AvailableAuthMethods> {
+  return request<AvailableAuthMethods>(
+    IDENTITY_URL,
+    `/api/v1/auth/methods?email=${encodeURIComponent(email)}`
+  );
+}
+
+export async function getWebAuthnLoginOptions(email: string): Promise<WebAuthnChallenge> {
+  return request<WebAuthnChallenge>(
+    IDENTITY_URL,
+    `/api/v1/auth/webauthn/login/options?email=${encodeURIComponent(email)}`,
+    { method: "POST" }
+  );
+}
+
+export async function loginWebAuthn(
+  credentialId: string,
+  challenge: string,
+  email?: string
+): Promise<AuthLoginResponse> {
+  return request<AuthLoginResponse>(IDENTITY_URL, "/api/v1/auth/webauthn/login", {
+    method: "POST",
+    body: JSON.stringify({ credential_id: credentialId, challenge, email }),
+  });
+}
+
+export async function getWebAuthnRegisterOptions(token: string): Promise<WebAuthnChallenge> {
+  return request<WebAuthnChallenge>(IDENTITY_URL, "/api/v1/auth/webauthn/register/options", {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function enrollPin(token: string, pin: string): Promise<void> {
+  await request(IDENTITY_URL, "/api/v1/auth/factors/pin", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ pin }),
+  });
+}
+
+export async function enrollBiometric(
+  token: string,
+  factorType: "face" | "palm" | "voice",
+  templateHash: string,
+  label?: string
+): Promise<void> {
+  await request(IDENTITY_URL, "/api/v1/auth/factors/biometric", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({
+      factor_type: factorType,
+      template_hash: templateHash,
+      label,
+    }),
+  });
+}
+
+export async function enrollWebAuthn(
+  token: string,
+  credentialId: string,
+  challenge: string,
+  label?: string
+): Promise<void> {
+  await request(IDENTITY_URL, "/api/v1/auth/factors/webauthn", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ credential_id: credentialId, challenge, label }),
+  });
+}
+
+export async function createParentalApproval(
+  token: string,
+  childDisplayName: string
+): Promise<ParentalApprovalResponse> {
+  return request<ParentalApprovalResponse>(IDENTITY_URL, "/api/v1/auth/parental-approval", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ child_display_name: childDisplayName }),
+  });
+}
+
+export async function registerKids(data: KidsRegisterRequest): Promise<KidsRegisterResponse> {
+  return request<KidsRegisterResponse>(IDENTITY_URL, "/api/v1/auth/register/kids", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export type { AuthMethod };
 
 export async function generateStubProof(isAdult = true): Promise<ZKPAgeProof> {
   return request<ZKPAgeProof>(IDENTITY_URL, `/api/v1/zkp/stub-proof?is_adult=${isAdult}`, {

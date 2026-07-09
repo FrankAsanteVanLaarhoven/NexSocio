@@ -4,7 +4,7 @@ import { Button, Input, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
-import { RegisterFlow } from "@/components/RegisterFlow";
+import { LoginGateway } from "@/components/auth/LoginGateway";
 import {
   acceptConnection,
   getConnections,
@@ -71,7 +71,7 @@ export default function ConnectionsPage() {
     <AppShell>
       <AuthHydrationGate>
         {!session ? (
-          <RegisterFlow onComplete={() => window.location.reload()} />
+          <LoginGateway />
         ) : (
       <div className="mx-auto max-w-2xl space-y-6">
         <div>

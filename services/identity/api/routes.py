@@ -6,6 +6,23 @@ from nexus_common.domain.feature_flags import BETA_COHORTS, DEFAULT_FLAGS, Featu
 from nexus_common.domain.models import ApiResponse, HealthResponse, ZKPAgeProof
 from nexus_common.security.zkp import ZKPVerifier
 
+from services.identity.application.auth_dtos import (
+    AuthLoginResponse,
+    AvailableAuthMethods,
+    BiometricLoginRequest,
+    EnrollBiometricRequest,
+    EnrollPinRequest,
+    EnrollWebAuthnRequest,
+    KidsFaceLoginRequest,
+    KidsRegisterRequest,
+    KidsRegisterResponse,
+    LoginRequest,
+    ParentalApprovalRequest,
+    ParentalApprovalResponse,
+    PinLoginRequest,
+    WebAuthnChallengeResponse,
+    WebAuthnLoginRequest,
+)
 from services.identity.application.dtos import (
     ModeSelectRequest,
     ModeSelectResponse,
@@ -16,7 +33,13 @@ from services.identity.application.dtos import (
     UserResponse,
 )
 from services.identity.application.services import IdentityService
-from services.identity.api.deps import get_current_user_id, get_identity_service, get_settings
+from services.identity.api.deps import (
+    get_auth_service,
+    get_current_user_id,
+    get_identity_service,
+    get_settings,
+)
+from services.identity.application.auth_service import AuthService
 from services.identity.infrastructure.config import Settings
 
 router = APIRouter()
@@ -110,3 +133,114 @@ async def generate_stub_proof(is_adult: bool = True) -> ApiResponse[ZKPAgeProof]
     verifier = ZKPVerifier()
     proof = verifier.generate_stub_proof(is_adult=is_adult)
     return ApiResponse(data=proof)
+
+
+@router.post("/auth/login", response_model=ApiResponse[AuthLoginResponse])
+async def login_password(
+    request: LoginRequest,
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[AuthLoginResponse]:
+    return ApiResponse(data=await auth.login_password(request))
+
+
+@router.post("/auth/login/pin", response_model=ApiResponse[AuthLoginResponse])
+async def login_pin(
+    request: PinLoginRequest,
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[AuthLoginResponse]:
+    return ApiResponse(data=await auth.login_pin(request))
+
+
+@router.post("/auth/login/kids-face", response_model=ApiResponse[AuthLoginResponse])
+async def login_kids_face(
+    request: KidsFaceLoginRequest,
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[AuthLoginResponse]:
+    return ApiResponse(data=await auth.login_kids_face(request))
+
+
+@router.post("/auth/login/biometric", response_model=ApiResponse[AuthLoginResponse])
+async def login_biometric(
+    request: BiometricLoginRequest,
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[AuthLoginResponse]:
+    return ApiResponse(data=await auth.login_biometric(request))
+
+
+@router.get("/auth/methods", response_model=ApiResponse[AvailableAuthMethods])
+async def get_auth_methods(
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+    email: str = Query(..., min_length=3),
+) -> ApiResponse[AvailableAuthMethods]:
+    return ApiResponse(data=await auth.get_available_methods(email))
+
+
+@router.post("/auth/webauthn/register/options", response_model=ApiResponse[WebAuthnChallengeResponse])
+async def webauthn_register_options(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[WebAuthnChallengeResponse]:
+    return ApiResponse(data=await auth.webauthn_register_options(user_id))
+
+
+@router.post("/auth/webauthn/login/options", response_model=ApiResponse[WebAuthnChallengeResponse])
+async def webauthn_login_options(
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+    email: str = Query(..., min_length=3),
+) -> ApiResponse[WebAuthnChallengeResponse]:
+    return ApiResponse(data=await auth.webauthn_login_options(email))
+
+
+@router.post("/auth/webauthn/login", response_model=ApiResponse[AuthLoginResponse])
+async def webauthn_login(
+    request: WebAuthnLoginRequest,
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[AuthLoginResponse]:
+    return ApiResponse(data=await auth.login_webauthn(request))
+
+
+@router.post("/auth/factors/pin", response_model=ApiResponse[dict])
+async def enroll_pin(
+    request: EnrollPinRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    await auth.enroll_pin(user_id, request)
+    return ApiResponse(data={"enrolled": True})
+
+
+@router.post("/auth/factors/biometric", response_model=ApiResponse[dict])
+async def enroll_biometric(
+    request: EnrollBiometricRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    await auth.enroll_biometric(user_id, request)
+    return ApiResponse(data={"enrolled": True})
+
+
+@router.post("/auth/factors/webauthn", response_model=ApiResponse[dict])
+async def enroll_webauthn(
+    request: EnrollWebAuthnRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    await auth.enroll_webauthn(user_id, request)
+    return ApiResponse(data={"enrolled": True})
+
+
+@router.post("/auth/parental-approval", response_model=ApiResponse[ParentalApprovalResponse])
+async def create_parental_approval(
+    request: ParentalApprovalRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[ParentalApprovalResponse]:
+    return ApiResponse(data=await auth.create_parental_approval(user_id, request))
+
+
+@router.post("/auth/register/kids", response_model=ApiResponse[KidsRegisterResponse])
+async def register_kids(
+    request: KidsRegisterRequest,
+    auth: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[KidsRegisterResponse]:
+    return ApiResponse(data=await auth.register_kids(request))
