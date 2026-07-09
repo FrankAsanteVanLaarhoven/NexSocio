@@ -23,6 +23,10 @@ class CreatePostRequest(BaseModel):
     place_address: str | None = None
     place_lat: float | None = None
     place_lng: float | None = None
+    location_label: str | None = None
+    location_lat: float | None = None
+    location_lng: float | None = None
+    is_live_session: bool = False
 
 
 class AIComposeRequest(BaseModel):
@@ -57,6 +61,10 @@ class PostResponse(BaseModel):
     place_address: str | None = None
     place_lat: float | None = None
     place_lng: float | None = None
+    location_label: str | None = None
+    location_lat: float | None = None
+    location_lng: float | None = None
+    is_live_session: bool = False
     created_at: datetime
 
 

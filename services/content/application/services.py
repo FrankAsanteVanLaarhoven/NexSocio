@@ -106,6 +106,10 @@ class ContentService:
             place_address=request.place_address,
             place_lat=request.place_lat,
             place_lng=request.place_lng,
+            location_label=request.location_label,
+            location_lat=request.location_lat,
+            location_lng=request.location_lng,
+            is_live_session=request.is_live_session,
         )
         self.db.add(post)
         await self.db.commit()
@@ -228,6 +232,10 @@ class ContentService:
             place_address=getattr(post, "place_address", None),
             place_lat=getattr(post, "place_lat", None),
             place_lng=getattr(post, "place_lng", None),
+            location_label=getattr(post, "location_label", None),
+            location_lat=getattr(post, "location_lat", None),
+            location_lng=getattr(post, "location_lng", None),
+            is_live_session=getattr(post, "is_live_session", False) or False,
             created_at=post.created_at,
         )
 

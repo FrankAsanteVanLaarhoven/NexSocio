@@ -36,6 +36,12 @@ export function parseVoiceCommand(transcript: string): VoiceAction {
   if (t.includes("open map") || t.includes("directions") || t.includes("navigation")) {
     return { type: "navigate", path: "/map" };
   }
+  if (t.includes("find me") || t.includes("enable find me") || t.includes("i am lost")) {
+    return { type: "navigate", path: "/settings/location" };
+  }
+  if (t.includes("open find") || t.includes("location finder") || t.includes("find someone")) {
+    return { type: "navigate", path: "/find" };
+  }
   if (t.includes("stock market") || t.includes("open markets") || t.includes("yahoo finance")) {
     return { type: "navigate", path: "/hub" };
   }

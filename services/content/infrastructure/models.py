@@ -34,6 +34,10 @@ class PostModel(Base):
     place_address: Mapped[str | None] = mapped_column(String(512), nullable=True)
     place_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
     place_lng: Mapped[float | None] = mapped_column(Float, nullable=True)
+    location_label: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    location_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    location_lng: Mapped[float | None] = mapped_column(Float, nullable=True)
+    is_live_session: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

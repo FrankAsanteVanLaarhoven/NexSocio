@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.security.jwt import decode_access_token
 from services.identity.application.auth_service import AuthService
+from services.identity.application.location_service import LocationService
 from services.identity.application.services import IdentityService
 from services.identity.infrastructure.config import Settings
 from services.identity.infrastructure.database import get_session_factory
@@ -41,6 +42,12 @@ async def get_identity_service(
     cfg: Annotated[Settings, Depends(get_settings)],
 ) -> IdentityService:
     return IdentityService(db, cfg.jwt_secret)
+
+
+async def get_location_service(
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> LocationService:
+    return LocationService(db)
 
 
 async def get_auth_service(

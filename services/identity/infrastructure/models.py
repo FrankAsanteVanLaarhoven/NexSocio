@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -28,6 +28,29 @@ class UserModel(Base):
     beta_cohort: Mapped[str | None] = mapped_column(String(64), nullable=True, default="public_beta")
     subscription_tier: Mapped[str] = mapped_column(String(16), nullable=False, default="free")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class UserLocationModel(Base):
+    __tablename__ = "user_locations"
+    __table_args__ = {"schema": "identity"}
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("identity.users.id", ondelete="CASCADE"), primary_key=True
+    )
+    display_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    lat: Mapped[float] = mapped_column(Float, nullable=False)
+    lng: Mapped[float] = mapped_column(Float, nullable=False)
+    location_label: Mapped[str] = mapped_column(String(128), nullable=False)
+    find_me_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    share_with_followers: Mapped[bool] = mapped_column(Boolean, default=False)
+    show_live_tag: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_live: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_login_label: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    live_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

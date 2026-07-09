@@ -60,6 +60,8 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
       { id: "followers", label: "Followers & following", href: "/settings/network#followers", sector: "personal", icon: "↔" },
       { id: "groups", label: "Groups", href: "/settings/groups", sector: "personal", icon: "◎" },
       { id: "near-me", label: "Location & near me", href: "/map", sector: "personal", icon: "📍" },
+      { id: "find-me", label: "Find Me & safety", description: "Get found if lost", href: "/settings/location", sector: "personal", icon: "🆘" },
+      { id: "location-finder", label: "Location finder map", description: "See members live", href: "/find", sector: "personal", icon: "⊕" },
       { id: "share", label: "Share & invites", href: "/settings/share", sector: "personal", icon: "↗" },
     ],
   },
@@ -189,6 +191,17 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     ],
   },
   {
+    id: "location-safety",
+    title: "Location Finder",
+    subtitle: "Find Me · follower sharing · live tags",
+    sector: "both",
+    items: [
+      { id: "find-me-settings", label: "Find Me & sharing", description: "Safety mode and follower visibility", href: "/settings/location", sector: "both", icon: "🆘" },
+      { id: "find-map", label: "Member location map", description: "Locate findable members", href: "/find", sector: "both", icon: "⊕" },
+      { id: "login-location", label: "Login location tracking", href: "/settings/location#login", sector: "both", icon: "🛰" },
+    ],
+  },
+  {
     id: "voice-ui",
     title: "Voice, AI & UI",
     sector: "both",
@@ -225,4 +238,5 @@ export const SECTION_META: Record<string, { title: string; subtitle: string }> =
   legal: { title: "Legal", subtitle: "Terms · privacy · agreements" },
   help: { title: "Help & Feedback", subtitle: "We're here for you" },
   share: { title: "Share & Invites", subtitle: "Grow your circle" },
+  location: { title: "Location Finder", subtitle: "Find Me · sharing · live tags" },
 };

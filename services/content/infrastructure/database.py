@@ -30,6 +30,10 @@ async def init_db(engine) -> None:
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_address VARCHAR(512)",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_lat DOUBLE PRECISION",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS place_lng DOUBLE PRECISION",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS location_label VARCHAR(128)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS location_lat DOUBLE PRECISION",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS location_lng DOUBLE PRECISION",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS is_live_session BOOLEAN DEFAULT FALSE",
         ]:
             await conn.execute(text(stmt))
 

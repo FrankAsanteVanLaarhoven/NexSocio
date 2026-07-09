@@ -16,7 +16,9 @@ import {
   searchPlaces,
 } from "@/lib/api";
 import { inAppMapUrl } from "@/components/InAppLink";
+import { LiveLocationTag } from "@/components/LiveLocationTag";
 import { useAuthStore } from "@/lib/auth-store";
+import { resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
 import type { PlaceResult } from "@nexus/types";
 
@@ -62,6 +64,16 @@ function PostCard({
                 <span className="ml-2 text-[#7C4DFF] font-medium">· NEXSOCIO AI</span>
               )}
             </p>
+            {(post.is_live_session || post.location_label) && (
+              <LiveLocationTag
+                label={post.location_label || post.place_name || "Live"}
+                isLive={post.is_live_session || post.post_type === "live"}
+                since={post.created_at}
+                lat={post.location_lat ?? post.place_lat}
+                lng={post.location_lng ?? post.place_lng}
+                compact
+              />
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -211,6 +223,8 @@ export function Feed() {
   const [placeResults, setPlaceResults] = useState<PlaceResult[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
   const [searchingPlace, setSearchingPlace] = useState(false);
+  const showLiveLocationTag = useSettingsStore((s) => s.showLiveLocationTag);
+  const shareLocationWithFollowers = useSettingsStore((s) => s.shareLocationWithFollowers);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -289,6 +303,23 @@ export function Feed() {
     if (!body.trim()) return;
     setSubmitting(true);
     try {
+      let locationFields: {
+        location_label?: string;
+        location_lat?: number;
+        location_lng?: number;
+      } = {};
+      if (showLiveLocationTag && shareLocationWithFollowers) {
+        try {
+          const pos = await resolveCurrentPosition();
+          locationFields = {
+            location_label: pos.label,
+            location_lat: pos.lat,
+            location_lng: pos.lng,
+          };
+        } catch {
+          /* optional */
+        }
+      }
       await createPost(session.accessToken, {
         body: body.trim(),
         context: viewContext,
@@ -299,6 +330,7 @@ export function Feed() {
         place_address: selectedPlace?.address,
         place_lat: selectedPlace?.lat ?? undefined,
         place_lng: selectedPlace?.lng ?? undefined,
+        ...locationFields,
       });
       setBody("");
       setUsedAi(false);

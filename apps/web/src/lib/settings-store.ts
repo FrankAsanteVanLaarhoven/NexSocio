@@ -29,6 +29,10 @@ export interface UserSettings {
   paypalConnected: boolean;
   bonusCoins: number;
   scheduledPosts: { id: string; body: string; at: string }[];
+  findMeEnabled: boolean;
+  shareLocationWithFollowers: boolean;
+  showLiveLocationTag: boolean;
+  trackLoginLocation: boolean;
 }
 
 interface SettingsState extends UserSettings {
@@ -65,6 +69,10 @@ const defaults: UserSettings = {
   paypalConnected: false,
   bonusCoins: 120,
   scheduledPosts: [],
+  findMeEnabled: false,
+  shareLocationWithFollowers: false,
+  showLiveLocationTag: true,
+  trackLoginLocation: true,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -125,6 +133,10 @@ export const useSettingsStore = create<SettingsState>()(
         paypalConnected: s.paypalConnected,
         bonusCoins: s.bonusCoins,
         scheduledPosts: s.scheduledPosts,
+        findMeEnabled: s.findMeEnabled,
+        shareLocationWithFollowers: s.shareLocationWithFollowers,
+        showLiveLocationTag: s.showLiveLocationTag,
+        trackLoginLocation: s.trackLoginLocation,
       }),
     }
   )

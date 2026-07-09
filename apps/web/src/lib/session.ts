@@ -1,5 +1,6 @@
 import type { AuthLoginResponse, KidsRegisterResponse } from "@nexus/types";
 import { useAuthStore } from "@/lib/auth-store";
+import { recordLoginLocation } from "@/lib/location";
 
 export function applyAuthLogin(result: AuthLoginResponse | KidsRegisterResponse) {
   const email = "email" in result ? result.email : `kid-${result.user_id}@nexsocio.kids`;
@@ -12,4 +13,5 @@ export function applyAuthLogin(result: AuthLoginResponse | KidsRegisterResponse)
     ageVerified: "age_verified" in result ? result.age_verified : true,
     viewContext: "personal",
   });
+  recordLoginLocation(result.access_token);
 }

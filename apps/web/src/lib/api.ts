@@ -20,8 +20,10 @@ import type {
   ArticlePreview,
   DirectionsResult,
   HubDashboard,
+  LocationUpdateRequest,
   MarketHistory,
   MarketQuote,
+  MemberLocation,
   PlaceResult,
   PostType,
   AIComposeResult,
@@ -36,6 +38,7 @@ import type {
   RegisterRequest,
   RegisterResponse,
   UpdateProfileRequest,
+  UserLocation,
   UserMode,
   UserProfile,
   ViewContext,
@@ -318,6 +321,40 @@ export async function getMe(token: string): Promise<UserProfile> {
   return request<UserProfile>(IDENTITY_URL, "/api/v1/users/me", {
     headers: authHeaders(token),
   });
+}
+
+export async function updateLocation(
+  token: string,
+  data: LocationUpdateRequest
+): Promise<UserLocation> {
+  return request<UserLocation>(IDENTITY_URL, "/api/v1/location", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMyLocation(token: string): Promise<UserLocation | null> {
+  return request<UserLocation | null>(IDENTITY_URL, "/api/v1/location/me", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getMemberLocations(token: string): Promise<MemberLocation[]> {
+  return request<MemberLocation[]>(IDENTITY_URL, "/api/v1/location/members", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getMemberLocation(
+  token: string,
+  userId: string
+): Promise<MemberLocation | null> {
+  return request<MemberLocation | null>(
+    IDENTITY_URL,
+    `/api/v1/location/${userId}`,
+    { headers: authHeaders(token) }
+  );
 }
 
 export async function updateProfile(
@@ -652,6 +689,10 @@ export async function createMediaPost(
     context?: ViewContext;
     ai_assisted?: boolean;
     hide_ai_tag?: boolean;
+    location_label?: string;
+    location_lat?: number;
+    location_lng?: number;
+    is_live_session?: boolean;
   }
 ): Promise<Post> {
   return request<Post>(CONTENT_URL, "/api/v1/posts", {

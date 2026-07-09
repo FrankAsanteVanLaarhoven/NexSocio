@@ -104,6 +104,10 @@ export interface CreatePostRequest {
   place_address?: string | null;
   place_lat?: number | null;
   place_lng?: number | null;
+  location_label?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  is_live_session?: boolean;
 }
 
 export type PostType = "text" | "reel" | "photo" | "live";
@@ -129,6 +133,10 @@ export interface Post {
   place_address?: string | null;
   place_lat?: number | null;
   place_lng?: number | null;
+  location_label?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  is_live_session?: boolean;
   created_at: string;
 }
 
@@ -434,4 +442,45 @@ export interface KidsRegisterResponse {
   access_token: string;
   zkp_result: ZKPVerificationResult;
   parental_approved: boolean;
+}
+
+export type LocationSource = "app" | "login" | "live" | "find_me";
+
+export interface LocationUpdateRequest {
+  lat: number;
+  lng: number;
+  location_label: string;
+  find_me_enabled?: boolean;
+  share_with_followers?: boolean;
+  show_live_tag?: boolean;
+  is_live?: boolean;
+  source?: LocationSource;
+}
+
+export interface UserLocation {
+  user_id: string;
+  display_name: string;
+  lat: number;
+  lng: number;
+  location_label: string;
+  find_me_enabled: boolean;
+  share_with_followers: boolean;
+  show_live_tag: boolean;
+  is_live: boolean;
+  last_login_label?: string | null;
+  last_login_at?: string | null;
+  live_since?: string | null;
+  updated_at: string;
+}
+
+export interface MemberLocation {
+  user_id: string;
+  display_name: string;
+  lat: number;
+  lng: number;
+  location_label: string;
+  is_live: boolean;
+  find_me_enabled: boolean;
+  live_since?: string | null;
+  updated_at: string;
 }

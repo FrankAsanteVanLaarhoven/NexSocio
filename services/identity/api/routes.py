@@ -36,11 +36,18 @@ from services.identity.application.dtos import (
     UpdateProfileRequest,
     UserResponse,
 )
+from services.identity.application.location_dtos import (
+    LocationUpdateRequest,
+    MemberLocationResponse,
+    UserLocationResponse,
+)
+from services.identity.application.location_service import LocationService
 from services.identity.application.services import IdentityService
 from services.identity.api.deps import (
     get_auth_service,
     get_current_user_id,
     get_identity_service,
+    get_location_service,
     get_settings,
 )
 from services.identity.application.auth_service import AuthService
@@ -70,6 +77,65 @@ async def select_mode(
     service: Annotated[IdentityService, Depends(get_identity_service)],
 ) -> ApiResponse[ModeSelectResponse]:
     result = await service.select_mode(user_id, request)
+    return ApiResponse(data=result)
+
+
+@router.post("/location", response_model=ApiResponse[UserLocationResponse])
+async def update_location(
+    request: LocationUpdateRequest,
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[IdentityService, Depends(get_identity_service)],
+    loc_service: Annotated[LocationService, Depends(get_location_service)],
+) -> ApiResponse[UserLocationResponse]:
+    user = await service.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    result = await loc_service.update_location(user_id, user.display_name, request)
+    return ApiResponse(data=result)
+
+
+@router.get("/location/me", response_model=ApiResponse[UserLocationResponse | None])
+async def get_my_location(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    loc_service: Annotated[LocationService, Depends(get_location_service)],
+) -> ApiResponse[UserLocationResponse | None]:
+    result = await loc_service.get_my_location(user_id)
+    return ApiResponse(data=result)
+
+
+@router.get("/location/members", response_model=ApiResponse[list[MemberLocationResponse]])
+async def list_member_locations(
+    loc_service: Annotated[LocationService, Depends(get_location_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> ApiResponse[list[MemberLocationResponse]]:
+    members = await loc_service.get_findable_members()
+    return ApiResponse(data=[m for m in members if m.user_id != user_id])
+
+
+@router.get("/location/{target_id}", response_model=ApiResponse[MemberLocationResponse | None])
+async def get_member_location(
+    target_id: UUID,
+    loc_service: Annotated[LocationService, Depends(get_location_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> ApiResponse[MemberLocationResponse | None]:
+    if target_id == user_id:
+        mine = await loc_service.get_my_location(user_id)
+        if not mine:
+            return ApiResponse(data=None)
+        return ApiResponse(
+            data=MemberLocationResponse(
+                user_id=mine.user_id,
+                display_name=mine.display_name,
+                lat=mine.lat,
+                lng=mine.lng,
+                location_label=mine.location_label,
+                is_live=mine.is_live,
+                find_me_enabled=mine.find_me_enabled,
+                live_since=mine.live_since,
+                updated_at=mine.updated_at,
+            )
+        )
+    result = await loc_service.get_member_location(target_id)
     return ApiResponse(data=result)
 
 
