@@ -4,6 +4,8 @@ import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as eks from "aws-cdk-lib/aws-eks";
 import { KubectlV31Layer } from "@aws-cdk/lambda-layer-kubectl-v31";
 import { Construct } from "constructs";
+import { NexusExternalSecrets } from "./constructs/nexus-external-secrets";
+import { NexusKmsSecrets } from "./constructs/nexus-kms-secrets";
 
 export class NexusStagingStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -29,9 +31,29 @@ export class NexusStagingStack extends cdk.Stack {
       desiredSize: 2,
     });
 
-    const repos = ["nexus-identity", "nexus-content", "nexus-social-graph", "nexus-professional"];
+    const secrets = new NexusKmsSecrets(this, "Secrets", {
+      environment: "staging",
+    });
+
+    new NexusExternalSecrets(this, "ExternalSecrets", {
+      cluster,
+      secrets,
+    });
+
+    const repos = [
+      "nexus-identity",
+      "nexus-content",
+      "nexus-social-graph",
+      "nexus-professional",
+      "nexus-hub",
+      "nexus-commerce",
+      "nexus-collaboration",
+      "nexus-notification",
+      "nexus-safety",
+      "nexus-robot-agent",
+    ];
     for (const name of repos) {
-      new ecr.Repository(this, `${name}Repo`, {
+      new ecr.Repository(this, `${name.replace(/-/g, "")}Repo`, {
         repositoryName: name,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
         lifecycleRules: [{ maxImageCount: 20 }],
@@ -40,6 +62,12 @@ export class NexusStagingStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "StagingClusterName", { value: cluster.clusterName });
     new cdk.CfnOutput(this, "StagingVpcId", { value: vpc.vpcId });
+    new cdk.CfnOutput(this, "StagingDatabaseSecretName", {
+      value: secrets.databaseSecret.secretName,
+    });
+    new cdk.CfnOutput(this, "StagingJwtSecretName", {
+      value: secrets.jwtSecret.secretName,
+    });
 
     cdk.Tags.of(this).add("Project", "NEXSOCIO");
     cdk.Tags.of(this).add("Environment", "staging");

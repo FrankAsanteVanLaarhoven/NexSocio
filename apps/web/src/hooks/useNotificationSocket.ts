@@ -1,17 +1,15 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import type { Notification } from "@nexus/types";
 import { notificationWsUrl } from "@/lib/api";
+import { prependInboxNotification } from "@/hooks/queries/useInbox";
 
-type NotificationHandler = (notification: Notification) => void;
-
-export function useNotificationSocket(
-  token: string | undefined,
-  onNotification: NotificationHandler
-) {
-  const handlerRef = useRef(onNotification);
-  handlerRef.current = onNotification;
+export function useNotificationSocket(token: string | undefined) {
+  const queryClient = useQueryClient();
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
 
   useEffect(() => {
     if (!token) return;
@@ -19,7 +17,6 @@ export function useNotificationSocket(
     let ws: WebSocket | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
     let closed = false;
-
     const accessToken = token;
 
     function connect() {
@@ -31,7 +28,7 @@ export function useNotificationSocket(
             data?: Notification;
           };
           if (payload.type === "notification" && payload.data) {
-            handlerRef.current(payload.data);
+            prependInboxNotification(queryClient, tokenRef.current, payload.data);
           }
         } catch {
           /* ignore malformed frames */
@@ -51,5 +48,5 @@ export function useNotificationSocket(
       if (retryTimer) clearTimeout(retryTimer);
       ws?.close();
     };
-  }, [token]);
+  }, [token, queryClient]);
 }

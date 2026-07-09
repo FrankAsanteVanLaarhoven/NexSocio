@@ -1,63 +1,34 @@
 "use client";
 
-import { Button, Input, Panel } from "@nexus/ui";
+import { Button, Input, Panel, FadeIn, AnimatedList, AnimatedListItem } from "@nexus/ui";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
-import { createTeam, getTeamMembers, listTeams } from "@/lib/api";
+import { useCreateTeam, useTeamMembers, useTeams } from "@/hooks/queries/useTeams";
 import { useAuthStore } from "@/lib/auth-store";
-import type { Team, TeamMember } from "@nexus/types";
 
 export default function TeamsPage() {
   const session = useAuthStore((s) => s.session);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [members, setMembers] = useState<Record<string, TeamMember[]>>({});
+  const token = session?.accessToken;
+  const { data: teams = [], isLoading } = useTeams(token);
+  const createTeam = useCreateTeam(token);
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!session) return;
-    setLoading(true);
-    try {
-      const data = await listTeams(session.accessToken);
-      setTeams(data);
-    } finally {
-      setLoading(false);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const [expandedTeamId, setExpandedTeamId] = useState<string | undefined>();
+  const { data: members = [] } = useTeamMembers(token, expandedTeamId);
 
   async function handleCreate() {
-    if (!session || !name.trim()) return;
-    setCreating(true);
-    try {
-      await createTeam(session.accessToken, {
-        name: name.trim(),
-        sector: session.viewContext === "professional" ? "professional" : "business",
-      });
-      setName("");
-      await load();
-    } finally {
-      setCreating(false);
-    }
+    if (!name.trim()) return;
+    await createTeam.mutateAsync({
+      name: name.trim(),
+      sector: session?.viewContext === "professional" ? "professional" : "business",
+    });
+    setName("");
   }
 
-  async function toggleMembers(teamId: string) {
-    if (!session) return;
-    if (members[teamId]) {
-      const next = { ...members };
-      delete next[teamId];
-      setMembers(next);
-      return;
-    }
-    const data = await getTeamMembers(session.accessToken, teamId);
-    setMembers((prev) => ({ ...prev, [teamId]: data }));
+  function toggleMembers(teamId: string) {
+    setExpandedTeamId((prev) => (prev === teamId ? undefined : teamId));
   }
 
   return (
@@ -66,7 +37,7 @@ export default function TeamsPage() {
         {!session ? (
           <LoginGateway />
         ) : (
-          <div className="mx-auto max-w-lg space-y-5">
+          <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
               <Link href="/settings" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
                 ← Settings
@@ -83,48 +54,55 @@ export default function TeamsPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Product squad"
                 />
-                <Button className="w-full" loading={creating} disabled={!name.trim()} onClick={handleCreate}>
+                <Button
+                  className="w-full"
+                  loading={createTeam.isPending}
+                  disabled={!name.trim()}
+                  onClick={handleCreate}
+                >
                   Create team
                 </Button>
               </div>
             </Panel>
 
             <Panel open title={`Your teams (${teams.length})`}>
-              {loading ? (
+              {isLoading ? (
                 <p className="text-xs text-[#5A5A5A]">Loading…</p>
               ) : teams.length === 0 ? (
                 <p className="text-xs text-[#5A5A5A]">No teams yet — create one above.</p>
               ) : (
-                <div className="space-y-2">
+                <AnimatedList className="space-y-2">
                   {teams.map((t) => (
-                    <div key={t.id} className="rounded-lg border border-[#2A2A2A] p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-[#F5F5F5] font-medium">{t.name}</p>
-                          <p className="text-[10px] text-[#5A5A5A] mt-0.5">
-                            {t.member_count} members · {t.sector}
-                          </p>
+                    <AnimatedListItem key={t.id}>
+                      <div className="rounded-lg border border-[#2A2A2A] p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-[#F5F5F5] font-medium">{t.name}</p>
+                            <p className="text-[10px] text-[#5A5A5A] mt-0.5">
+                              {t.member_count} members · {t.sector}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleMembers(t.id)}
+                            className="text-[10px] text-[#00E5FF] uppercase tracking-wider"
+                          >
+                            {expandedTeamId === t.id ? "Hide" : "Members"}
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => toggleMembers(t.id)}
-                          className="text-[10px] text-[#00E5FF] uppercase tracking-wider"
-                        >
-                          {members[t.id] ? "Hide" : "Members"}
-                        </button>
+                        {expandedTeamId === t.id && (
+                          <ul className="mt-2 space-y-1 border-t border-[#1F1F1F] pt-2">
+                            {members.map((m) => (
+                              <li key={m.user_id} className="text-xs text-[#8A8A8A]">
+                                {m.display_name} · {m.role}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
-                      {members[t.id] && (
-                        <ul className="mt-2 space-y-1 border-t border-[#1F1F1F] pt-2">
-                          {members[t.id].map((m) => (
-                            <li key={m.user_id} className="text-xs text-[#8A8A8A]">
-                              {m.display_name} · {m.role}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                    </AnimatedListItem>
                   ))}
-                </div>
+                </AnimatedList>
               )}
             </Panel>
 
@@ -134,7 +112,7 @@ export default function TeamsPage() {
             >
               Schedule a meeting →
             </Link>
-          </div>
+          </FadeIn>
         )}
       </AuthHydrationGate>
     </AppShell>

@@ -3,6 +3,8 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as eks from "aws-cdk-lib/aws-eks";
 import { KubectlV31Layer } from "@aws-cdk/lambda-layer-kubectl-v31";
 import { Construct } from "constructs";
+import { NexusExternalSecrets } from "./constructs/nexus-external-secrets";
+import { NexusKmsSecrets } from "./constructs/nexus-kms-secrets";
 
 export class NexusEksStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -37,7 +39,15 @@ export class NexusEksStack extends cdk.Stack {
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
     });
 
-    // Istio service mesh installed via ArgoCD (see k8s/istio/)
+    const secrets = new NexusKmsSecrets(this, "Secrets", {
+      environment: "production",
+    });
+
+    new NexusExternalSecrets(this, "ExternalSecrets", {
+      cluster,
+      secrets,
+    });
+
     cluster.addHelmChart("AwsLoadBalancerController", {
       chart: "aws-load-balancer-controller",
       repository: "https://aws.github.io/eks-charts",
@@ -54,8 +64,13 @@ export class NexusEksStack extends cdk.Stack {
     new cdk.CfnOutput(this, "ClusterName", { value: cluster.clusterName });
     new cdk.CfnOutput(this, "VpcId", { value: vpc.vpcId });
     new cdk.CfnOutput(this, "NodeGroupName", { value: nodeGroup.nodegroupName });
+    new cdk.CfnOutput(this, "ProductionDatabaseSecretName", {
+      value: secrets.databaseSecret.secretName,
+    });
+    new cdk.CfnOutput(this, "ProductionJwtSecretName", {
+      value: secrets.jwtSecret.secretName,
+    });
 
-    // Cost attribution tag per bounded context
     cdk.Tags.of(this).add("Project", "NEXSOCIO");
     cdk.Tags.of(this).add("Environment", "production");
     cdk.Tags.of(this).add("ManagedBy", "CDK");
