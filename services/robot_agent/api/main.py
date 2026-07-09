@@ -6,9 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from nexus_common.observability.logging import configure_logging
 from nexus_common.observability.middleware import RequestLoggingMiddleware
 from nexus_common.observability.tracing import configure_tracing
-from services.safety.api.routes import router
-from services.safety.infrastructure.config import Settings
-from services.safety.infrastructure.database import get_engine, init_db
+from services.robot_agent.api.routes import router
+from services.robot_agent.infrastructure.config import Settings
+from services.robot_agent.infrastructure.database import get_engine, init_db
 
 
 @asynccontextmanager
@@ -25,8 +25,8 @@ def create_app() -> FastAPI:
     configure_tracing(settings.service_name)
 
     app = FastAPI(
-        title="Nexus Safety, Moderation & Governance",
-        description="Multi-layer safety: deterministic rules + ML stub",
+        title="Nexus Robot & Embodied Agent Layer",
+        description="Digital twins, safety-certified command channels, social presence",
         version="1.0.0",
         lifespan=lifespan,
     )

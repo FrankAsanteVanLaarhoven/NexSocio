@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from services.identity.infrastructure.models import Base
+from services.safety.infrastructure.models import Base
 
 
 def get_engine(database_url: str):
@@ -12,18 +12,8 @@ def get_engine(database_url: str):
 
 async def init_db(engine) -> None:
     async with engine.begin() as conn:
-        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS identity"))
+        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS safety"))
         await conn.run_sync(Base.metadata.create_all)
-        for col, col_type in [
-            ("bio", "TEXT"),
-            ("headline", "VARCHAR(128)"),
-            ("skills", "TEXT"),
-            ("company", "VARCHAR(128)"),
-            ("beta_cohort", "VARCHAR(64)"),
-        ]:
-            await conn.execute(
-                text(f"ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS {col} {col_type}")
-            )
 
 
 def get_session_factory(engine) -> async_sessionmaker[AsyncSession]:

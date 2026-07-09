@@ -21,4 +21,6 @@ class PostModel(Base):
     mode: Mapped[str] = mapped_column(String(32), nullable=False)
     context: Mapped[str] = mapped_column(String(32), nullable=False, default="personal")
     visibility: Mapped[str] = mapped_column(String(32), nullable=False, default="public")
+    media_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    moderation_status: Mapped[str] = mapped_column(String(32), nullable=False, default="approved")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

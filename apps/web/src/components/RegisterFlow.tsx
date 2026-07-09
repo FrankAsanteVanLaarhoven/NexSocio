@@ -2,7 +2,6 @@
 
 import type { UserMode } from "@nexus/types";
 import { Button, Input, Panel } from "@nexus/ui";
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { generateStubProof, register } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
@@ -93,13 +92,9 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl font-semibold tracking-tight text-[#F5F5F5]"
-        >
+        <h1 className="text-2xl font-semibold tracking-tight text-[#F5F5F5]">
           Join Nexus
-        </motion.h1>
+        </h1>
         <p className="mt-2 text-sm text-[#8A8A8A]">
           Zero-trust identity with ZKP age verification
         </p>

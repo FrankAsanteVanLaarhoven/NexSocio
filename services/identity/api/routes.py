@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from nexus_common.domain.feature_flags import BETA_COHORTS, DEFAULT_FLAGS, FeatureFlagsResponse
 from nexus_common.domain.models import ApiResponse, HealthResponse, ZKPAgeProof
 from nexus_common.security.zkp import ZKPVerifier
 
@@ -85,6 +86,23 @@ async def get_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return ApiResponse(data=user)
+
+
+@router.get("/features", response_model=ApiResponse[FeatureFlagsResponse])
+async def get_features(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    service: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ApiResponse[FeatureFlagsResponse]:
+    user = await service.get_user(user_id)
+    cohort = user.beta_cohort if user else "public_beta"
+    beta_access = bool(cohort and (cohort in BETA_COHORTS or cohort == "public_beta"))
+    return ApiResponse(
+        data=FeatureFlagsResponse(
+            flags=DEFAULT_FLAGS,
+            cohort=cohort,
+            beta_access=beta_access,
+        )
+    )
 
 
 @router.post("/zkp/stub-proof", response_model=ApiResponse[ZKPAgeProof])

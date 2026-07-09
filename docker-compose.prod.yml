@@ -1,0 +1,62 @@
+# Production-hardened overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  identity:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      LOG_LEVEL: INFO
+
+  content:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+    environment:
+      SAFETY_SERVICE_URL: http://safety:8005
+
+  social-graph:
+    restart: always
+
+  professional:
+    restart: always
+
+  safety:
+    build:
+      context: .
+      dockerfile: services/safety/Dockerfile
+    ports:
+      - "8005:8005"
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      CORS_ORIGINS: '["https://nexus.io"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  robot-agent:
+    build:
+      context: .
+      dockerfile: services/robot_agent/Dockerfile
+    ports:
+      - "8006:8006"
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      SAFETY_SERVICE_URL: http://safety:8005
+      CORS_ORIGINS: '["https://nexus.io"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      safety:
+        condition: service_started

@@ -4,10 +4,10 @@ import type { Post } from "@nexus/types";
 import { Button, ModeBadge, Panel } from "@nexus/ui";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
-import { createPost, getFeed, getProfessionalDashboard } from "@/lib/api";
+import { createPost, getFeed, getProfessionalDashboard, reportPost } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => void }) {
   const time = new Date(post.created_at).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -33,7 +33,15 @@ function PostCard({ post }: { post: Post }) {
             <p className="text-[10px] text-[#5A5A5A]">{time}</p>
           </div>
         </div>
-        <ModeBadge mode={post.mode} />
+        <div className="flex items-center gap-2">
+          <ModeBadge mode={post.mode} />
+          <button
+            onClick={() => onReport(post.id)}
+            className="text-[10px] text-[#5A5A5A] hover:text-[#FF5252] transition-colors"
+          >
+            Report
+          </button>
+        </div>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-[#D4D4D4] whitespace-pre-wrap">{post.body}</p>
     </motion.article>
@@ -85,6 +93,14 @@ export function Feed() {
   useEffect(() => {
     loadFeed();
   }, [loadFeed]);
+
+  async function handleReport(postId: string) {
+    try {
+      await reportPost(session.accessToken, postId, "inappropriate", "User report from feed");
+    } catch {
+      /* silent */
+    }
+  }
 
   async function handlePost() {
     if (!body.trim()) return;
@@ -191,7 +207,7 @@ export function Feed() {
         <AnimatePresence mode="popLayout">
           <div className="space-y-4">
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} onReport={handleReport} />
             ))}
           </div>
         </AnimatePresence>

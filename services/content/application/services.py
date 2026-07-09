@@ -1,10 +1,12 @@
 from uuid import UUID, uuid4
 
 import httpx
+from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.domain.enums import ContentVisibility, FeedType, UserMode, ViewContext
+from nexus_common.safety.moderation import ModerationEngine
 from services.content.application.dtos import CreatePostRequest, FeedResponse, PostResponse
 from services.content.infrastructure.config import Settings
 from services.content.infrastructure.models import PostModel
@@ -14,6 +16,22 @@ class ContentService:
     def __init__(self, db: AsyncSession, settings: Settings | None = None):
         self.db = db
         self.settings = settings or Settings()
+        self._moderator = ModerationEngine()
+
+    async def _moderate(self, text: str, mode: UserMode, post_id: UUID | None = None) -> None:
+        # Local fast path
+        result = self._moderator.analyze(text, mode.value)
+        if not result.allowed:
+            raise HTTPException(status_code=400, detail=result.message)
+        # Async safety service logging
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                await client.post(
+                    f"{self.settings.safety_service_url}/api/v1/moderate",
+                    json={"text": text, "author_mode": mode.value, "content_id": str(post_id) if post_id else None},
+                )
+        except httpx.HTTPError:
+            pass
 
     async def create_post(
         self,
@@ -22,14 +40,19 @@ class ContentService:
         mode: UserMode,
         request: CreatePostRequest,
     ) -> PostResponse:
+        post_id = uuid4()
+        await self._moderate(request.body, mode, post_id)
+
         post = PostModel(
-            id=uuid4(),
+            id=post_id,
             author_id=author_id,
             author_name=author_name,
             body=request.body,
             mode=mode.value,
             context=request.context.value,
             visibility=request.visibility.value,
+            media_url=request.media_url,
+            moderation_status="approved",
         )
         self.db.add(post)
         await self.db.commit()
@@ -96,5 +119,7 @@ class ContentService:
             mode=UserMode(post.mode),
             context=ViewContext(post.context) if post.context else ViewContext.PERSONAL,
             visibility=ContentVisibility(post.visibility),
+            media_url=post.media_url,
+            moderation_status=post.moderation_status,
             created_at=post.created_at,
         )

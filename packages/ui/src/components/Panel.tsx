@@ -17,7 +17,7 @@ export function Panel({ open, children, className, title, subtitle, onClose }: P
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          initial={false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -4, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}

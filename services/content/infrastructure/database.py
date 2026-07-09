@@ -14,11 +14,12 @@ async def init_db(engine) -> None:
     async with engine.begin() as conn:
         await conn.execute(text("CREATE SCHEMA IF NOT EXISTS content"))
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(
-            text(
-                "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS context VARCHAR(32) DEFAULT 'personal'"
-            )
-        )
+        for stmt in [
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS context VARCHAR(32) DEFAULT 'personal'",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS media_url VARCHAR(512)",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS moderation_status VARCHAR(32) DEFAULT 'approved'",
+        ]:
+            await conn.execute(text(stmt))
 
 
 def get_session_factory(engine) -> async_sessionmaker[AsyncSession]:

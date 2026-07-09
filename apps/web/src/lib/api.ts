@@ -7,8 +7,12 @@ import type {
   ModeSelectRequest,
   ModeSelectResponse,
   Post,
+  CommandResponse,
+  FeatureFlags,
   ProfessionalDashboard,
   ProfessionalProfile,
+  RobotDashboard,
+  SafetyDashboard,
   PublicUser,
   RegisterRequest,
   RegisterResponse,
@@ -23,6 +27,8 @@ const IDENTITY_URL = process.env.NEXT_PUBLIC_IDENTITY_URL || "http://localhost:8
 const SOCIAL_URL = process.env.NEXT_PUBLIC_SOCIAL_URL || "http://localhost:8002";
 const CONTENT_URL = process.env.NEXT_PUBLIC_CONTENT_URL || "http://localhost:8003";
 const PROFESSIONAL_URL = process.env.NEXT_PUBLIC_PROFESSIONAL_URL || "http://localhost:8004";
+const SAFETY_URL = process.env.NEXT_PUBLIC_SAFETY_URL || "http://localhost:8005";
+const ROBOT_URL = process.env.NEXT_PUBLIC_ROBOT_URL || "http://localhost:8006";
 
 async function request<T>(
   baseUrl: string,
@@ -178,5 +184,54 @@ export async function getProfessionalProfile(token: string): Promise<Professiona
 export async function getProfessionalDashboard(token: string): Promise<ProfessionalDashboard> {
   return request<ProfessionalDashboard>(PROFESSIONAL_URL, "/api/v1/dashboard", {
     headers: authHeaders(token),
+  });
+}
+
+export async function getFeatureFlags(token: string): Promise<FeatureFlags> {
+  return request<FeatureFlags>(IDENTITY_URL, "/api/v1/features", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getSafetyDashboard(): Promise<SafetyDashboard> {
+  return request<SafetyDashboard>(SAFETY_URL, "/api/v1/dashboard");
+}
+
+export async function reportPost(
+  token: string,
+  postId: string,
+  reason: string,
+  details?: string
+): Promise<void> {
+  await request(SAFETY_URL, "/api/v1/reports", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ post_id: postId, reason, details }),
+  });
+}
+
+export async function getRobotDashboard(token: string): Promise<RobotDashboard> {
+  return request<RobotDashboard>(ROBOT_URL, "/api/v1/dashboard", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function issueRobotCommand(
+  token: string,
+  agentId: string,
+  command: string
+): Promise<CommandResponse> {
+  return request<CommandResponse>(ROBOT_URL, "/api/v1/commands", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ agent_id: agentId, command }),
+  });
+}
+
+export async function createRobotTwin(token: string, name: string): Promise<void> {
+  await request(ROBOT_URL, "/api/v1/twins", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ name }),
   });
 }

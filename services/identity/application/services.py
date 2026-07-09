@@ -48,6 +48,7 @@ class IdentityService:
             headline=user.headline,
             skills=user.skills,
             company=user.company,
+            beta_cohort=user.beta_cohort or "public_beta",
             created_at=user.created_at,
         )
 
@@ -71,6 +72,7 @@ class IdentityService:
             mode=mode.value,
             age_verified=zkp_result.verified,
             zkp_proof_hash=zkp_result.proof_hash,
+            beta_cohort="founding",
         )
         self.db.add(user)
         await self.db.commit()

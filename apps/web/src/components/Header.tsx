@@ -8,6 +8,8 @@ import { useAuthStore } from "@/lib/auth-store";
 const NAV = [
   { href: "/", label: "Feed" },
   { href: "/connections", label: "Connections" },
+  { href: "/robots", label: "Robots" },
+  { href: "/safety", label: "Safety" },
   { href: "/profile", label: "Profile" },
 ];
 

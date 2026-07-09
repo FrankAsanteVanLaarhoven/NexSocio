@@ -28,8 +28,8 @@ nexus/
 | Social Graph | 8002 | **MVP** — Connect, accept, connection feed |
 | Content & Media | 8003 | **MVP** — Posts, global/connections/professional feeds |
 | Professional Networking | 8004 | **MVP** — Dashboard, professional profile |
-| Safety & Moderation | 8005 | Stub |
-| Robot & Embodied Agent | 8006 | Architectural stub |
+| Safety & Moderation | 8005 | **MVP** — Moderation engine, reports, dashboard |
+| Robot & Embodied Agent | 8006 | **MVP** — Digital twins, safety commands |
 
 ## Quick Start
 
@@ -120,10 +120,17 @@ npm run build
 
 ## Roadmap
 
-- **Phase 0** (Weeks 1-4): Foundations — ✅ Scaffold complete
-- **Phase 1** (Weeks 5-16): Core MVP — Identity, Content, UI
-- **Phase 2** (Weeks 17-24): Robot layer, safety, load testing
-- **Phase 3** (Weeks 25-32): Production hardening, public beta
+- **Phase 0** (Weeks 1-4): Foundations — ✅ Complete
+- **Phase 1** (Weeks 5-16): Core MVP — ✅ Identity, Content, UI, Profiles, Social Graph
+- **Phase 2** (Weeks 17-24): Differentiation — ✅ Robot layer, Safety, Load tests
+- **Phase 3** (Weeks 25-32): Production — ✅ Hardening overlay, public beta cohorts, observability
+
+## Load Testing
+
+```bash
+k6 run tests/load/k6-core-flow.js
+locust -f tests/load/locustfile.py --host=http://localhost:8001
+```
 
 ---
 

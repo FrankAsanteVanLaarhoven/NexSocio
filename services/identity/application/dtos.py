@@ -54,6 +54,7 @@ class UserResponse(BaseModel):
     headline: str | None = None
     skills: str | None = None
     company: str | None = None
+    beta_cohort: str | None = "public_beta"
     created_at: datetime | None = None
 
 

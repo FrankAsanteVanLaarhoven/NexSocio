@@ -10,6 +10,7 @@ class CreatePostRequest(BaseModel):
     body: str = Field(..., min_length=1, max_length=5000)
     visibility: ContentVisibility = ContentVisibility.PUBLIC
     context: ViewContext = ViewContext.PERSONAL
+    media_url: str | None = Field(default=None, max_length=512)
 
 
 class PostResponse(BaseModel):
@@ -20,6 +21,8 @@ class PostResponse(BaseModel):
     mode: UserMode
     context: ViewContext
     visibility: ContentVisibility
+    media_url: str | None = None
+    moderation_status: str = "approved"
     created_at: datetime
 
 

@@ -98,6 +98,8 @@ export interface Post {
   mode: UserMode;
   context: ViewContext;
   visibility: ContentVisibility;
+  media_url?: string | null;
+  moderation_status?: string;
   created_at: string;
 }
 
@@ -137,6 +139,51 @@ export interface ProfessionalDashboard {
   profile: ProfessionalProfile;
   insights: { label: string; value: string; trend: string }[];
   connection_suggestions: string[];
+}
+
+export interface FeatureFlags {
+  flags: Record<string, boolean>;
+  cohort: string | null;
+  beta_access: boolean;
+}
+
+export interface SafetyDashboard {
+  total_events: number;
+  blocked_count: number;
+  review_count: number;
+  open_reports: number;
+  incident_rate: number;
+  recent_events: {
+    id: string;
+    action: string;
+    score: string;
+    labels: string;
+    status: string;
+    created_at: string;
+  }[];
+}
+
+export interface DigitalTwin {
+  agent_id: string;
+  name: string;
+  status: string;
+  safety_channel: string;
+  social_status: string;
+  capabilities?: string | null;
+}
+
+export interface RobotDashboard {
+  twins: DigitalTwin[];
+  recent_commands: { agent_id: string; command: string; safety_check: string; created_at: string }[];
+  safety_channel_status: string;
+}
+
+export interface CommandResponse {
+  agent_id: string;
+  command: string;
+  status: string;
+  safety_check: string;
+  message: string;
 }
 
 export interface AuthSession {

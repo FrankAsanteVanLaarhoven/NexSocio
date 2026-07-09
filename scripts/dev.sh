@@ -23,6 +23,8 @@ case "${1:-help}" in
   social)     run_service "services.social_graph.api.main:app" 8002 ;;
   content)    run_service "services.content.api.main:app" 8003 ;;
   professional) run_service "services.professional.api.main:app" 8004 ;;
+  safety)     run_service "services.safety.api.main:app" 8005 ;;
+  robot)      run_service "services.robot_agent.api.main:app" 8006 ;;
   web)
     cd "${ROOT}/apps/web"
     npm run dev
@@ -34,9 +36,11 @@ case "${1:-help}" in
     echo "  ./scripts/dev.sh social"
     echo "  ./scripts/dev.sh content"
     echo "  ./scripts/dev.sh professional"
+    echo "  ./scripts/dev.sh safety"
+    echo "  ./scripts/dev.sh robot"
     echo "  ./scripts/dev.sh web"
     ;;
   *)
-    echo "Usage: ./scripts/dev.sh {infra|identity|social|content|professional|web|all}"
+    echo "Usage: ./scripts/dev.sh {infra|identity|social|content|professional|safety|robot|web|all}"
     ;;
 esac
