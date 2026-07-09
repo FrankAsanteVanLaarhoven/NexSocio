@@ -30,5 +30,13 @@ export const BRAND_ICONS = {
   apple: "/icons/icon-192.png",
 } as const;
 
+/** Default accent-aligned palette (splash + fallbacks; UI uses CSS vars when themed) */
+export const BRAND_COLORS = {
+  accent: "#00E5FF",
+  accentRgb: "0 229 255",
+  navy: "#0A1628",
+  base: "#0A0A0A",
+} as const;
+
 export type BrandLogoVariant = "header" | "icon" | "wordmark";
 export type BrandLogoSize = "md" | "lg";
