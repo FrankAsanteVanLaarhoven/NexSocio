@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Meeting } from "@nexus/types";
 import { createMeeting, listMeetings, listUpcomingMeetings } from "@/lib/api";
 import { queryKeys } from "./keys";
 
@@ -17,6 +18,7 @@ export function useUpcomingMeetings(token: string | undefined) {
     queryKey: queryKeys.upcomingMeetings(token),
     queryFn: () => listUpcomingMeetings(token!),
     enabled: !!token,
+    refetchInterval: 30_000,
   });
 }
 
@@ -29,7 +31,16 @@ export function useCreateMeeting(token: string | undefined) {
       duration_min?: number;
       team_id?: string;
     }) => createMeeting(token!, data),
-    onSuccess: () => {
+    onSuccess: (meeting) => {
+      queryClient.setQueryData<Meeting[]>(queryKeys.meetings(token), (old) =>
+        [meeting, ...(old ?? [])]
+      );
+      queryClient.setQueryData<Meeting[]>(queryKeys.upcomingMeetings(token), (old) => {
+        const list = [meeting, ...(old ?? [])];
+        return list.sort(
+          (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+        );
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.meetings(token) });
       queryClient.invalidateQueries({ queryKey: queryKeys.upcomingMeetings(token) });
     },

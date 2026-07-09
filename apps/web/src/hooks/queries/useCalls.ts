@@ -11,6 +11,7 @@ export function useRecentCalls(token: string | undefined) {
     queryFn: () => getRecentCalls(token!),
     enabled: !!token,
     refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -22,8 +23,11 @@ export function useStartCall(token: string | undefined) {
       callee_name: string;
       call_type?: "voice" | "video";
     }) => startCall(token!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.calls(token) });
+    onSuccess: (call) => {
+      queryClient.setQueryData<CallSession[]>(queryKeys.calls(token), (old) => [
+        call,
+        ...(old ?? []).filter((c) => c.id !== call.id),
+      ]);
     },
   });
 }
@@ -32,7 +36,20 @@ export function useAnswerCall(token: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (callId: string) => answerCall(token!, callId),
-    onSuccess: (call: CallSession) => {
+    onMutate: async (callId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.calls(token) });
+      const previous = queryClient.getQueryData<CallSession[]>(queryKeys.calls(token));
+      queryClient.setQueryData<CallSession[]>(queryKeys.calls(token), (old) =>
+        old?.map((c) => (c.id === callId ? { ...c, status: "active" } : c))
+      );
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(queryKeys.calls(token), ctx.previous);
+      }
+    },
+    onSuccess: (call) => {
       queryClient.setQueryData<CallSession[]>(queryKeys.calls(token), (old) =>
         old?.map((c) => (c.id === call.id ? call : c)) ?? [call]
       );
@@ -44,7 +61,20 @@ export function useEndCall(token: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (callId: string) => endCall(token!, callId),
-    onSuccess: () => {
+    onMutate: async (callId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.calls(token) });
+      const previous = queryClient.getQueryData<CallSession[]>(queryKeys.calls(token));
+      queryClient.setQueryData<CallSession[]>(queryKeys.calls(token), (old) =>
+        old?.map((c) => (c.id === callId ? { ...c, status: "ended" } : c))
+      );
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(queryKeys.calls(token), ctx.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.calls(token) });
     },
   });

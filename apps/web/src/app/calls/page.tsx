@@ -13,6 +13,7 @@ import {
   useStartCall,
 } from "@/hooks/queries/useCalls";
 import { useContacts } from "@/hooks/queries/useContacts";
+import { useActiveCallSync } from "@/hooks/useActiveCallSync";
 import { useAuthStore } from "@/lib/auth-store";
 import type { CallSession } from "@nexus/types";
 
@@ -33,6 +34,8 @@ export default function CallsPage() {
   const [callRole, setCallRole] = useState<"caller" | "callee">("caller");
 
   const callableContacts = contacts.filter((c) => c.contact_user_id);
+
+  useActiveCallSync(calls, activeCall, setActiveCall);
 
   const ringing = calls.find(
     (c) => c.status === "ringing" && c.callee_id === userId
