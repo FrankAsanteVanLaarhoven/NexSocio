@@ -12,7 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (session) router.replace("/");
+    if (session) router.replace("/feed");
   }, [session, router]);
 
   return (

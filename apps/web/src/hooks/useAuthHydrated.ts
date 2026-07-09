@@ -9,11 +9,17 @@ export function useAuthHydrated(): boolean {
   const [ready, setReady] = useState(hasHydrated);
 
   useEffect(() => {
+    const finish = () => setReady(true);
     if (useAuthStore.persist.hasHydrated()) {
-      setReady(true);
+      finish();
       return;
     }
-    return useAuthStore.persist.onFinishHydration(() => setReady(true));
+    const unsub = useAuthStore.persist.onFinishHydration(finish);
+    const timeout = window.setTimeout(finish, 400);
+    return () => {
+      unsub();
+      window.clearTimeout(timeout);
+    };
   }, []);
 
   return ready || hasHydrated;

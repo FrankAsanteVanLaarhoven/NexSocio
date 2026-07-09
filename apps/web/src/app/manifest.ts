@@ -40,7 +40,7 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     shortcuts: [
-      { name: "Feed", url: "/", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
+      { name: "Feed", url: "/feed", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
       { name: "Calls", url: "/calls", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
       { name: "Inbox", url: "/inbox", icons: [{ src: "/icons/icon.svg", sizes: "any" }] },
     ],
