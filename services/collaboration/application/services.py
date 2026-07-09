@@ -336,6 +336,20 @@ class CollaborationService:
         except httpx.HTTPError:
             pass
 
+    async def verify_call_room(self, user_id: UUID, room_code: str) -> CallSessionModel:
+        result = await self.db.execute(
+            select(CallSessionModel).where(
+                CallSessionModel.room_code == room_code,
+                CallSessionModel.status.in_(["ringing", "active"]),
+            )
+        )
+        call = result.scalar_one_or_none()
+        if not call:
+            raise HTTPException(status_code=404, detail="Call room not found or ended")
+        if user_id not in (call.caller_id, call.callee_id):
+            raise HTTPException(status_code=403, detail="Not a call participant")
+        return call
+
     async def _get_call(self, call_id: UUID) -> CallSessionModel:
         result = await self.db.execute(
             select(CallSessionModel).where(CallSessionModel.id == call_id)

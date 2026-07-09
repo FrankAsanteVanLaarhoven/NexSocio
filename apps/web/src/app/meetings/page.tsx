@@ -1,12 +1,12 @@
 "use client";
 
-import { Button, Input, Panel } from "@nexus/ui";
+import { useState } from "react";
+import { Button, FadeIn, Input, Panel, AnimatedList, AnimatedListItem } from "@nexus/ui";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
-import { createMeeting, listMeetings, listUpcomingMeetings } from "@/lib/api";
+import { useCreateMeeting, useMeetings, useUpcomingMeetings } from "@/hooks/queries/useMeetings";
 import { useAuthStore } from "@/lib/auth-store";
 import type { Meeting } from "@nexus/types";
 
@@ -21,47 +21,22 @@ function formatWhen(iso: string) {
 
 export default function MeetingsPage() {
   const session = useAuthStore((s) => s.session);
-  const [mine, setMine] = useState<Meeting[]>([]);
-  const [upcoming, setUpcoming] = useState<Meeting[]>([]);
+  const token = session?.accessToken;
+  const { data: mine = [], isLoading: loadingMine } = useMeetings(token);
+  const { data: upcoming = [], isLoading: loadingUpcoming } = useUpcomingMeetings(token);
+  const createMeeting = useCreateMeeting(token);
   const [title, setTitle] = useState("");
   const [when, setWhen] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!session) return;
-    setLoading(true);
-    try {
-      const [myMeetings, allUpcoming] = await Promise.all([
-        listMeetings(session.accessToken),
-        listUpcomingMeetings(session.accessToken),
-      ]);
-      setMine(myMeetings);
-      setUpcoming(allUpcoming);
-    } finally {
-      setLoading(false);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   async function handleCreate() {
-    if (!session || !title.trim() || !when) return;
-    setCreating(true);
-    try {
-      await createMeeting(session.accessToken, {
-        title: title.trim(),
-        scheduled_at: new Date(when).toISOString(),
-        duration_min: 30,
-      });
-      setTitle("");
-      setWhen("");
-      await load();
-    } finally {
-      setCreating(false);
-    }
+    if (!title.trim() || !when) return;
+    await createMeeting.mutateAsync({
+      title: title.trim(),
+      scheduled_at: new Date(when).toISOString(),
+      duration_min: 30,
+    });
+    setTitle("");
+    setWhen("");
   }
 
   return (
@@ -70,7 +45,7 @@ export default function MeetingsPage() {
         {!session ? (
           <LoginGateway />
         ) : (
-          <div className="mx-auto max-w-lg space-y-5">
+          <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
               <Link href="/teams" className="text-xs text-[#8A8A8A] hover:text-[#00E5FF]">
                 ← Teams
@@ -90,7 +65,7 @@ export default function MeetingsPage() {
                 />
                 <Button
                   className="w-full"
-                  loading={creating}
+                  loading={createMeeting.isPending}
                   disabled={!title.trim() || !when}
                   onClick={handleCreate}
                 >
@@ -100,31 +75,37 @@ export default function MeetingsPage() {
             </Panel>
 
             <Panel open title="Upcoming">
-              {loading ? (
+              {loadingUpcoming ? (
                 <p className="text-xs text-[#5A5A5A]">Loading…</p>
               ) : upcoming.length === 0 ? (
                 <p className="text-xs text-[#5A5A5A]">No upcoming meetings.</p>
               ) : (
-                <div className="space-y-2">
+                <AnimatedList className="space-y-2">
                   {upcoming.map((m) => (
-                    <MeetingRow key={m.id} meeting={m} />
+                    <AnimatedListItem key={m.id}>
+                      <MeetingRow meeting={m} />
+                    </AnimatedListItem>
                   ))}
-                </div>
+                </AnimatedList>
               )}
             </Panel>
 
             <Panel open title="Your meetings">
-              {mine.length === 0 ? (
+              {loadingMine ? (
+                <p className="text-xs text-[#5A5A5A]">Loading…</p>
+              ) : mine.length === 0 ? (
                 <p className="text-xs text-[#5A5A5A]">You have not hosted any meetings yet.</p>
               ) : (
-                <div className="space-y-2">
+                <AnimatedList className="space-y-2">
                   {mine.map((m) => (
-                    <MeetingRow key={m.id} meeting={m} />
+                    <AnimatedListItem key={m.id}>
+                      <MeetingRow meeting={m} />
+                    </AnimatedListItem>
                   ))}
-                </div>
+                </AnimatedList>
               )}
             </Panel>
-          </div>
+          </FadeIn>
         )}
       </AuthHydrationGate>
     </AppShell>

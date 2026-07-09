@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PwaRegister } from "@/components/PwaRegister";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -18,6 +19,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NEXSOCIO",
   description: "World-Leading SOTA Socio-Technical Platform",
+  applicationName: "NEXSOCIO",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "NEXSOCIO",
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#00E5FF",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,7 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         style={{ backgroundColor: "#0A0A0A", color: "#F5F5F5" }}
         suppressHydrationWarning
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <PwaRegister />
+          {children}
+        </Providers>
       </body>
     </html>
   );

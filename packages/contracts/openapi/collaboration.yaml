@@ -56,6 +56,13 @@ paths:
       responses:
         "200":
           description: Call session started
+  /calls/ws:
+    get:
+      summary: WebRTC signaling WebSocket (offer, answer, ICE)
+      description: Connect with ?token=JWT&room=ROOMCODE
+      responses:
+        "101":
+          description: WebSocket upgrade
   /status/feed:
     get:
       summary: Active status updates (24h)

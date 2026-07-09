@@ -846,6 +846,11 @@ export function notificationWsUrl(token: string): string {
   return `${base}/api/v1/ws?token=${encodeURIComponent(token)}`;
 }
 
+export function callSignalingWsUrl(token: string, roomCode: string): string {
+  const base = COLLABORATION_URL.replace(/^http/, "ws");
+  return `${base}/api/v1/calls/ws?token=${encodeURIComponent(token)}&room=${encodeURIComponent(roomCode)}`;
+}
+
 export async function listTeams(token: string): Promise<Team[]> {
   return request<Team[]>(COLLABORATION_URL, "/api/v1/teams", {
     headers: authHeaders(token),

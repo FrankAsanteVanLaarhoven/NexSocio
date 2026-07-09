@@ -1,7 +1,9 @@
+import json
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from nexus_common.security.jwt import decode_access_token
 from nexus_common.domain.models import ApiResponse, HealthResponse
 
 from services.collaboration.api.deps import (
@@ -28,6 +30,7 @@ from services.collaboration.application.dtos import (
     TeamMemberResponse,
     TeamResponse,
 )
+from services.collaboration.application.call_signaling import signaling
 from services.collaboration.application.services import CollaborationService
 from services.collaboration.infrastructure.config import Settings
 
@@ -186,6 +189,49 @@ async def create_episode(
     service: Annotated[CollaborationService, Depends(get_collaboration_service)],
 ) -> ApiResponse[PodcastEpisodeResponse]:
     return ApiResponse(data=await service.create_podcast_episode(auth.user_id, request))
+
+
+@router.websocket("/calls/ws")
+async def call_signaling_ws(
+    websocket: WebSocket,
+    token: str = Query(...),
+    room: str = Query(..., min_length=4, max_length=16),
+):
+    settings = Settings()
+    payload = decode_access_token(token, settings.jwt_secret)
+    if not payload:
+        await websocket.close(code=4001)
+        return
+
+    user_id = str(UUID(payload.sub))
+
+    from services.collaboration.api.deps import verify_call_room_access
+
+    try:
+        await verify_call_room_access(UUID(payload.sub), room)
+    except Exception:
+        await websocket.close(code=4003)
+        return
+
+    room_key = room.upper()
+    await signaling.join(room_key, user_id, websocket)
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            try:
+                message = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(message, dict) or "type" not in message:
+                continue
+            allowed = {"offer", "answer", "ice", "hangup"}
+            if message["type"] not in allowed:
+                continue
+            message["from"] = user_id
+            await signaling.relay(room_key, user_id, message)
+    except WebSocketDisconnect:
+        signaling.leave(room_key, user_id)
+        await signaling.relay(room_key, user_id, {"type": "peer-left", "user_id": user_id})
 
 
 @router.get("/podcast/episodes", response_model=ApiResponse[list[PodcastEpisodeResponse]])

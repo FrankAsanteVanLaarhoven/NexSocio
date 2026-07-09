@@ -1,64 +1,42 @@
 "use client";
 
-import { Button, Input, Panel } from "@nexus/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { Button, FadeIn, Input, Panel } from "@nexus/ui";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { ContactPicker } from "@/components/ContactPicker";
-import { addContact, listContacts, shareWithContacts } from "@/lib/api";
+import { useAddContact, useContacts, useShareWithContacts } from "@/hooks/queries/useContacts";
 import { useAuthStore } from "@/lib/auth-store";
-import type { Contact } from "@nexus/types";
 
 export default function ContactsPage() {
   const session = useAuthStore((s) => s.session);
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const token = session?.accessToken;
+  const { data: contacts = [], isLoading } = useContacts(token, true);
+  const addContact = useAddContact(token);
+  const share = useShareWithContacts(token);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [shareMsg, setShareMsg] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
-  const [sharing, setSharing] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!session) return;
-    setLoading(true);
-    try {
-      const data = await listContacts(session.accessToken, true);
-      setContacts(data);
-    } finally {
-      setLoading(false);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
   async function handleAdd() {
-    if (!session || !name.trim()) return;
-    setAdding(true);
-    try {
-      await addContact(session.accessToken, {
-        display_name: name.trim(),
-        email: email.trim() || undefined,
-      });
-      setName("");
-      setEmail("");
-      await load();
-    } finally {
-      setAdding(false);
-    }
+    if (!name.trim()) return;
+    await addContact.mutateAsync({
+      display_name: name.trim(),
+      email: email.trim() || undefined,
+    });
+    setName("");
+    setEmail("");
   }
 
   async function handleShare() {
-    if (!session || !shareMsg.trim() || selected.length === 0) return;
-    setSharing(true);
+    if (!shareMsg.trim() || selected.length === 0) return;
     setMsg(null);
     try {
-      const result = await shareWithContacts(session.accessToken, {
+      const result = await share.mutateAsync({
         content_type: "update",
         message: shareMsg.trim(),
         contact_ids: selected,
@@ -68,8 +46,6 @@ export default function ContactsPage() {
       setSelected([]);
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Share failed");
-    } finally {
-      setSharing(false);
     }
   }
 
@@ -79,7 +55,7 @@ export default function ContactsPage() {
         {!session ? (
           <LoginGateway />
         ) : (
-          <div className="mx-auto max-w-lg space-y-5">
+          <FadeIn className="mx-auto max-w-lg space-y-5">
             <div>
               <h1 className="text-xl font-semibold text-[#F5F5F5]">Contacts</h1>
               <p className="text-xs text-[#8A8A8A] mt-1">Sync connections · share with selection</p>
@@ -89,14 +65,19 @@ export default function ContactsPage() {
               <div className="space-y-3">
                 <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
                 <Input label="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
-                <Button className="w-full" loading={adding} disabled={!name.trim()} onClick={handleAdd}>
+                <Button
+                  className="w-full"
+                  loading={addContact.isPending}
+                  disabled={!name.trim()}
+                  onClick={handleAdd}
+                >
                   Add contact
                 </Button>
               </div>
             </Panel>
 
             <Panel open title={`All contacts (${contacts.length})`}>
-              {loading ? (
+              {isLoading ? (
                 <p className="text-xs text-[#5A5A5A]">Syncing…</p>
               ) : contacts.length === 0 ? (
                 <p className="text-xs text-[#5A5A5A]">No contacts — add one or connect with members.</p>
@@ -123,14 +104,12 @@ export default function ContactsPage() {
                   onChange={(e) => setShareMsg(e.target.value)}
                   placeholder="Check out this update…"
                 />
-                <ContactPicker
-                  token={session.accessToken}
-                  selected={selected}
-                  onChange={setSelected}
-                />
+                {token && (
+                  <ContactPicker token={token} selected={selected} onChange={setSelected} />
+                )}
                 <Button
                   className="w-full"
-                  loading={sharing}
+                  loading={share.isPending}
                   disabled={!shareMsg.trim() || selected.length === 0}
                   onClick={handleShare}
                 >
@@ -139,7 +118,7 @@ export default function ContactsPage() {
                 {msg && <p className="text-xs text-[#00C853]">{msg}</p>}
               </div>
             </Panel>
-          </div>
+          </FadeIn>
         )}
       </AuthHydrationGate>
     </AppShell>
