@@ -9,41 +9,38 @@ type BrandLogoProps = {
   className?: string;
 };
 
-const ASSETS = {
-  icon: "/brand/logo-icon.jpg",
-  header: "/brand/logo-horizontal-color.jpg",
-  wordmark: "/brand/logo-wordmark.jpg",
-} as const;
-
 export function BrandLogo({ variant = "header", href = "/", className = "" }: BrandLogoProps) {
   const content =
     variant === "icon" ? (
       <Image
-        src={ASSETS.icon}
+        src="/brand/logo-icon-transparent.png"
         alt="NexSocio"
-        width={28}
-        height={28}
-        className={`h-7 w-7 object-contain ${className}`}
+        width={32}
+        height={32}
+        className={`h-8 w-8 object-contain ${className}`}
         priority
       />
     ) : variant === "wordmark" ? (
-      <Image
-        src={ASSETS.wordmark}
-        alt="NexSocio"
-        width={160}
-        height={40}
-        className={`h-8 w-auto max-w-[10rem] object-contain object-left ${className}`}
-        priority
-      />
+      <span className={`inline-flex items-center text-lg font-bold tracking-tight ${className}`}>
+        <span className="text-primary">Nex</span>
+        <span className="text-[#007bff]">Socio</span>
+      </span>
     ) : (
-      <Image
-        src={ASSETS.header}
-        alt="NexSocio"
-        width={180}
-        height={36}
-        className={`h-8 w-auto max-w-[11rem] object-contain object-left sm:max-w-[13rem] ${className}`}
-        priority
-      />
+      <span className={`inline-flex items-center gap-2.5 ${className}`}>
+        <Image
+          src="/brand/logo-icon-transparent.png"
+          alt=""
+          width={32}
+          height={32}
+          className="h-8 w-8 shrink-0 object-contain"
+          priority
+          aria-hidden
+        />
+        <span className="text-base font-bold tracking-tight leading-none sm:text-lg">
+          <span className="text-primary">Nex</span>
+          <span className="text-[#007bff]">Socio</span>
+        </span>
+      </span>
     );
 
   if (!href) return content;
