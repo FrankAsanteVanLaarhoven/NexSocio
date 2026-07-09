@@ -15,12 +15,14 @@ export interface UserSettings {
   notes: string[];
   wishlist: string[];
   likes: string[];
+  hubHistory: { symbol: string; viewedAt: string }[];
 }
 
 interface SettingsState extends UserSettings {
   addNote: (text: string) => void;
   addWishlist: (item: string) => void;
   toggleLike: (postId: string) => void;
+  addHubHistory: (symbol: string) => void;
   update: (partial: Partial<UserSettings>) => void;
 }
 
@@ -36,6 +38,7 @@ const defaults: UserSettings = {
   notes: [],
   wishlist: [],
   likes: [],
+  hubHistory: [],
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -51,6 +54,14 @@ export const useSettingsStore = create<SettingsState>()(
             ? likes.filter((id) => id !== postId)
             : [postId, ...likes],
         });
+      },
+      addHubHistory: (symbol) => {
+        const entry = { symbol, viewedAt: new Date().toISOString() };
+        const hubHistory = [
+          entry,
+          ...get().hubHistory.filter((h) => h.symbol !== symbol),
+        ].slice(0, 20);
+        set({ hubHistory });
       },
       update: (partial) => set(partial),
     }),
@@ -68,6 +79,7 @@ export const useSettingsStore = create<SettingsState>()(
         notes: s.notes,
         wishlist: s.wishlist,
         likes: s.likes,
+        hubHistory: s.hubHistory,
       }),
     }
   )

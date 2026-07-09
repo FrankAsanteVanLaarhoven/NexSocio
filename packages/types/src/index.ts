@@ -225,6 +225,77 @@ export interface AIComposeResult {
   tagged_as: string;
 }
 
+export interface MarketQuote {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  change_percent: number;
+  currency: string;
+  market_state: string;
+  exchange: string;
+}
+
+export interface MarketHistoryPoint {
+  time: number;
+  close: number;
+}
+
+export interface MarketHistory {
+  symbol: string;
+  name: string;
+  range: string;
+  currency: string;
+  current_price?: number | null;
+  points: MarketHistoryPoint[];
+}
+
+export interface TrendingItem {
+  symbol: string;
+  name: string;
+  price?: number | null;
+  change_percent?: number | null;
+}
+
+export interface HubNewsItem {
+  id: string;
+  title: string;
+  publisher: string;
+  link: string;
+  published_at?: number | null;
+  related_tickers: string[];
+}
+
+export interface MapEvent {
+  id: string;
+  title: string;
+  category: string;
+  city: string;
+  lat: number;
+  lng: number;
+  starts_at: string;
+  status: string;
+}
+
+export interface DeviceStatus {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  detail: string;
+  last_seen?: string | null;
+}
+
+export interface HubDashboard {
+  markets: MarketQuote[];
+  trending: TrendingItem[];
+  news: HubNewsItem[];
+  events: MapEvent[];
+  devices: DeviceStatus[];
+  updated_at: string;
+  source: string;
+}
+
 export interface TwinMessage {
   id: string;
   twin_agent_id: string;

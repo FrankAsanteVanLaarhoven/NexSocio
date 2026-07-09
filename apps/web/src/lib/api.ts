@@ -17,6 +17,9 @@ import type {
   CommandResponse,
   DigitalTwin,
   FeatureFlags,
+  HubDashboard,
+  MarketHistory,
+  MarketQuote,
   PostType,
   AIComposeResult,
   AvatarVideoJob,
@@ -43,6 +46,7 @@ const CONTENT_URL = process.env.NEXT_PUBLIC_CONTENT_URL || "http://localhost:800
 const PROFESSIONAL_URL = process.env.NEXT_PUBLIC_PROFESSIONAL_URL || "http://localhost:8004";
 const SAFETY_URL = process.env.NEXT_PUBLIC_SAFETY_URL || "http://localhost:8005";
 const ROBOT_URL = process.env.NEXT_PUBLIC_ROBOT_URL || "http://localhost:8006";
+const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL || "http://localhost:8007";
 
 async function request<T>(
   baseUrl: string,
@@ -407,6 +411,27 @@ export async function getProfessionalDashboard(token: string): Promise<Professio
   return request<ProfessionalDashboard>(PROFESSIONAL_URL, "/api/v1/dashboard", {
     headers: authHeaders(token),
   });
+}
+
+export async function getHubDashboard(token?: string): Promise<HubDashboard> {
+  return request<HubDashboard>(HUB_URL, "/api/v1/dashboard", {
+    headers: token ? authHeaders(token) : {},
+  });
+}
+
+export async function getHubMarkets(symbols?: string): Promise<MarketQuote[]> {
+  const qs = symbols ? `?symbols=${encodeURIComponent(symbols)}` : "";
+  return request<MarketQuote[]>(HUB_URL, `/api/v1/markets${qs}`);
+}
+
+export async function getMarketHistory(
+  symbol: string,
+  range = "1mo"
+): Promise<MarketHistory> {
+  return request<MarketHistory>(
+    HUB_URL,
+    `/api/v1/markets/${encodeURIComponent(symbol)}/history?range=${range}`
+  );
 }
 
 export async function getFeatureFlags(token: string): Promise<FeatureFlags> {
