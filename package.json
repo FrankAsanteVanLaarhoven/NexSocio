@@ -15,7 +15,7 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "pwa:icons": "node scripts/generate-brand-icons.mjs"
+    "pwa:icons": "node scripts/process-logo-mark.mjs && node scripts/generate-brand-icons.mjs"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

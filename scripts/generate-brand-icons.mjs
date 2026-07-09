@@ -4,7 +4,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const logoIcon = join(root, "apps/web/public/brand/logo-icon.jpg");
+const logoMark = join(root, "apps/web/public/brand/logo-mark.png");
 const iconsDir = join(root, "apps/web/public/icons");
 const appDir = join(root, "apps/web/src/app");
 
@@ -14,16 +14,17 @@ const BG = { r: 10, g: 22, b: 40, alpha: 1 };
 
 async function main() {
   const sharp = (await import("sharp")).default;
-  const source = sharp(logoIcon).resize(420, 420, { fit: "contain", background: BG });
+  const source = sharp(logoMark).resize(820, 820, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } });
 
   for (const size of [16, 32, 192, 512]) {
+    const markSize = Math.round(size * 0.78);
     const out = join(iconsDir, size === 32 ? "favicon.png" : `icon-${size}.png`);
     await sharp({
       create: { width: size, height: size, channels: 4, background: BG },
     })
       .composite([
         {
-          input: await source.resize(Math.round(size * 0.82), Math.round(size * 0.82)).png().toBuffer(),
+          input: await source.resize(markSize, markSize).png().toBuffer(),
           gravity: "center",
         },
       ])
@@ -32,29 +33,24 @@ async function main() {
     console.log(`Wrote ${out}`);
   }
 
-  await sharp({
-    create: { width: 180, height: 180, channels: 4, background: BG },
-  })
-    .composite([
-      {
-        input: await source.resize(148, 148).png().toBuffer(),
-        gravity: "center",
-      },
-    ])
-    .png()
-    .toFile(join(appDir, "apple-icon.png"));
-
-  await sharp({
-    create: { width: 32, height: 32, channels: 4, background: BG },
-  })
-    .composite([
-      {
-        input: await source.resize(26, 26).png().toBuffer(),
-        gravity: "center",
-      },
-    ])
-    .png()
-    .toFile(join(appDir, "icon.png"));
+  for (const [w, h, mark] of [
+    [180, 180, 148],
+    [32, 32, 26],
+  ]) {
+    const out = w === 32 ? join(appDir, "icon.png") : join(appDir, "apple-icon.png");
+    await sharp({
+      create: { width: w, height: h, channels: 4, background: BG },
+    })
+      .composite([
+        {
+          input: await source.resize(mark, mark).png().toBuffer(),
+          gravity: "center",
+        },
+      ])
+      .png()
+      .toFile(out);
+    console.log(`Wrote ${out}`);
+  }
 
   console.log("Brand icons generated.");
 }
