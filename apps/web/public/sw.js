@@ -1,5 +1,5 @@
-const CACHE = "nexus-pwa-v4";
-const PRECACHE = ["/", "/offline"];
+const CACHE = "nexus-pwa-v5";
+const PRECACHE = ["/offline"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,37 +45,41 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+function networkFirst(request) {
+  return fetch(request)
+    .then((res) => {
+      if (res.ok && request.method === "GET") {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(request, copy));
+      }
+      return res;
+    })
+    .catch(() => caches.match(request));
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-
   if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(request, copy));
-          return res;
-        })
         .catch(() => caches.match("/offline").then((r) => r || caches.match("/")))
     );
     return;
   }
 
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+  if (
+    url.pathname.startsWith("/_next/") ||
+    url.pathname.endsWith(".mp4") ||
+    url.pathname.includes("splash-nexsocio")
+  ) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(request, copy));
-        }
-        return res;
-      });
-    })
-  );
+  event.respondWith(networkFirst(request));
 });

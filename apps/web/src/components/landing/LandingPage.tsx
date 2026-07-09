@@ -27,7 +27,7 @@ export function LandingPage() {
   }, [hydrated, session, router]);
 
   return (
-    <div className="fixed inset-0 z-50 h-[100dvh] w-full overflow-hidden bg-[#0a1628]">
+    <div className="fixed inset-0 z-50 h-[100dvh] w-full overflow-hidden bg-black">
       <SplashVideo />
 
       <button
@@ -38,7 +38,7 @@ export function LandingPage() {
         aria-label="Enter NexSocio"
       />
 
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-[#0a1628]/95 via-[#0a1628]/25 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-20">
         <button
