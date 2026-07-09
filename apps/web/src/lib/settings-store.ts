@@ -33,6 +33,8 @@ export interface UserSettings {
   shareLocationWithFollowers: boolean;
   showLiveLocationTag: boolean;
   trackLoginLocation: boolean;
+  profileMediaUrl: string | null;
+  businessMediaUrl: string | null;
 }
 
 interface SettingsState extends UserSettings {
@@ -73,6 +75,8 @@ const defaults: UserSettings = {
   shareLocationWithFollowers: false,
   showLiveLocationTag: true,
   trackLoginLocation: true,
+  profileMediaUrl: null,
+  businessMediaUrl: null,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -137,6 +141,8 @@ export const useSettingsStore = create<SettingsState>()(
         shareLocationWithFollowers: s.shareLocationWithFollowers,
         showLiveLocationTag: s.showLiveLocationTag,
         trackLoginLocation: s.trackLoginLocation,
+        profileMediaUrl: s.profileMediaUrl,
+        businessMediaUrl: s.businessMediaUrl,
       }),
     }
   )

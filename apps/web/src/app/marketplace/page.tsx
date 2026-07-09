@@ -15,6 +15,7 @@ import {
   getWallet,
   removeFromCart,
 } from "@/lib/api";
+import { isImageUrl, isVideoUrl, resolveMediaUrl } from "@/lib/media-formats";
 import { useAuthStore } from "@/lib/auth-store";
 
 const CATEGORIES = [
@@ -42,6 +43,24 @@ function ProductCard({
 }) {
   return (
     <article className="rounded-lg border border-[#1F1F1F] bg-[#111111] p-4 flex flex-col">
+      {product.media_url && (
+        <div className="mb-3 overflow-hidden rounded-lg border border-[#2A2A2A] aspect-video max-h-36 bg-black">
+          {isVideoUrl(product.media_url) ? (
+            <video
+              src={resolveMediaUrl(product.media_url)}
+              controls
+              playsInline
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <img
+              src={resolveMediaUrl(product.media_url)}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          )}
+        </div>
+      )}
       <div className="flex items-start gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] text-2xl">
           {product.image_emoji}

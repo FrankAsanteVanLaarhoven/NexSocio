@@ -81,6 +81,11 @@ async def init_db(engine, default_balance: float = 150.0) -> None:
     async with engine.begin() as conn:
         await conn.execute(text("CREATE SCHEMA IF NOT EXISTS commerce"))
         await conn.run_sync(Base.metadata.create_all)
+        for stmt in [
+            "ALTER TABLE commerce.products ADD COLUMN IF NOT EXISTS media_url TEXT",
+            "ALTER TABLE commerce.products ADD COLUMN IF NOT EXISTS media_type VARCHAR(16)",
+        ]:
+            await conn.execute(text(stmt))
 
     async with async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)() as session:
         result = await session.execute(select(ProductModel).limit(1))

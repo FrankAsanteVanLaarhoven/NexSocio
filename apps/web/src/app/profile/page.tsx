@@ -6,13 +6,19 @@ import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { SecuritySetup } from "@/components/auth/SecuritySetup";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { MediaUploader } from "@/components/MediaUploader";
 import { getMe, updateProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { resolveMediaUrl } from "@/lib/media-formats";
+import { useSettingsStore } from "@/lib/settings-store";
 import type { UserProfile } from "@nexus/types";
 
 export default function ProfilePage() {
   const session = useAuthStore((s) => s.session);
   const updateDisplayName = useAuthStore((s) => s.updateDisplayName);
+  const profileMediaUrl = useSettingsStore((s) => s.profileMediaUrl);
+  const businessMediaUrl = useSettingsStore((s) => s.businessMediaUrl);
+  const updateSettings = useSettingsStore((s) => s.update);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -83,9 +89,17 @@ export default function ProfilePage() {
           <Panel open title="Your Profile">
             <div className="space-y-4">
               <div className="flex items-center gap-3 pb-4 border-b border-[#1F1F1F]">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-lg font-bold text-[#00E5FF]">
-                  {displayName.charAt(0).toUpperCase()}
-                </div>
+                {profileMediaUrl ? (
+                  <img
+                    src={resolveMediaUrl(profileMediaUrl)}
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover border border-[#00E5FF]/30"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-lg font-bold text-[#00E5FF]">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-medium text-[#F5F5F5]">{displayName}</p>
                   <p className="text-xs text-[#8A8A8A]">{profile?.email}</p>
@@ -103,6 +117,29 @@ export default function ProfilePage() {
                 <div className="rounded-md border border-[#00C853]/30 bg-[#00C853]/5 px-3 py-2">
                   <p className="text-xs text-[#00C853]">✓ Age verified via ZKP</p>
                 </div>
+              )}
+
+              {session && (
+                <>
+                  <MediaUploader
+                    context="avatar"
+                    token={session.accessToken}
+                    label="Profile photo (JPG/PNG/WebP)"
+                    previewUrl={profileMediaUrl}
+                    onUploaded={(m) => updateSettings({ profileMediaUrl: m.url })}
+                    onClear={() => updateSettings({ profileMediaUrl: null })}
+                    compact
+                  />
+                  <MediaUploader
+                    context="business"
+                    token={session.accessToken}
+                    label="Business promo (photo or video)"
+                    previewUrl={businessMediaUrl}
+                    onUploaded={(m) => updateSettings({ businessMediaUrl: m.url })}
+                    onClear={() => updateSettings({ businessMediaUrl: null })}
+                    compact
+                  />
+                </>
               )}
 
               {error && <p className="text-xs text-[#FF5252]">{error}</p>}

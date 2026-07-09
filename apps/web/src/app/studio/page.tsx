@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { MediaUploader } from "@/components/MediaUploader";
 import { composeWithAI, createMediaPost, getMe } from "@/lib/api";
+import type { UploadedMedia } from "@/lib/media-upload";
 import { useAuthStore } from "@/lib/auth-store";
 import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
 
@@ -35,6 +37,7 @@ export default function StudioPage() {
   const [hideAiTag, setHideAiTag] = useState(false);
   const [canHideAiTag, setCanHideAiTag] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [uploadedMedia, setUploadedMedia] = useState<UploadedMedia | null>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -111,13 +114,18 @@ export default function StudioPage() {
   }
 
   async function publish() {
-    if (!session || !preview) return;
+    if (!session || (!preview && !uploadedMedia)) return;
     setLoading(true);
     try {
+      const mediaUrl = uploadedMedia?.url || preview!;
+      const postType =
+        uploadedMedia?.media_type === "video" || mode === "reel" || mode === "ai_video"
+          ? "reel"
+          : "photo";
       await createMediaPost(session.accessToken, {
         body: caption || (mode === "reel" ? "New reel" : mode === "photo" ? "New photo" : aiScript),
-        post_type: mode === "ai_video" ? "reel" : mode,
-        media_url: preview,
+        post_type: mode === "ai_video" ? "reel" : uploadedMedia ? postType : mode,
+        media_url: mediaUrl,
         filter_preset: mode === "ai_video" ? "ai-talking-head" : filter,
         context: session.viewContext ?? "personal",
         ai_assisted: usedAi || mode === "ai_video",
@@ -126,6 +134,7 @@ export default function StudioPage() {
       setMsg("Published!");
       setCaption("");
       setPreview(null);
+      setUploadedMedia(null);
       setAvatarPhoto(null);
       setAiScript("");
       setUsedAi(false);
@@ -156,6 +165,7 @@ export default function StudioPage() {
                   onClick={() => {
                     setMode(m);
                     setPreview(null);
+                    setUploadedMedia(null);
                     setMsg(null);
                   }}
                   className={`flex-1 py-2 text-xs uppercase tracking-wider rounded-md border ${
@@ -255,6 +265,18 @@ export default function StudioPage() {
                       </button>
                     ))}
                   </div>
+                  <MediaUploader
+                    context={mode === "reel" ? "reel" : "photo"}
+                    token={session.accessToken}
+                    label={mode === "reel" ? "Upload reel (MP4/MOV)" : "Upload photo"}
+                    previewUrl={uploadedMedia?.url}
+                    onUploaded={(m) => {
+                      setUploadedMedia(m);
+                      setPreview(null);
+                    }}
+                    onClear={() => setUploadedMedia(null)}
+                    compact
+                  />
                   <Button className="w-full" variant="secondary" onClick={startCamera}>
                     Start Camera
                   </Button>
@@ -277,7 +299,7 @@ export default function StudioPage() {
                       {canHideAiTag ? "Hide NEXSOCIO AI tag" : "NEXSOCIO AI tag shown"}
                     </label>
                   )}
-                  <Button className="w-full" loading={loading} disabled={!preview} onClick={publish}>
+                  <Button className="w-full" loading={loading} disabled={!preview && !uploadedMedia} onClick={publish}>
                     Publish {mode}
                   </Button>
                 </div>

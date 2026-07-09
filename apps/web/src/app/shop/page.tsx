@@ -7,7 +7,9 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { MediaUploader } from "@/components/MediaUploader";
 import { StatCard } from "@/components/settings/SettingsSectionShell";
+import type { UploadedMedia } from "@/lib/media-upload";
 import {
   createProduct,
   getMarketplaceDashboard,
@@ -37,6 +39,7 @@ export default function ShopPage() {
   const [category, setCategory] = useState("general");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [listingMedia, setListingMedia] = useState<UploadedMedia | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -71,10 +74,13 @@ export default function ShopPage() {
         price: parseFloat(price),
         category,
         is_digital: category === "digital" || category === "subscriptions",
+        media_url: listingMedia?.url,
+        media_type: listingMedia?.media_type,
       });
       setTitle("");
       setDescription("");
       setPrice("");
+      setListingMedia(null);
       setMessage("Listing published to marketplace");
       await load();
     } catch (e) {
@@ -138,6 +144,15 @@ export default function ShopPage() {
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
+                <MediaUploader
+                  context="shop"
+                  token={session.accessToken}
+                  label="Product photo or demo video"
+                  previewUrl={listingMedia?.url}
+                  onUploaded={setListingMedia}
+                  onClear={() => setListingMedia(null)}
+                  compact
+                />
                 <Button className="w-full" loading={submitting} disabled={!title.trim() || !price} onClick={handleCreate}>
                   Publish to marketplace
                 </Button>

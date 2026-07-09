@@ -514,6 +514,8 @@ export interface MarketplaceProduct {
   currency: string;
   category: string;
   image_emoji: string;
+  media_url?: string | null;
+  media_type?: string | null;
   stock: number;
   status: string;
   is_digital: boolean;
@@ -528,6 +530,20 @@ export interface CreateProductRequest {
   image_emoji?: string;
   stock?: number;
   is_digital?: boolean;
+  media_url?: string | null;
+  media_type?: string | null;
+}
+
+export interface MediaUploadResult {
+  url: string;
+  filename: string;
+  original_name: string;
+  mime_type: string;
+  media_type: string;
+  size_bytes: number;
+  context: string;
+  max_duration_sec?: number | null;
+  aspect_hint?: string | null;
 }
 
 export interface CartItem {

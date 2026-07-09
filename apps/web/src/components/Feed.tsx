@@ -17,7 +17,10 @@ import {
 } from "@/lib/api";
 import { inAppMapUrl } from "@/components/InAppLink";
 import { LiveLocationTag } from "@/components/LiveLocationTag";
+import { MediaUploader } from "@/components/MediaUploader";
 import { useAuthStore } from "@/lib/auth-store";
+import { isImageUrl, isVideoUrl, resolveMediaUrl } from "@/lib/media-formats";
+import type { UploadedMedia } from "@/lib/media-upload";
 import { resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
 import type { PlaceResult } from "@nexus/types";
@@ -110,15 +113,19 @@ function PostCard({
       )}
       {post.media_url && post.post_type !== "text" && (
         <div className="mt-3 overflow-hidden rounded-lg border border-[#2A2A2A]">
-          {post.media_url.startsWith("data:video") || post.post_type === "reel" ? (
+          {isVideoUrl(post.media_url) || post.post_type === "reel" ? (
             <video
-              src={post.media_url}
+              src={resolveMediaUrl(post.media_url)}
               controls
               playsInline
               className="w-full max-h-80 object-cover bg-black"
             />
-          ) : post.media_url.startsWith("data:image") ? (
-            <img src={post.media_url} alt="" className="w-full max-h-80 object-cover" />
+          ) : isImageUrl(post.media_url) || post.post_type === "photo" ? (
+            <img
+              src={resolveMediaUrl(post.media_url)}
+              alt=""
+              className="w-full max-h-80 object-cover"
+            />
           ) : (
             <p className="p-3 text-[10px] text-[#5A5A5A]">
               📎 {post.post_type} {post.filter_preset ? `· ${post.filter_preset} filter` : ""}
@@ -223,6 +230,8 @@ export function Feed() {
   const [placeResults, setPlaceResults] = useState<PlaceResult[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
   const [searchingPlace, setSearchingPlace] = useState(false);
+  const [attachedMedia, setAttachedMedia] = useState<UploadedMedia | null>(null);
+  const [mediaPostType, setMediaPostType] = useState<"text" | "photo" | "reel">("text");
   const showLiveLocationTag = useSettingsStore((s) => s.showLiveLocationTag);
   const shareLocationWithFollowers = useSettingsStore((s) => s.shareLocationWithFollowers);
 
@@ -330,6 +339,12 @@ export function Feed() {
         place_address: selectedPlace?.address,
         place_lat: selectedPlace?.lat ?? undefined,
         place_lng: selectedPlace?.lng ?? undefined,
+        media_url: attachedMedia?.url,
+        post_type: attachedMedia
+          ? attachedMedia.media_type === "video"
+            ? "reel"
+            : "photo"
+          : "text",
         ...locationFields,
       });
       setBody("");
@@ -338,6 +353,8 @@ export function Feed() {
       setPlaceQuery("");
       setPlaceResults([]);
       setSelectedPlace(null);
+      setAttachedMedia(null);
+      setMediaPostType("text");
       setComposing(false);
       await loadFeed();
     } finally {
@@ -423,6 +440,38 @@ export function Feed() {
             rows={4}
             className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#00E5FF]/20"
           />
+          <div className="rounded-md border border-[#1F1F1F] p-3 space-y-2">
+            <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">Attach media (optional)</p>
+            <div className="flex gap-2 mb-2">
+              {(["text", "photo", "reel"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => {
+                    setMediaPostType(t);
+                    if (t === "text") setAttachedMedia(null);
+                  }}
+                  className={`px-2 py-1 text-[10px] rounded border ${
+                    mediaPostType === t
+                      ? "border-[#00E5FF]/40 text-[#00E5FF]"
+                      : "border-[#2A2A2A] text-[#8A8A8A]"
+                  }`}
+                >
+                  {t === "text" ? "Text only" : t === "photo" ? "Photo" : "Reel"}
+                </button>
+              ))}
+            </div>
+            {mediaPostType !== "text" && (
+              <MediaUploader
+                context={mediaPostType === "reel" ? "reel" : "photo"}
+                token={session.accessToken}
+                previewUrl={attachedMedia?.url}
+                onUploaded={setAttachedMedia}
+                onClear={() => setAttachedMedia(null)}
+                compact
+              />
+            )}
+          </div>
           <div className="rounded-md border border-[#1F1F1F] p-3 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">Tag a place (optional)</p>
             <div className="flex gap-2">

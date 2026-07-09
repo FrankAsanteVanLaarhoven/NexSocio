@@ -52,6 +52,8 @@ class ProductModel(Base):
     currency: Mapped[str] = mapped_column(String(8), nullable=False, default="GBP")
     category: Mapped[str] = mapped_column(String(64), nullable=False, default="general")
     image_emoji: Mapped[str] = mapped_column(String(8), nullable=False, default="🛍")
+    media_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    media_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
     stock: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     is_digital: Mapped[bool] = mapped_column(Boolean, default=False)

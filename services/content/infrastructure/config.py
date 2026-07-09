@@ -11,3 +11,4 @@ class Settings(BaseSettings):
     social_graph_service_url: str = "http://localhost:8002"
     safety_service_url: str = "http://localhost:8005"
     cors_origins: list[str] = ["http://localhost:3000"]
+    upload_dir: str = "uploads/content"

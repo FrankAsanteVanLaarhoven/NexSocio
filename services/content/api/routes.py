@@ -1,14 +1,17 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from nexus_common.domain.enums import FeedType, UserMode, ViewContext
 from nexus_common.domain.models import ApiResponse, HealthResponse
+
+from nexus_common.media.formats import SPECS
 
 from services.content.api.deps import (
     AuthContext,
     get_auth_context,
     get_content_service,
+    get_media_upload_service,
     get_settings,
     get_token,
 )
@@ -19,8 +22,10 @@ from services.content.application.dtos import (
     CreateCommentRequest,
     CreatePostRequest,
     FeedResponse,
+    MediaUploadResponse,
     PostResponse,
 )
+from services.content.application.media_upload import MediaUploadService
 from services.content.application.services import ContentService
 from services.content.infrastructure.config import Settings
 
@@ -30,6 +35,38 @@ router = APIRouter()
 @router.get("/health", response_model=HealthResponse)
 async def health(settings: Annotated[Settings, Depends(get_settings)]) -> HealthResponse:
     return HealthResponse(service=settings.service_name)
+
+
+@router.get("/media/formats", response_model=ApiResponse[dict])
+async def media_formats() -> ApiResponse[dict]:
+    return ApiResponse(
+        data={
+            k: {
+                "label": v.label,
+                "extensions": list(v.extensions),
+                "mime_types": list(v.mime_types),
+                "max_bytes": v.max_bytes,
+                "max_duration_sec": v.max_duration_sec,
+                "aspect_hint": v.aspect_hint,
+            }
+            for k, v in SPECS.items()
+        }
+    )
+
+
+@router.post("/media/upload", response_model=ApiResponse[MediaUploadResponse])
+async def upload_media(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    upload_service: Annotated[MediaUploadService, Depends(get_media_upload_service)],
+    file: UploadFile = File(...),
+    context: str = Form(default="photo"),
+) -> ApiResponse[MediaUploadResponse]:
+    if context not in SPECS:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=400, detail=f"Unknown context: {context}")
+    result = await upload_service.save(file, context)
+    return ApiResponse(data=MediaUploadResponse(**result))
 
 
 @router.post("/ai/compose", response_model=ApiResponse[AIComposeResponse])

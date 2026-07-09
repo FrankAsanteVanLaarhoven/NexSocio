@@ -33,6 +33,8 @@ class ProductResponse(BaseModel):
     currency: str
     category: str
     image_emoji: str
+    media_url: str | None = None
+    media_type: str | None = None
     stock: int
     status: str
     is_digital: bool
@@ -47,6 +49,8 @@ class CreateProductRequest(BaseModel):
     image_emoji: str = Field(default="🛍", max_length=8)
     stock: int = Field(default=1, ge=0)
     is_digital: bool = False
+    media_url: str | None = Field(default=None, max_length=2048)
+    media_type: str | None = Field(default=None, max_length=16)
 
 
 class CartItemResponse(BaseModel):

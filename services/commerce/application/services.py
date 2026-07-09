@@ -108,6 +108,8 @@ class CommerceService:
             image_emoji=request.image_emoji,
             stock=request.stock if not request.is_digital else 999,
             is_digital=request.is_digital,
+            media_url=request.media_url,
+            media_type=request.media_type,
             status="active",
         )
         self.db.add(product)
@@ -420,6 +422,8 @@ class CommerceService:
             currency=p.currency,
             category=p.category,
             image_emoji=p.image_emoji,
+            media_url=getattr(p, "media_url", None),
+            media_type=getattr(p, "media_type", None),
             stock=p.stock,
             status=p.status,
             is_digital=p.is_digital,

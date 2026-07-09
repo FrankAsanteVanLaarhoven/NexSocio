@@ -29,6 +29,18 @@ class CreatePostRequest(BaseModel):
     is_live_session: bool = False
 
 
+class MediaUploadResponse(BaseModel):
+    url: str
+    filename: str
+    original_name: str
+    mime_type: str
+    media_type: str
+    size_bytes: int
+    context: str
+    max_duration_sec: int | None = None
+    aspect_hint: str | None = None
+
+
 class AIComposeRequest(BaseModel):
     draft: str = Field(..., min_length=1, max_length=5000)
     tone: str = Field(default="friendly", pattern=r"^(friendly|professional|bold|casual)$")

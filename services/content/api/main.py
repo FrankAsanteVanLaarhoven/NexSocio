@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from nexus_common.observability.logging import configure_logging
 from nexus_common.observability.middleware import RequestLoggingMiddleware
@@ -15,6 +17,7 @@ async def lifespan(app: FastAPI):
     settings: Settings = app.state.settings
     engine = get_engine(settings.database_url)
     await init_db(engine)
+    Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
     yield
 
 
@@ -39,6 +42,13 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(RequestLoggingMiddleware)
     app.include_router(router, prefix="/api/v1")
+    upload_path = Path(settings.upload_dir)
+    upload_path.mkdir(parents=True, exist_ok=True)
+    app.mount(
+        "/api/v1/media/files",
+        StaticFiles(directory=str(upload_path)),
+        name="media-files",
+    )
 
     return app
 

@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.domain.enums import UserMode
 from nexus_common.security.jwt import decode_access_token
+from pathlib import Path
+
+from services.content.application.media_upload import MediaUploadService
 from services.content.application.services import ContentService
 from services.content.infrastructure.config import Settings
 from services.content.infrastructure.database import get_engine, get_session_factory
@@ -40,6 +43,12 @@ async def get_content_service(
     cfg: Annotated[Settings, Depends(get_settings)],
 ) -> ContentService:
     return ContentService(db, cfg)
+
+
+def get_media_upload_service(
+    cfg: Annotated[Settings, Depends(get_settings)],
+) -> MediaUploadService:
+    return MediaUploadService(Path(cfg.upload_dir))
 
 
 class AuthContext:
