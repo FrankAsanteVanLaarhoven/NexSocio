@@ -126,3 +126,13 @@ class CreatePodcastEpisodeRequest(BaseModel):
     media_url: str | None = None
     episode_type: str = Field(default="podcast", pattern=r"^(podcast|vlog|tv)$")
     publish: bool = False
+
+
+class IceServerEntry(BaseModel):
+    urls: list[str]
+    username: str | None = None
+    credential: str | None = None
+
+
+class IceServersResponse(BaseModel):
+    ice_servers: list[IceServerEntry]

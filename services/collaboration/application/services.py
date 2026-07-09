@@ -336,6 +336,18 @@ class CollaborationService:
         except httpx.HTTPError:
             pass
 
+    async def verify_meeting_room(self, user_id: UUID, room_code: str) -> MeetingModel:
+        result = await self.db.execute(
+            select(MeetingModel).where(
+                MeetingModel.room_code == room_code.upper(),
+                MeetingModel.status == "scheduled",
+            )
+        )
+        meeting = result.scalar_one_or_none()
+        if not meeting:
+            raise HTTPException(status_code=404, detail="Meeting room not found or ended")
+        return meeting
+
     async def verify_call_room(self, user_id: UUID, room_code: str) -> CallSessionModel:
         result = await self.db.execute(
             select(CallSessionModel).where(

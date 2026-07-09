@@ -18,6 +18,8 @@ export class NexusKmsSecrets extends Construct {
   readonly key: kms.Key;
   readonly databaseSecret: secretsmanager.Secret;
   readonly jwtSecret: secretsmanager.Secret;
+  readonly turnSecret: secretsmanager.Secret;
+  readonly vapidSecret: secretsmanager.Secret;
 
   constructor(scope: Construct, id: string, props: NexusKmsSecretsProps) {
     super(scope, id);
@@ -56,6 +58,34 @@ export class NexusKmsSecrets extends Construct {
       },
     });
 
+    this.turnSecret = new secretsmanager.Secret(this, "TurnSecret", {
+      secretName: `nexus/${environment}/turn`,
+      encryptionKey: this.key,
+      description: `WebRTC TURN credentials (${environment})`,
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({
+          urls: "turn:turn.nexsocio.app:3478?transport=udp,turn:turn.nexsocio.app:3478?transport=tcp",
+          username: "nexus",
+        }),
+        generateStringKey: "password",
+        passwordLength: 32,
+        excludeCharacters: '"@/\\\'',
+      },
+    });
+
+    this.vapidSecret = new secretsmanager.Secret(this, "VapidSecret", {
+      secretName: `nexus/${environment}/vapid`,
+      encryptionKey: this.key,
+      description: `Web Push VAPID keys (${environment})`,
+      secretStringValue: cdk.SecretValue.unsafePlainText(
+        JSON.stringify({
+          public_key: "REPLACE_WITH_VAPID_PUBLIC_KEY",
+          private_key: "REPLACE_WITH_VAPID_PRIVATE_KEY",
+          email: "mailto:admin@nexsocio.app",
+        })
+      ),
+    });
+
     new cdk.CfnOutput(this, "KmsKeyArn", {
       value: this.key.keyArn,
       description: `${environment} KMS key for secrets`,
@@ -76,5 +106,7 @@ export class NexusKmsSecrets extends Construct {
     this.key.grantDecrypt(grantee);
     this.databaseSecret.grantRead(grantee);
     this.jwtSecret.grantRead(grantee);
+    this.turnSecret.grantRead(grantee);
+    this.vapidSecret.grantRead(grantee);
   }
 }

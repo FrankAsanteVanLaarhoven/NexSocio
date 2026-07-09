@@ -14,10 +14,12 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "pwa:icons": "node scripts/generate-pwa-icons.mjs"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
+    "sharp": "^0.35.3",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },

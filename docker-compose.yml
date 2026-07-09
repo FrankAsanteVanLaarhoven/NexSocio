@@ -127,6 +127,9 @@ services:
       JWT_SECRET: dev-secret-change-in-production
       SOCIAL_GRAPH_SERVICE_URL: http://social-graph:8002
       NOTIFICATION_SERVICE_URL: http://notification:8010
+      TURN_URLS: ""
+      TURN_USERNAME: ""
+      TURN_PASSWORD: ""
       CORS_ORIGINS: '["http://localhost:3000"]'
     depends_on:
       postgres:
@@ -145,6 +148,8 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
       JWT_SECRET: dev-secret-change-in-production
+      VAPID_PUBLIC_KEY: "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"
+      VAPID_PRIVATE_KEY: "UUxI4O8-FbRouAevSmBQ6o18hgj4fZePrNiMKQsW1Iw"
       CORS_ORIGINS: '["http://localhost:3000"]'
     depends_on:
       postgres:

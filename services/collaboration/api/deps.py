@@ -68,3 +68,10 @@ async def verify_call_room_access(user_id: UUID, room_code: str) -> None:
     async with factory() as db:
         service = CollaborationService(db, settings)
         await service.verify_call_room(user_id, room_code.upper())
+
+
+async def verify_meeting_room_access(user_id: UUID, room_code: str) -> None:
+    factory = _get_session_factory()
+    async with factory() as db:
+        service = CollaborationService(db, settings)
+        await service.verify_meeting_room(user_id, room_code.upper())

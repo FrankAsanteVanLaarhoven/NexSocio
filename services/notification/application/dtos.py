@@ -24,3 +24,16 @@ class CreateNotificationRequest(BaseModel):
 class InboxSummary(BaseModel):
     unread_count: int
     notifications: list[NotificationResponse]
+
+
+class VapidPublicKeyResponse(BaseModel):
+    public_key: str
+
+
+class PushSubscribeRequest(BaseModel):
+    endpoint: str
+    keys: dict[str, str] = Field(..., description="p256dh and auth keys")
+
+
+class PushSubscribeResponse(BaseModel):
+    subscribed: bool

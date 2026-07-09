@@ -15,6 +15,9 @@ from services.notification.application.dtos import (
     CreateNotificationRequest,
     InboxSummary,
     NotificationResponse,
+    PushSubscribeRequest,
+    PushSubscribeResponse,
+    VapidPublicKeyResponse,
 )
 from services.notification.application.services import NotificationService
 from services.notification.application.ws_manager import manager
@@ -51,6 +54,33 @@ async def mark_read(
     service: Annotated[NotificationService, Depends(get_notification_service)],
 ) -> ApiResponse[NotificationResponse]:
     return ApiResponse(data=await service.mark_read(user_id, notification_id))
+
+
+@router.get("/push/vapid-public-key", response_model=ApiResponse[VapidPublicKeyResponse])
+async def vapid_public_key(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> ApiResponse[VapidPublicKeyResponse]:
+    return ApiResponse(data=VapidPublicKeyResponse(public_key=settings.vapid_public_key))
+
+
+@router.post("/push/subscribe", response_model=ApiResponse[PushSubscribeResponse])
+async def push_subscribe(
+    request: PushSubscribeRequest,
+    user_id: Annotated[UUID, Depends(require_user_id)],
+    service: Annotated[NotificationService, Depends(get_notification_service)],
+) -> ApiResponse[PushSubscribeResponse]:
+    await service.subscribe_push(user_id, request)
+    return ApiResponse(data=PushSubscribeResponse(subscribed=True))
+
+
+@router.delete("/push/subscribe", response_model=ApiResponse[PushSubscribeResponse])
+async def push_unsubscribe(
+    endpoint: str,
+    user_id: Annotated[UUID, Depends(require_user_id)],
+    service: Annotated[NotificationService, Depends(get_notification_service)],
+) -> ApiResponse[PushSubscribeResponse]:
+    removed = await service.unsubscribe_push(user_id, endpoint)
+    return ApiResponse(data=PushSubscribeResponse(subscribed=not removed))
 
 
 @router.websocket("/ws")

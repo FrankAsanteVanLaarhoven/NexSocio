@@ -10,3 +10,6 @@ class Settings(BaseSettings):
     social_graph_service_url: str = "http://localhost:8002"
     notification_service_url: str = "http://localhost:8010"
     cors_origins: list[str] = ["http://localhost:3000"]
+    turn_urls: str = ""
+    turn_username: str = ""
+    turn_password: str = ""

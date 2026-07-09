@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { MeetingRoomView } from "@/components/MeetingRoomView";
 import { useCreateMeeting, useMeetings, useUpcomingMeetings } from "@/hooks/queries/useMeetings";
 import { useAuthStore } from "@/lib/auth-store";
 import type { Meeting } from "@nexus/types";
@@ -27,6 +28,7 @@ export default function MeetingsPage() {
   const createMeeting = useCreateMeeting(token);
   const [title, setTitle] = useState("");
   const [when, setWhen] = useState("");
+  const [joinedMeeting, setJoinedMeeting] = useState<Meeting | null>(null);
 
   async function handleCreate() {
     if (!title.trim() || !when) return;
@@ -74,6 +76,15 @@ export default function MeetingsPage() {
               </div>
             </Panel>
 
+            {joinedMeeting && session && (
+              <MeetingRoomView
+                token={session.accessToken}
+                userId={session.userId}
+                meeting={joinedMeeting}
+                onLeave={() => setJoinedMeeting(null)}
+              />
+            )}
+
             <Panel open title="Upcoming">
               {loadingUpcoming ? (
                 <p className="text-xs text-[#5A5A5A]">Loading…</p>
@@ -83,7 +94,7 @@ export default function MeetingsPage() {
                 <AnimatedList className="space-y-2">
                   {upcoming.map((m) => (
                     <AnimatedListItem key={m.id}>
-                      <MeetingRow meeting={m} />
+                      <MeetingRow meeting={m} onJoin={setJoinedMeeting} />
                     </AnimatedListItem>
                   ))}
                 </AnimatedList>
@@ -99,7 +110,7 @@ export default function MeetingsPage() {
                 <AnimatedList className="space-y-2">
                   {mine.map((m) => (
                     <AnimatedListItem key={m.id}>
-                      <MeetingRow meeting={m} />
+                      <MeetingRow meeting={m} onJoin={setJoinedMeeting} />
                     </AnimatedListItem>
                   ))}
                 </AnimatedList>
@@ -112,14 +123,31 @@ export default function MeetingsPage() {
   );
 }
 
-function MeetingRow({ meeting }: { meeting: Meeting }) {
+function MeetingRow({
+  meeting,
+  onJoin,
+}: {
+  meeting: Meeting;
+  onJoin?: (m: Meeting) => void;
+}) {
   return (
     <div className="rounded-lg border border-[#2A2A2A] p-3">
       <p className="text-sm text-[#F5F5F5] font-medium">{meeting.title}</p>
       <p className="text-[10px] text-[#5A5A5A] mt-0.5">
         {formatWhen(meeting.scheduled_at)} · {meeting.duration_min}m · host {meeting.host_name}
       </p>
-      <p className="text-xs text-[#00E5FF] mt-1 font-mono">Room {meeting.room_code}</p>
+      <div className="flex items-center justify-between mt-2">
+        <p className="text-xs text-[#00E5FF] font-mono">Room {meeting.room_code}</p>
+        {onJoin && meeting.status === "scheduled" && (
+          <button
+            type="button"
+            onClick={() => onJoin(meeting)}
+            className="text-[10px] uppercase tracking-wider text-[#00E5FF] hover:underline"
+          >
+            Join video
+          </button>
+        )}
+      </div>
     </div>
   );
 }

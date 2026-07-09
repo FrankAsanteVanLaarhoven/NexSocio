@@ -13,6 +13,8 @@ async def notification_client():
     from services.notification.infrastructure.config import Settings
     from services.notification.infrastructure.database import get_engine, init_db
 
+    from services.notification.infrastructure.config import Settings
+
     app = create_app()
     settings = Settings()
     engine = get_engine(settings.database_url)

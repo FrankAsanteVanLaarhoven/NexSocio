@@ -846,9 +846,50 @@ export function notificationWsUrl(token: string): string {
   return `${base}/api/v1/ws?token=${encodeURIComponent(token)}`;
 }
 
-export function callSignalingWsUrl(token: string, roomCode: string): string {
+export function callSignalingWsUrl(
+  token: string,
+  roomCode: string,
+  kind: "call" | "meeting" = "call"
+): string {
   const base = COLLABORATION_URL.replace(/^http/, "ws");
-  return `${base}/api/v1/calls/ws?token=${encodeURIComponent(token)}&room=${encodeURIComponent(roomCode)}`;
+  return `${base}/api/v1/calls/ws?token=${encodeURIComponent(token)}&room=${encodeURIComponent(roomCode)}&kind=${kind}`;
+}
+
+export async function getIceServers(token: string): Promise<RTCIceServer[]> {
+  const data = await request<{ ice_servers: { urls: string[]; username?: string; credential?: string }[] }>(
+    COLLABORATION_URL,
+    "/api/v1/webrtc/ice-servers",
+    { headers: authHeaders(token) }
+  );
+  return data.ice_servers.map((s) => ({
+    urls: s.urls,
+    ...(s.username && s.credential
+      ? { username: s.username, credential: s.credential }
+      : {}),
+  }));
+}
+
+export async function getVapidPublicKey(): Promise<string> {
+  const data = await request<{ public_key: string }>(
+    NOTIFICATION_URL,
+    "/api/v1/push/vapid-public-key"
+  );
+  return data.public_key;
+}
+
+export async function subscribePush(
+  token: string,
+  subscription: PushSubscription
+): Promise<void> {
+  const sub = subscription.toJSON();
+  await request(NOTIFICATION_URL, "/api/v1/push/subscribe", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({
+      endpoint: sub.endpoint,
+      keys: sub.keys,
+    }),
+  });
 }
 
 export async function listTeams(token: string): Promise<Team[]> {

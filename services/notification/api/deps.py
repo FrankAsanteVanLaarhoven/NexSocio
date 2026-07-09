@@ -36,8 +36,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_notification_service(
     db: Annotated[AsyncSession, Depends(get_db)],
+    cfg: Annotated[Settings, Depends(get_settings)],
 ) -> NotificationService:
-    return NotificationService(db)
+    return NotificationService(db, cfg)
 
 
 async def get_current_user_id(

@@ -8,6 +8,7 @@ resources:
   - ../external-secrets/cluster-secret-store.yaml
   - external-secret-db.yaml
   - external-secret-jwt.yaml
+  - external-secret-turn.yaml
   - ../services/identity-deployment.yaml
   - ../services/content-deployment.yaml
   - ../services/social-graph-deployment.yaml

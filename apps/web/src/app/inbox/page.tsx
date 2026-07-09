@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { useInbox, useMarkNotificationRead } from "@/hooks/queries/useInbox";
+import { PushEnableBanner } from "@/components/PushEnableBanner";
 import { useNotificationSocket } from "@/hooks/useNotificationSocket";
 import { useAuthStore } from "@/lib/auth-store";
 import type { Notification } from "@nexus/types";
@@ -55,6 +56,8 @@ export default function InboxPage() {
                 <PulseBadge className="text-[10px] text-[#FF5252]">{unread} new</PulseBadge>
               )}
             </div>
+            {token && <PushEnableBanner token={token} />}
+
             <Panel open title="Notifications">
               {isLoading ? (
                 <p className="text-xs text-[#5A5A5A]">Loading…</p>

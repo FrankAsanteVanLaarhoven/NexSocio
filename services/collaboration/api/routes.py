@@ -16,6 +16,8 @@ from services.collaboration.api.deps import (
 from services.collaboration.application.dtos import (
     CallResponse,
     ContactResponse,
+    IceServerEntry,
+    IceServersResponse,
     CreateContactRequest,
     CreateMeetingRequest,
     CreatePodcastEpisodeRequest,
@@ -191,11 +193,31 @@ async def create_episode(
     return ApiResponse(data=await service.create_podcast_episode(auth.user_id, request))
 
 
+@router.get("/webrtc/ice-servers", response_model=ApiResponse[IceServersResponse])
+async def ice_servers(
+    settings: Annotated[Settings, Depends(get_settings)],
+    _auth: Annotated[AuthContext, Depends(get_auth_context)],
+) -> ApiResponse[IceServersResponse]:
+    servers = [
+        IceServerEntry(urls=["stun:stun.l.google.com:19302"]),
+        IceServerEntry(urls=["stun:stun1.l.google.com:19302"]),
+    ]
+    if settings.turn_urls.strip():
+        turn_entry = IceServerEntry(
+            urls=[u.strip() for u in settings.turn_urls.split(",") if u.strip()],
+            username=settings.turn_username or None,
+            credential=settings.turn_password or None,
+        )
+        servers.append(turn_entry)
+    return ApiResponse(data=IceServersResponse(ice_servers=servers))
+
+
 @router.websocket("/calls/ws")
 async def call_signaling_ws(
     websocket: WebSocket,
     token: str = Query(...),
     room: str = Query(..., min_length=4, max_length=16),
+    kind: str = Query(default="call", pattern=r"^(call|meeting)$"),
 ):
     settings = Settings()
     payload = decode_access_token(token, settings.jwt_secret)
@@ -205,10 +227,16 @@ async def call_signaling_ws(
 
     user_id = str(UUID(payload.sub))
 
-    from services.collaboration.api.deps import verify_call_room_access
+    from services.collaboration.api.deps import (
+        verify_call_room_access,
+        verify_meeting_room_access,
+    )
 
     try:
-        await verify_call_room_access(UUID(payload.sub), room)
+        if kind == "meeting":
+            await verify_meeting_room_access(UUID(payload.sub), room)
+        else:
+            await verify_call_room_access(UUID(payload.sub), room)
     except Exception:
         await websocket.close(code=4003)
         return

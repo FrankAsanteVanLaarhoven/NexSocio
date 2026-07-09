@@ -37,6 +37,24 @@ spec:
               value: http://social-graph:8002
             - name: NOTIFICATION_SERVICE_URL
               value: http://notification:8010
+            - name: TURN_URLS
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-turn
+                  key: urls
+                  optional: true
+            - name: TURN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-turn
+                  key: username
+                  optional: true
+            - name: TURN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nexus-turn
+                  key: password
+                  optional: true
           resources:
             requests:
               cpu: 100m

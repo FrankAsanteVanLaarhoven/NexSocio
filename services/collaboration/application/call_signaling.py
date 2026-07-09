@@ -11,8 +11,13 @@ class CallSignalingManager:
         self._rooms: dict[str, dict[str, WebSocket]] = {}
 
     async def join(self, room: str, user_id: str, websocket: WebSocket) -> None:
+        existing = [uid for uid in self._rooms.get(room, {}) if uid != user_id]
         await websocket.accept()
         self._rooms.setdefault(room, {})[user_id] = websocket
+        if existing:
+            await websocket.send_text(
+                json.dumps({"type": "room-state", "peers": existing})
+            )
         await self._broadcast(
             room,
             user_id,
@@ -29,13 +34,28 @@ class CallSignalingManager:
 
     async def relay(self, room: str, sender: str, message: dict) -> None:
         payload = json.dumps(message)
-        for uid, ws in list(self._rooms.get(room, {}).items()):
+        target = message.get("to")
+        peers = self._rooms.get(room, {})
+
+        if target:
+            ws = peers.get(str(target))
+            if ws and str(target) != sender:
+                try:
+                    await ws.send_text(payload)
+                except Exception:
+                    self.leave(room, str(target))
+            return
+
+        for uid, ws in list(peers.items()):
             if uid == sender:
                 continue
             try:
                 await ws.send_text(payload)
             except Exception:
                 self.leave(room, uid)
+
+    def peers_in_room(self, room: str) -> list[str]:
+        return list(self._rooms.get(room, {}).keys())
 
     async def _broadcast(self, room: str, sender: str, message: dict) -> None:
         await self.relay(room, sender, message)
