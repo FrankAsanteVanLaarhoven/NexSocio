@@ -17,24 +17,24 @@ export function Panel({ open, children, className, title, subtitle, onClose }: P
   return (
     <div
       className={cn(
-        "nexus-panel rounded-lg border border-[#2A2A2A] bg-[#111111]",
-        "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+        "nexus-panel rounded-lg border border-default bg-surface",
+        "shadow-[0_8px_32px_rgba(0,0,0,0.15)]",
         className
       )}
     >
       {(title || onClose) && (
-        <div className="flex items-start justify-between border-b border-[#1F1F1F] px-5 py-4">
+        <div className="flex items-start justify-between border-b border-subtle px-5 py-4">
           <div>
             {title && (
-              <h3 className="text-sm font-semibold tracking-wide text-[#F5F5F5]">{title}</h3>
+              <h3 className="text-sm font-semibold tracking-wide text-primary">{title}</h3>
             )}
-            {subtitle && <p className="mt-0.5 text-xs text-[#8A8A8A]">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
           </div>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="text-[#5A5A5A] hover:text-[#F5F5F5] transition-colors text-lg leading-none"
+              className="text-dim hover:text-primary transition-colors text-lg leading-none"
               aria-label="Close panel"
             >
               ×

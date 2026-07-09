@@ -2,10 +2,14 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { DEFAULT_ACCENT, type AccentPresetId, type ThemeMode } from "./theme";
 
 export type ProfileVisibility = "public" | "connections" | "private";
 
 export interface UserSettings {
+  themeMode: ThemeMode;
+  accentColor: string;
+  accentPreset: AccentPresetId;
   voiceControlEnabled: boolean;
   ephemeralNav: boolean;
   locale: string;
@@ -48,6 +52,9 @@ interface SettingsState extends UserSettings {
 }
 
 const defaults: UserSettings = {
+  themeMode: "dark",
+  accentColor: DEFAULT_ACCENT,
+  accentPreset: "cyan",
   voiceControlEnabled: false,
   ephemeralNav: true,
   locale: "en",
@@ -114,6 +121,9 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: "nexsocio-settings",
       partialize: (s) => ({
+        themeMode: s.themeMode,
+        accentColor: s.accentColor,
+        accentPreset: s.accentPreset,
         voiceControlEnabled: s.voiceControlEnabled,
         ephemeralNav: s.ephemeralNav,
         locale: s.locale,

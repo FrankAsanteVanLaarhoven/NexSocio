@@ -30,22 +30,23 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#00E5FF",
-  colorScheme: "dark",
+  colorScheme: "dark light",
 };
+
+const themeBootScript = `(function(){try{var s=JSON.parse(localStorage.getItem('nexsocio-settings')||'{}');var st=s.state||{};var mode=st.themeMode||'dark';var resolved=mode==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):mode;document.documentElement.setAttribute('data-theme',resolved);document.documentElement.style.colorScheme=resolved;var accent=st.accentColor||'#00E5FF';document.documentElement.style.setProperty('--color-accent',accent);}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
-      style={{ backgroundColor: "#0A0A0A", color: "#F5F5F5" }}
+      data-theme="dark"
       suppressHydrationWarning
     >
-      <body
-        className="min-h-screen antialiased bg-[#0A0A0A] text-[#F5F5F5]"
-        style={{ backgroundColor: "#0A0A0A", color: "#F5F5F5" }}
-        suppressHydrationWarning
-      >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
+      <body className="min-h-screen antialiased bg-base text-primary" suppressHydrationWarning>
         <Providers>
           <PwaRegister />
           {children}

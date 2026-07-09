@@ -2,6 +2,7 @@
 
 import { Input, Panel } from "@nexus/ui";
 import { SecuritySetup } from "@/components/auth/SecuritySetup";
+import { ThemeSettings } from "@/components/settings/ThemeSettings";
 import { SettingToggle } from "@/components/settings/SettingsSectionShell";
 import { SettingsSectionShell } from "@/components/settings/SettingsSectionShell";
 import { LOCALE_CODES, LOCALES, normalizeLocale } from "@/i18n";
@@ -18,13 +19,16 @@ export default function AccountSettingsPage() {
   return (
     <SettingsSectionShell section="account">
       <div id="prefs" />
+      <Panel open title={t("settings.appearance")}>
+        <ThemeSettings />
+      </Panel>
       <Panel open title={t("settings.localization")}>
         <div className="space-y-3">
-          <label className="text-xs text-[#8A8A8A] uppercase">{t("settings.language")}</label>
+          <label className="text-xs text-muted uppercase">{t("settings.language")}</label>
           <select
             value={locale}
             onChange={(e) => s.update({ locale: e.target.value })}
-            className="w-full rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2 text-sm text-[#F5F5F5]"
+            className="w-full rounded-md border border-default bg-base px-3 py-2 text-sm text-primary"
           >
             {LOCALE_CODES.map((code) => (
               <option key={code} value={code}>
@@ -36,7 +40,7 @@ export default function AccountSettingsPage() {
           <select
             value={s.currency}
             onChange={(e) => s.update({ currency: e.target.value })}
-            className="w-full rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2 text-sm text-[#F5F5F5]"
+            className="w-full rounded-md border border-default bg-base px-3 py-2 text-sm text-primary"
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -54,7 +58,7 @@ export default function AccountSettingsPage() {
       </Panel>
       <div id="ai" />
       <Panel open title={t("settings.aiTitle")}>
-        <p className="text-xs text-[#8A8A8A] leading-relaxed">
+        <p className="text-xs text-muted leading-relaxed">
           {t("settings.aiBody")}
         </p>
       </Panel>

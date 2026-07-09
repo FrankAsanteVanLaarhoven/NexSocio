@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { I18nProvider } from "@/i18n";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>{children}</I18nProvider>
+      <I18nProvider>
+        <ThemeProvider>{children}</ThemeProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

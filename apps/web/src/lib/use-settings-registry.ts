@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import type { AppIconName } from "@/components/icons/AppIcon";
 import { useTranslation } from "@/i18n";
 import type { SettingsGroup, SettingsItem } from "./settings-registry";
 
@@ -9,7 +10,7 @@ function item(
   labelKey: string,
   href: string,
   sector: SettingsItem["sector"],
-  icon?: string,
+  icon?: AppIconName,
   descKey?: string,
   badge?: string
 ): SettingsItem & { labelKey: string; descKey?: string } {
@@ -33,9 +34,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.security.subtitle",
     sector: "both" as const,
     items: [
-      item("auth-methods", "settings.items.authMethods", "/settings/security", "both", "🔐", "settings.items.authMethodsDesc"),
-      item("sessions", "settings.items.sessions", "/settings/security#sessions", "both", "📱", "settings.items.sessionsDesc"),
-      item("remote-access", "settings.items.remoteAccess", "/settings/connectivity", "both", "🛰", "settings.items.remoteAccessDesc"),
+      item("auth-methods", "settings.items.authMethods", "/settings/security", "both", "shield", "settings.items.authMethodsDesc"),
+      item("sessions", "settings.items.sessions", "/settings/security#sessions", "both", "smartphone", "settings.items.sessionsDesc"),
+      item("remote-access", "settings.items.remoteAccess", "/settings/connectivity", "both", "satellite", "settings.items.remoteAccessDesc"),
     ],
   },
   {
@@ -44,9 +45,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.account.subtitle",
     sector: "both" as const,
     items: [
-      item("prefs", "settings.items.prefs", "/settings/account", "both", "⚙"),
-      item("inbox", "settings.items.inbox", "/inbox", "both", "✉", "settings.items.inboxDesc"),
-      item("help", "settings.items.help", "/settings/help", "both", "💬"),
+      item("prefs", "settings.items.prefs", "/settings/account", "both", "prefs"),
+      item("inbox", "settings.items.inbox", "/inbox", "both", "mail", "settings.items.inboxDesc"),
+      item("help", "settings.items.help", "/settings/help", "both", "help"),
     ],
   },
   {
@@ -55,9 +56,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.privacy.subtitle",
     sector: "both" as const,
     items: [
-      item("data-privacy", "settings.items.dataPrivacy", "/settings/privacy", "both", "🛡", "settings.items.dataPrivacyDesc"),
-      item("visibility", "settings.items.visibility", "/settings/privacy#visibility", "both", "👁", "settings.items.visibilityDesc"),
-      item("advertising-data", "settings.items.advertisingData", "/settings/privacy#ads", "both", "📊", "settings.items.advertisingDataDesc"),
+      item("data-privacy", "settings.items.dataPrivacy", "/settings/privacy", "both", "privacy", "settings.items.dataPrivacyDesc"),
+      item("visibility", "settings.items.visibility", "/settings/privacy#visibility", "both", "eye", "settings.items.visibilityDesc"),
+      item("advertising-data", "settings.items.advertisingData", "/settings/privacy#ads", "both", "chart", "settings.items.advertisingDataDesc"),
     ],
   },
   {
@@ -66,13 +67,13 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.socialPersonal.subtitle",
     sector: "personal" as const,
     items: [
-      item("friends", "settings.items.friends", "/connections", "personal", "👥"),
-      item("followers", "settings.items.followers", "/settings/network#followers", "personal", "↔"),
-      item("groups", "settings.items.groups", "/settings/groups", "personal", "◎"),
-      item("near-me", "settings.items.nearMe", "/map", "personal", "📍"),
-      item("find-me", "settings.items.findMe", "/settings/location", "personal", "🆘", "settings.items.findMeDesc"),
-      item("location-finder", "settings.items.locationFinder", "/find", "personal", "⊕", "settings.items.locationFinderDesc"),
-      item("share", "settings.items.share", "/settings/share", "personal", "↗"),
+      item("friends", "settings.items.friends", "/connections", "personal", "friends"),
+      item("followers", "settings.items.followers", "/settings/network#followers", "personal", "followers"),
+      item("groups", "settings.items.groups", "/settings/groups", "personal", "groups"),
+      item("near-me", "settings.items.nearMe", "/map", "personal", "location"),
+      item("find-me", "settings.items.findMe", "/settings/location", "personal", "sos", "settings.items.findMeDesc"),
+      item("location-finder", "settings.items.locationFinder", "/find", "personal", "finder", "settings.items.locationFinderDesc"),
+      item("share", "settings.items.share", "/settings/share", "personal", "share"),
     ],
   },
   {
@@ -81,10 +82,10 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.networkPro.subtitle",
     sector: "professional" as const,
     items: [
-      item("network", "settings.items.network", "/connections", "professional", "◇"),
-      item("viewers", "settings.items.viewers", "/settings/analytics#viewers", "professional", "👀"),
-      item("impressions", "settings.items.impressions", "/settings/analytics#impressions", "professional", "📈"),
-      item("connectors", "settings.items.connectors", "/settings/network", "professional", "🔗", "settings.items.connectorsDesc"),
+      item("network", "settings.items.network", "/connections", "professional", "network"),
+      item("viewers", "settings.items.viewers", "/settings/analytics#viewers", "professional", "viewers"),
+      item("impressions", "settings.items.impressions", "/settings/analytics#impressions", "professional", "impressions"),
+      item("connectors", "settings.items.connectors", "/settings/network", "professional", "connectors", "settings.items.connectorsDesc"),
     ],
   },
   {
@@ -93,11 +94,11 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.connectors.subtitle",
     sector: "both" as const,
     items: [
-      item("slack", "settings.items.slack", "/settings/network#slack", "both", "💼"),
-      item("github", "settings.items.github", "/settings/network#github", "both", "⌥"),
-      item("linkedin", "settings.items.linkedin", "/settings/network#linkedin", "both", "in"),
-      item("email", "settings.items.emailAccounts", "/settings/network#email", "both", "@"),
-      item("social-connect", "settings.items.socialAccounts", "/settings/network#social", "both", "◈"),
+      item("slack", "settings.items.slack", "/settings/network#slack", "both", "slack"),
+      item("github", "settings.items.github", "/settings/network#github", "both", "github"),
+      item("linkedin", "settings.items.linkedin", "/settings/network#linkedin", "both", "linkedin"),
+      item("email", "settings.items.emailAccounts", "/settings/network#email", "both", "email"),
+      item("social-connect", "settings.items.socialAccounts", "/settings/network#social", "both", "social"),
     ],
   },
   {
@@ -106,12 +107,12 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.content.subtitle",
     sector: "both" as const,
     items: [
-      item("schedule", "settings.items.schedulePosts", "/settings/schedule", "both", "🗓"),
-      item("podcast", "settings.items.podcast", "/studio", "personal", "🎙"),
-      item("vlog", "settings.items.vlog", "/studio", "personal", "📹"),
-      item("live", "settings.items.liveStreams", "/live", "both", "●"),
-      item("uploads", "settings.items.mediaUploads", "/studio", "both", "⬆", "settings.items.mediaUploadsDesc"),
-      item("offline", "settings.items.offlineDownloads", "/settings/media", "personal", "⬇"),
+      item("schedule", "settings.items.schedulePosts", "/settings/schedule", "both", "schedule"),
+      item("podcast", "settings.items.podcast", "/studio", "personal", "podcast"),
+      item("vlog", "settings.items.vlog", "/studio", "personal", "vlog"),
+      item("live", "settings.items.liveStreams", "/live", "both", "streams"),
+      item("uploads", "settings.items.mediaUploads", "/studio", "both", "upload", "settings.items.mediaUploadsDesc"),
+      item("offline", "settings.items.offlineDownloads", "/settings/media", "personal", "download"),
     ],
   },
   {
@@ -120,13 +121,13 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.wallet.subtitle",
     sector: "both" as const,
     items: [
-      item("wallet", "settings.items.wallet", "/wallet", "both", "💳"),
-      item("cards", "settings.items.addCard", "/wallet#cards", "both", "＋"),
-      item("stripe", "settings.items.stripe", "/wallet#stripe", "both", "S"),
-      item("paypal", "settings.items.paypal", "/wallet#paypal", "both", "P"),
-      item("transactions", "settings.items.transactions", "/wallet#transactions", "both", "🧾"),
-      item("payouts", "settings.items.payouts", "/wallet#payouts", "both", "↩"),
-      item("crypto", "settings.items.crypto", "/wallet#crypto", "personal", "◎"),
+      item("wallet", "settings.items.wallet", "/wallet", "both", "wallet"),
+      item("cards", "settings.items.addCard", "/wallet#cards", "both", "addCard"),
+      item("stripe", "settings.items.stripe", "/wallet#stripe", "both", "stripe"),
+      item("paypal", "settings.items.paypal", "/wallet#paypal", "both", "paypal"),
+      item("transactions", "settings.items.transactions", "/wallet#transactions", "both", "receipt"),
+      item("payouts", "settings.items.payouts", "/wallet#payouts", "both", "refund"),
+      item("crypto", "settings.items.crypto", "/wallet#crypto", "personal", "crypto"),
     ],
   },
   {
@@ -135,10 +136,10 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.monetizationPersonal.subtitle",
     sector: "personal" as const,
     items: [
-      item("live-rewards", "settings.items.liveRewards", "/settings/monetization#live-rewards", "personal", "🎁"),
-      item("promotions", "settings.items.promotions", "/settings/monetization#promotions", "personal", "✨"),
-      item("bonus-coins", "settings.items.bonusCoins", "/wallet#crypto", "personal", "🪙"),
-      item("subscriptions-personal", "settings.items.subscriptions", "/settings/monetization#subscriptions", "personal", "★"),
+      item("live-rewards", "settings.items.liveRewards", "/settings/monetization#live-rewards", "personal", "rewards"),
+      item("promotions", "settings.items.promotions", "/settings/monetization#promotions", "personal", "promotions"),
+      item("bonus-coins", "settings.items.bonusCoins", "/wallet#crypto", "personal", "bonus"),
+      item("subscriptions-personal", "settings.items.subscriptions", "/settings/monetization#subscriptions", "personal", "star"),
     ],
   },
   {
@@ -147,9 +148,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.marketplace.subtitle",
     sector: "both" as const,
     items: [
-      item("marketplace", "settings.items.browseMarketplace", "/marketplace", "both", "🛍"),
-      item("marketplace-sell", "settings.items.sellListings", "/shop", "both", "🏪"),
-      item("marketplace-wallet", "settings.items.walletCheckout", "/wallet", "both", "💳"),
+      item("marketplace", "settings.items.browseMarketplace", "/marketplace", "both", "marketplace"),
+      item("marketplace-sell", "settings.items.sellListings", "/shop", "both", "sell"),
+      item("marketplace-wallet", "settings.items.walletCheckout", "/wallet", "both", "wallet"),
     ],
   },
   {
@@ -158,15 +159,15 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.business.subtitle",
     sector: "professional" as const,
     items: [
-      item("teams", "settings.items.teams", "/teams", "professional", "▤", "settings.items.teamsDesc"),
-      item("meetings", "settings.items.meetings", "/meetings", "professional", "📅", "settings.items.meetingsDesc"),
-      item("calls", "settings.items.calls", "/calls", "both", "☎", "settings.items.callsDesc"),
-      item("contacts", "settings.items.contacts", "/contacts", "both", "☰", "settings.items.contactsDesc"),
-      item("status", "settings.items.statusFeed", "/status", "both", "◌", "settings.items.statusFeedDesc"),
-      item("shop", "settings.items.shop", "/shop", "professional", "🛒"),
-      item("cart", "settings.items.cart", "/shop#cart", "professional", "🛍"),
-      item("qr", "settings.items.qr", "/shop#qr", "professional", "▣", "settings.items.qrDesc"),
-      item("sales", "settings.items.sales", "/settings/analytics#sales", "professional", "💰"),
+      item("teams", "settings.items.teams", "/teams", "professional", "teams", "settings.items.teamsDesc"),
+      item("meetings", "settings.items.meetings", "/meetings", "professional", "schedule", "settings.items.meetingsDesc"),
+      item("calls", "settings.items.calls", "/calls", "both", "calls", "settings.items.callsDesc"),
+      item("contacts", "settings.items.contacts", "/contacts", "both", "contacts", "settings.items.contactsDesc"),
+      item("status", "settings.items.statusFeed", "/status", "both", "status", "settings.items.statusFeedDesc"),
+      item("shop", "settings.items.shop", "/shop", "professional", "shop"),
+      item("cart", "settings.items.cart", "/shop#cart", "professional", "cart"),
+      item("qr", "settings.items.qr", "/shop#qr", "professional", "qr", "settings.items.qrDesc"),
+      item("sales", "settings.items.sales", "/settings/analytics#sales", "professional", "sales"),
     ],
   },
   {
@@ -175,10 +176,10 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.jobs.subtitle",
     sector: "professional" as const,
     items: [
-      item("jobs", "settings.items.jobs", "/settings/jobs", "professional", "💼"),
-      item("hiring", "settings.items.hiring", "/settings/jobs#hiring", "professional", "📋"),
-      item("marketing", "settings.items.marketing", "/settings/jobs#marketing", "professional", "📣"),
-      item("campaigns", "settings.items.campaigns", "/settings/monetization#campaigns", "professional", "🎯"),
+      item("jobs", "settings.items.jobs", "/settings/jobs", "professional", "jobs"),
+      item("hiring", "settings.items.hiring", "/settings/jobs#hiring", "professional", "hiring"),
+      item("marketing", "settings.items.marketing", "/settings/jobs#marketing", "professional", "marketing"),
+      item("campaigns", "settings.items.campaigns", "/settings/monetization#campaigns", "professional", "campaigns"),
     ],
   },
   {
@@ -187,9 +188,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.analytics.subtitle",
     sector: "professional" as const,
     items: [
-      item("analytics", "settings.items.analytics", "/settings/analytics", "professional", "📊"),
-      item("profile-viewers", "settings.items.profileViewers", "/settings/analytics#viewers", "professional", "👁"),
-      item("who-viewed", "settings.items.whoViewed", "/settings/analytics#who-viewed", "professional", "🔍"),
+      item("analytics", "settings.items.analytics", "/settings/analytics", "professional", "analytics"),
+      item("profile-viewers", "settings.items.profileViewers", "/settings/analytics#viewers", "professional", "eye"),
+      item("who-viewed", "settings.items.whoViewed", "/settings/analytics#who-viewed", "professional", "finder"),
     ],
   },
   {
@@ -198,10 +199,10 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.monetizationPro.subtitle",
     sector: "professional" as const,
     items: [
-      item("monetization", "settings.items.monetization", "/settings/monetization", "professional", "💎"),
-      item("subscriptions-mgr", "settings.items.subscriptionsMgr", "/settings/monetization#subscriptions", "professional", "📅"),
-      item("tax", "settings.items.tax", "/settings/monetization#tax", "professional", "📑"),
-      item("deductions", "settings.items.deductions", "/wallet#payouts", "professional", "−"),
+      item("monetization", "settings.items.monetization", "/settings/monetization", "professional", "monetization"),
+      item("subscriptions-mgr", "settings.items.subscriptionsMgr", "/settings/monetization#subscriptions", "professional", "schedule"),
+      item("tax", "settings.items.tax", "/settings/monetization#tax", "professional", "tax"),
+      item("deductions", "settings.items.deductions", "/wallet#payouts", "professional", "minus"),
     ],
   },
   {
@@ -210,9 +211,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.connectivity.subtitle",
     sector: "both" as const,
     items: [
-      item("wifi", "settings.items.wifi", "/settings/connectivity#wifi", "both", "📶"),
-      item("airdrop", "settings.items.airdrop", "/settings/connectivity#airdrop", "personal", "📡"),
-      item("offline-sync", "settings.items.offlineSync", "/settings/media", "both", "☁"),
+      item("wifi", "settings.items.wifi", "/settings/connectivity#wifi", "both", "wifi"),
+      item("airdrop", "settings.items.airdrop", "/settings/connectivity#airdrop", "personal", "airdrop"),
+      item("offline-sync", "settings.items.offlineSync", "/settings/media", "both", "cloud"),
     ],
   },
   {
@@ -221,9 +222,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.legal.subtitle",
     sector: "both" as const,
     items: [
-      item("terms", "settings.items.terms", "/settings/legal#terms", "both", "📜"),
-      item("privacy-policy", "settings.items.privacyPolicy", "/settings/legal#privacy", "both", "🔒"),
-      item("agreements", "settings.items.agreements", "/settings/legal#agreements", "both", "✍"),
+      item("terms", "settings.items.terms", "/settings/legal#terms", "both", "terms"),
+      item("privacy-policy", "settings.items.privacyPolicy", "/settings/legal#privacy", "both", "legal"),
+      item("agreements", "settings.items.agreements", "/settings/legal#agreements", "both", "agreements"),
     ],
   },
   {
@@ -232,9 +233,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.locationSafety.subtitle",
     sector: "both" as const,
     items: [
-      item("find-me-settings", "settings.items.findMeSharing", "/settings/location", "both", "🆘", "settings.items.findMeSharingDesc"),
-      item("find-map", "settings.items.memberMap", "/find", "both", "⊕", "settings.items.memberMapDesc"),
-      item("login-location", "settings.items.loginLocation", "/settings/location#login", "both", "🛰"),
+      item("find-me-settings", "settings.items.findMeSharing", "/settings/location", "both", "findMe", "settings.items.findMeSharingDesc"),
+      item("find-map", "settings.items.memberMap", "/find", "both", "memberMap", "settings.items.memberMapDesc"),
+      item("login-location", "settings.items.loginLocation", "/settings/location#login", "both", "loginLocation"),
     ],
   },
   {
@@ -243,9 +244,9 @@ const REGISTRY_DEF = [
     subtitleKey: "settings.groups.voiceUiGroup.subtitle",
     sector: "both" as const,
     items: [
-      item("voice", "settings.items.voiceControl", "/settings/account#voice", "both", "🎤"),
-      item("ai-tag", "settings.items.aiTagging", "/settings/account#ai", "both", "✦"),
-      item("ephemeral", "settings.items.ephemeral", "/settings/account#ui", "both", "◌"),
+      item("voice", "settings.items.voiceControl", "/settings/account#voice", "both", "voice"),
+      item("ai-tag", "settings.items.aiTagging", "/settings/account#ai", "both", "ai"),
+      item("ephemeral", "settings.items.ephemeral", "/settings/account#ui", "both", "ephemeral"),
     ],
   },
 ] as const;

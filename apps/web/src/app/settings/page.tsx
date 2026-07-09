@@ -6,6 +6,7 @@ import { Panel } from "@nexus/ui";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { AppIcon, resolveIconName, type AppIconName } from "@/components/icons/AppIcon";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/i18n";
 import { useSettingsRegistry } from "@/lib/use-settings-registry";
@@ -40,8 +41,8 @@ export default function SettingsPage() {
         ) : (
           <div className="mx-auto max-w-2xl space-y-5 pb-12">
             <div>
-              <h1 className="text-xl font-semibold text-[#F5F5F5]">{t("settings.title")}</h1>
-              <p className="text-xs text-[#8A8A8A] mt-1">
+              <h1 className="text-xl font-semibold text-primary">{t("settings.title")}</h1>
+              <p className="text-xs text-muted mt-1">
                 {t("settings.subtitle")}
               </p>
             </div>
@@ -50,10 +51,10 @@ export default function SettingsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("settings.searchPlaceholder")}
-              className="w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A]"
+              className="w-full rounded-lg border border-default bg-base px-4 py-2.5 text-sm text-primary placeholder:text-dim"
             />
 
-            <div className="flex gap-1 p-1 rounded-lg border border-[#1F1F1F] bg-[#0A0A0A]">
+            <div className="flex gap-1 p-1 rounded-lg border border-subtle bg-base">
               {(["personal", "professional", "all"] as const).map((s) => (
                 <button
                   key={s}
@@ -62,9 +63,9 @@ export default function SettingsPage() {
                   className={`flex-1 py-2 text-xs capitalize rounded-md transition-colors ${
                     sector === s
                       ? s === "professional"
-                        ? "bg-[#4FC3F7]/15 text-[#4FC3F7]"
-                        : "bg-[#00E5FF]/15 text-[#00E5FF]"
-                      : "text-[#8A8A8A] hover:text-[#F5F5F5]"
+                        ? "bg-[color-mix(in_srgb,var(--color-pro)_15%,transparent)] text-pro"
+                        : "bg-accent-muted text-accent"
+                      : "text-muted hover:text-primary"
                   }`}
                 >
                   {t(s === "all" ? "settings.sectorAll" : s === "personal" ? "common.personal" : "common.professional")}
@@ -74,18 +75,18 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-4 gap-2">
               {[
-                { href: "/inbox", icon: "✉", labelKey: "settings.quickInbox" },
-                { href: "/wallet", icon: "💳", labelKey: "settings.quickWallet" },
-                { href: "/shop", icon: "🛒", labelKey: "settings.quickShop" },
-                { href: "/settings/analytics", icon: "📊", labelKey: "settings.quickStats" },
+                { href: "/inbox", icon: "inbox" as AppIconName, labelKey: "settings.quickInbox" },
+                { href: "/wallet", icon: "wallet" as AppIconName, labelKey: "settings.quickWallet" },
+                { href: "/shop", icon: "shop" as AppIconName, labelKey: "settings.quickShop" },
+                { href: "/settings/analytics", icon: "stats" as AppIconName, labelKey: "settings.quickStats" },
               ].map((q) => (
                 <Link
                   key={q.href}
                   href={q.href}
-                  className="flex flex-col items-center gap-1 rounded-lg border border-[#1F1F1F] py-3 hover:border-[#00E5FF]/30 transition-colors"
+                  className="flex flex-col items-center gap-1 rounded-lg border border-subtle py-3 hover:border-accent transition-colors"
                 >
-                  <span className="text-lg">{q.icon}</span>
-                  <span className="text-[10px] text-[#8A8A8A]">{t(q.labelKey)}</span>
+                  <AppIcon name={q.icon} size={20} className="text-accent" />
+                  <span className="text-[10px] text-muted">{t(q.labelKey)}</span>
                 </Link>
               ))}
             </div>
@@ -97,7 +98,7 @@ export default function SettingsPage() {
                 title={group.title}
                 subtitle={group.subtitle}
                 className={
-                  group.sector === "professional" ? "border-[#4FC3F7]/20" : undefined
+                  group.sector === "professional" ? "border-[color-mix(in_srgb,var(--color-pro)_20%,transparent)]" : undefined
                 }
               >
                 <div className="space-y-1">
@@ -105,25 +106,29 @@ export default function SettingsPage() {
                     <Link
                       key={item.id}
                       href={item.href}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-[#1A1A1A] transition-colors group"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-surface-elevated transition-colors group"
                     >
                       {item.icon && (
-                        <span className="w-8 h-8 flex items-center justify-center rounded-md border border-[#2A2A2A] text-sm shrink-0 group-hover:border-[#00E5FF]/30">
-                          {item.icon}
+                        <span className="w-8 h-8 flex items-center justify-center rounded-md border border-default shrink-0 group-hover:border-accent">
+                          <AppIcon
+                            name={resolveIconName(item.icon) ?? (item.icon as AppIconName)}
+                            size={16}
+                            className="text-muted group-hover:text-accent"
+                          />
                         </span>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-[#F5F5F5]">{item.label}</p>
+                        <p className="text-sm text-primary">{item.label}</p>
                         {item.description && (
-                          <p className="text-[10px] text-[#5A5A5A] truncate">{item.description}</p>
+                          <p className="text-[10px] text-dim truncate">{item.description}</p>
                         )}
                       </div>
                       {item.badge && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FF5252]/20 text-[#FF5252]">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-danger)_20%,transparent)] text-danger">
                           {item.badge}
                         </span>
                       )}
-                      <span className="text-[#5A5A5A] text-xs">›</span>
+                      <span className="text-dim text-xs">›</span>
                     </Link>
                   ))}
                 </div>
