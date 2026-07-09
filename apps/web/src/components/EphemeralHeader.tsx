@@ -14,6 +14,7 @@ const DOCK = [
   { href: "/studio", label: "Studio", icon: "▣" },
   { href: "/live", label: "Live", icon: "●" },
   { href: "/hub", label: "Hub", icon: "◉" },
+  { href: "/marketplace", label: "Market", icon: "🛒" },
   { href: "/map", label: "Map", icon: "⌖" },
   { href: "/find", label: "Find", icon: "⊕" },
   { href: "/connections", label: "Connect", icon: "◇" },

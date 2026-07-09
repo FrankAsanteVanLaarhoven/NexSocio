@@ -18,6 +18,12 @@ export function parseVoiceCommand(transcript: string): VoiceAction {
   if (t.includes("open wallet")) {
     return { type: "navigate", path: "/wallet" };
   }
+  if (t.includes("open marketplace") || t.includes("open market") || t.includes("go shopping")) {
+    return { type: "navigate", path: "/marketplace" };
+  }
+  if (t.includes("open shop") || t.includes("my shop") || t.includes("sell")) {
+    return { type: "navigate", path: "/shop" };
+  }
   if (t.includes("open inbox")) {
     return { type: "navigate", path: "/inbox" };
   }

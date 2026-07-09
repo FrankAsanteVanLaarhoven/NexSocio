@@ -484,3 +484,99 @@ export interface MemberLocation {
   live_since?: string | null;
   updated_at: string;
 }
+
+export interface Wallet {
+  user_id: string;
+  balance: number;
+  currency: string;
+  bonus_coins: number;
+  stripe_connected: boolean;
+  paypal_connected: boolean;
+}
+
+export interface WalletTransaction {
+  id: string;
+  type: string;
+  label: string;
+  amount: number;
+  currency: string;
+  order_id?: string | null;
+  created_at: string;
+}
+
+export interface MarketplaceProduct {
+  id: string;
+  seller_id: string;
+  seller_name: string;
+  title: string;
+  description: string;
+  price: number;
+  currency: string;
+  category: string;
+  image_emoji: string;
+  stock: number;
+  status: string;
+  is_digital: boolean;
+  created_at: string;
+}
+
+export interface CreateProductRequest {
+  title: string;
+  description?: string;
+  price: number;
+  category?: string;
+  image_emoji?: string;
+  stock?: number;
+  is_digital?: boolean;
+}
+
+export interface CartItem {
+  product_id: string;
+  title: string;
+  price: number;
+  currency: string;
+  quantity: number;
+  image_emoji: string;
+  seller_name: string;
+  line_total: number;
+}
+
+export interface Cart {
+  items: CartItem[];
+  subtotal: number;
+  currency: string;
+  item_count: number;
+}
+
+export interface OrderItem {
+  product_id: string;
+  title: string;
+  price: number;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  buyer_id: string;
+  buyer_name: string;
+  seller_id: string;
+  seller_name: string;
+  status: string;
+  total: number;
+  currency: string;
+  items: OrderItem[];
+  created_at: string;
+}
+
+export interface CheckoutResult {
+  orders: Order[];
+  total_paid: number;
+  currency: string;
+}
+
+export interface MarketplaceDashboard {
+  active_listings: number;
+  total_sales: number;
+  orders_to_fulfill: number;
+  currency: string;
+}

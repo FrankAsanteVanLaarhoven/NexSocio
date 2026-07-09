@@ -128,6 +128,17 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     ],
   },
   {
+    id: "marketplace",
+    title: "Marketplace",
+    subtitle: "Buy · sell · wallet checkout",
+    sector: "both",
+    items: [
+      { id: "marketplace", label: "Browse marketplace", href: "/marketplace", sector: "both", icon: "🛍" },
+      { id: "marketplace-sell", label: "Sell & listings", href: "/shop", sector: "both", icon: "🏪" },
+      { id: "marketplace-wallet", label: "Wallet & checkout", href: "/wallet", sector: "both", icon: "💳" },
+    ],
+  },
+  {
     id: "business",
     title: "Shop & Business",
     sector: "professional",

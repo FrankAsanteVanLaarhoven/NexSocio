@@ -19,11 +19,17 @@ import type {
   FeatureFlags,
   ArticlePreview,
   DirectionsResult,
+  Cart,
+  CheckoutResult,
+  CreateProductRequest,
   HubDashboard,
   LocationUpdateRequest,
   MarketHistory,
+  MarketplaceDashboard,
+  MarketplaceProduct,
   MarketQuote,
   MemberLocation,
+  Order,
   PlaceResult,
   PostType,
   AIComposeResult,
@@ -42,6 +48,8 @@ import type {
   UserMode,
   UserProfile,
   ViewContext,
+  Wallet,
+  WalletTransaction,
   WebAuthnChallenge,
   ZKPAgeProof,
 } from "@nexus/types";
@@ -53,6 +61,7 @@ const PROFESSIONAL_URL = process.env.NEXT_PUBLIC_PROFESSIONAL_URL || "http://loc
 const SAFETY_URL = process.env.NEXT_PUBLIC_SAFETY_URL || "http://localhost:8005";
 const ROBOT_URL = process.env.NEXT_PUBLIC_ROBOT_URL || "http://localhost:8006";
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL || "http://localhost:8007";
+const COMMERCE_URL = process.env.NEXT_PUBLIC_COMMERCE_URL || "http://localhost:8008";
 
 async function request<T>(
   baseUrl: string,
@@ -699,5 +708,106 @@ export async function createMediaPost(
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(data),
+  });
+}
+
+export async function getWallet(token: string): Promise<Wallet> {
+  return request<Wallet>(COMMERCE_URL, "/api/v1/wallet", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getWalletTransactions(token: string): Promise<WalletTransaction[]> {
+  return request<WalletTransaction[]>(COMMERCE_URL, "/api/v1/wallet/transactions", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function setPaymentProvider(
+  token: string,
+  provider: "stripe" | "paypal",
+  connected: boolean
+): Promise<Wallet> {
+  return request<Wallet>(COMMERCE_URL, "/api/v1/wallet/providers", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ provider, connected }),
+  });
+}
+
+export async function getMarketplaceProducts(
+  opts: { category?: string; q?: string } = {}
+): Promise<MarketplaceProduct[]> {
+  const params = new URLSearchParams();
+  if (opts.category) params.set("category", opts.category);
+  if (opts.q) params.set("q", opts.q);
+  const qs = params.toString() ? `?${params}` : "";
+  return request<MarketplaceProduct[]>(COMMERCE_URL, `/api/v1/marketplace/products${qs}`);
+}
+
+export async function getMyProducts(token: string): Promise<MarketplaceProduct[]> {
+  return request<MarketplaceProduct[]>(COMMERCE_URL, "/api/v1/marketplace/products/mine", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function createProduct(
+  token: string,
+  data: CreateProductRequest
+): Promise<MarketplaceProduct> {
+  return request<MarketplaceProduct>(COMMERCE_URL, "/api/v1/marketplace/products", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMarketplaceDashboard(token: string): Promise<MarketplaceDashboard> {
+  return request<MarketplaceDashboard>(COMMERCE_URL, "/api/v1/marketplace/dashboard", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getCart(token: string): Promise<Cart> {
+  return request<Cart>(COMMERCE_URL, "/api/v1/cart", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function addToCart(
+  token: string,
+  productId: string,
+  quantity = 1
+): Promise<Cart> {
+  return request<Cart>(COMMERCE_URL, "/api/v1/cart/items", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ product_id: productId, quantity }),
+  });
+}
+
+export async function removeFromCart(token: string, productId: string): Promise<Cart> {
+  return request<Cart>(COMMERCE_URL, `/api/v1/cart/items/${productId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+}
+
+export async function checkout(token: string): Promise<CheckoutResult> {
+  return request<CheckoutResult>(COMMERCE_URL, "/api/v1/checkout", {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function getOrders(token: string): Promise<Order[]> {
+  return request<Order[]>(COMMERCE_URL, "/api/v1/orders", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getSalesOrders(token: string): Promise<Order[]> {
+  return request<Order[]>(COMMERCE_URL, "/api/v1/orders/sales", {
+    headers: authHeaders(token),
   });
 }
