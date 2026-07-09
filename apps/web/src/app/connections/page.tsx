@@ -3,6 +3,7 @@
 import { Button, Input, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { RegisterFlow } from "@/components/RegisterFlow";
 import {
   acceptConnection,
@@ -66,16 +67,12 @@ export default function ConnectionsPage() {
     }
   }
 
-  if (!session) {
-    return (
-      <AppShell>
-        <RegisterFlow onComplete={() => window.location.reload()} />
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell>
+      <AuthHydrationGate>
+        {!session ? (
+          <RegisterFlow onComplete={() => window.location.reload()} />
+        ) : (
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <h1 className="text-xl font-semibold text-[#F5F5F5]">Connections</h1>
@@ -172,6 +169,8 @@ export default function ConnectionsPage() {
           )}
         </Panel>
       </div>
+        )}
+      </AuthHydrationGate>
     </AppShell>
   );
 }

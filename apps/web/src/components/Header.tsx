@@ -3,6 +3,7 @@
 import { ModeBadge } from "@nexus/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import { useAuthStore } from "@/lib/auth-store";
 
 const NAV = [
@@ -15,6 +16,7 @@ const NAV = [
 
 export function Header() {
   const pathname = usePathname();
+  const hydrated = useAuthHydrated();
   const session = useAuthStore((s) => s.session);
   const viewContext = session?.viewContext ?? "personal";
   const setViewContext = useAuthStore((s) => s.setViewContext);
@@ -33,7 +35,7 @@ export function Header() {
             </span>
           </Link>
 
-          {session && (
+          {hydrated && session && (
             <nav className="hidden sm:flex items-center gap-1">
               {NAV.map((item) => (
                 <Link
@@ -52,7 +54,7 @@ export function Header() {
           )}
         </div>
 
-        {session && (
+        {hydrated && session && (
           <div className="flex items-center gap-3">
             <div className="flex rounded-md border border-[#2A2A2A] p-0.5">
               {(["personal", "professional"] as const).map((ctx) => (

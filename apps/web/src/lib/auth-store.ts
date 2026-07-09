@@ -7,6 +7,8 @@ import { persist } from "zustand/middleware";
 interface AuthState {
   session: AuthSession | null;
   feedType: "global" | "connections";
+  _hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
   setSession: (session: AuthSession) => void;
   updateMode: (mode: UserMode, accessToken: string) => void;
   updateDisplayName: (displayName: string) => void;
@@ -20,6 +22,8 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       session: null,
       feedType: "global",
+      _hasHydrated: false,
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
       setSession: (session) =>
         set({
           session: {
@@ -40,6 +44,12 @@ export const useAuthStore = create<AuthState>()(
       setFeedType: (feedType) => set({ feedType }),
       clearSession: () => set({ session: null, feedType: "global" }),
     }),
-    { name: "nexus-auth" }
+    {
+      name: "nexus-auth",
+      partialize: (state) => ({ session: state.session, feedType: state.feedType }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
   )
 );

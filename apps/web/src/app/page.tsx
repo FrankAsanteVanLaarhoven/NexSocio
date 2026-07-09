@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { Feed } from "@/components/Feed";
 import { RegisterFlow } from "@/components/RegisterFlow";
 import { useAuthStore } from "@/lib/auth-store";
@@ -14,7 +15,9 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      {showFeed ? <Feed /> : <RegisterFlow onComplete={() => setRegistered(true)} />}
+      <AuthHydrationGate>
+        {showFeed ? <Feed /> : <RegisterFlow onComplete={() => setRegistered(true)} />}
+      </AuthHydrationGate>
     </AppShell>
   );
 }

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
+    "dev:clean": "rm -rf .next && next dev --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,7 +14,6 @@
     "@nexus/types": "*",
     "@nexus/ui": "*",
     "@tanstack/react-query": "^5.74.4",
-    "framer-motion": "^12.9.2",
     "next": "^15.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

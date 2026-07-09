@@ -2,7 +2,6 @@
 
 import type { Post } from "@nexus/types";
 import { Button, ModeBadge, Panel } from "@nexus/ui";
-import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { createPost, getFeed, getProfessionalDashboard, reportPost } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
@@ -16,13 +15,7 @@ function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => vo
   });
 
   return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="rounded-lg border border-[#1F1F1F] bg-[#111111] p-5"
-    >
+    <article className="rounded-lg border border-[#1F1F1F] bg-[#111111] p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2A2A2A] bg-[#1A1A1A] text-xs font-medium text-[#00E5FF]">
@@ -44,7 +37,7 @@ function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => vo
         </div>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-[#D4D4D4] whitespace-pre-wrap">{post.body}</p>
-    </motion.article>
+    </article>
   );
 }
 
@@ -204,13 +197,11 @@ export function Feed() {
           <p className="text-sm text-[#8A8A8A]">No posts yet. Be the first to share.</p>
         </div>
       ) : (
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} onReport={handleReport} />
-            ))}
-          </div>
-        </AnimatePresence>
+        <div className="space-y-4">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} onReport={handleReport} />
+          ))}
+        </div>
       )}
     </div>
   );

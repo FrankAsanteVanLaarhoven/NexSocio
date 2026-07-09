@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import { getFeatureFlags } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 
 export function BetaBanner() {
+  const hydrated = useAuthHydrated();
   const session = useAuthStore((s) => s.session);
   const [cohort, setCohort] = useState<string | null>(null);
 
@@ -13,7 +15,7 @@ export function BetaBanner() {
     getFeatureFlags(session.accessToken).then((f) => setCohort(f.cohort ?? null));
   }, [session]);
 
-  if (!session || !cohort) return null;
+  if (!hydrated || !session || !cohort) return null;
 
   return (
     <div className="border-b border-[#00E5FF]/20 bg-[#00E5FF]/5 px-6 py-1.5 text-center">

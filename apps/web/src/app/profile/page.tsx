@@ -3,6 +3,7 @@
 import { Button, Input, ModeBadge, Panel } from "@nexus/ui";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { RegisterFlow } from "@/components/RegisterFlow";
 import { getMe, updateProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
@@ -60,16 +61,12 @@ export default function ProfilePage() {
     }
   }
 
-  if (!session) {
-    return (
-      <AppShell>
-        <RegisterFlow onComplete={() => window.location.reload()} />
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell>
+      <AuthHydrationGate>
+        {!session ? (
+          <RegisterFlow onComplete={() => window.location.reload()} />
+        ) : (
       <div className="mx-auto max-w-lg space-y-6">
         <div>
           <h1 className="text-xl font-semibold text-[#F5F5F5]">Profile & Settings</h1>
@@ -116,6 +113,8 @@ export default function ProfilePage() {
           </Panel>
         )}
       </div>
+        )}
+      </AuthHydrationGate>
     </AppShell>
   );
 }
