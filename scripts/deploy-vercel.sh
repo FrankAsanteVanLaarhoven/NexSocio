@@ -6,28 +6,36 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WEB="${ROOT}/apps/web"
 
 echo "NEXSOCIO → Vercel production deploy"
-echo "  Root directory: apps/web"
+echo "  Monorepo root:  ${ROOT}"
+echo "  App directory:  apps/web"
 echo "  Domain:         nexsocio.com"
 echo ""
 
 if ! command -v vercel >/dev/null 2>&1; then
-  echo "Installing Vercel CLI..."
-  npm install -g vercel
+  echo "Using npx vercel..."
+  VERCEL="npx vercel"
+else
+  VERCEL="vercel"
 fi
 
-cd "${WEB}"
+cd "${ROOT}"
+
+if [[ ! -d .vercel && -d "${WEB}/.vercel" ]]; then
+  echo "Linking .vercel from apps/web..."
+  cp -R "${WEB}/.vercel" "${ROOT}/.vercel"
+fi
 
 if [[ ! -d .vercel ]]; then
   echo "Linking Vercel project (first run)..."
-  vercel link
+  ${VERCEL} link
 fi
 
 if [[ "${1:-}" == "--sync-env" ]]; then
   "${ROOT}/scripts/vercel-env-sync.sh"
 fi
 
-echo "Deploying to production..."
-vercel deploy --prod --yes
+echo "Deploying to production (full monorepo)..."
+${VERCEL} deploy --prod --yes
 
 echo ""
 echo "Add domains in Vercel (if not linked to GitHub yet):"
