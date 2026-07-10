@@ -53,3 +53,5 @@ npm-debug.log*
 
 # Turbo
 .turbo/
+.vercel
+.env*
