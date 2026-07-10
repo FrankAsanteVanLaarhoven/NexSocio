@@ -13,7 +13,17 @@ export IDENTITY_SERVICE_URL="${IDENTITY_SERVICE_URL:-http://localhost:8001}"
 export CONTENT_SERVICE_URL="${CONTENT_SERVICE_URL:-http://localhost:8003}"
 export NOTIFICATION_SERVICE_URL="${NOTIFICATION_SERVICE_URL:-http://localhost:8010}"
 
+# Never hang for minutes on a dead socket
+CURL="curl -sf --connect-timeout 2 --max-time 3"
+
 source "${ROOT}/.venv/bin/activate"
+
+api_healthy() {
+  local port=$1
+  ${CURL} "http://localhost:${port}/api/v1/health" >/dev/null 2>&1 \
+    || ${CURL} "http://localhost:${port}/health" >/dev/null 2>&1 \
+    || ${CURL} "http://localhost:${port}/docs" >/dev/null 2>&1
+}
 
 echo "==> Starting Postgres + Redis..."
 docker compose -f "${ROOT}/docker-compose.yml" up -d postgres redis
@@ -31,10 +41,16 @@ start_uvicorn() {
   local module=$2
   local port=$3
   if lsof -iTCP:"${port}" -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo "  [skip] ${name} already on :${port}"
-    return
+    if api_healthy "${port}"; then
+      echo "  [skip] ${name} already healthy on :${port}"
+      return
+    fi
+    echo "  [restart] ${name} :${port} (port open but not responding)"
+    lsof -tiTCP:"${port}" -sTCP:LISTEN | xargs kill 2>/dev/null || true
+    sleep 0.5
+  else
+    echo "  [start] ${name} :${port}"
   fi
-  echo "  [start] ${name} :${port}"
   nohup uvicorn "${module}" --host 0.0.0.0 --port "${port}" --reload \
     > "${LOG_DIR}/${name}.log" 2>&1 &
   echo $! > "${LOG_DIR}/${name}.pid"
@@ -54,38 +70,47 @@ start_uvicorn collaboration  "services.collaboration.api.main:app"  8009
 
 echo "==> Waiting for APIs..."
 for port in 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010; do
-  for i in $(seq 1 40); do
-    if curl -sf "http://localhost:${port}/health" >/dev/null 2>&1 || curl -sf "http://localhost:${port}/api/v1/health" >/dev/null 2>&1 || curl -sf "http://localhost:${port}/docs" >/dev/null 2>&1; then
+  for i in $(seq 1 20); do
+    if api_healthy "${port}"; then
       echo "  ✓ :${port}"
       break
     fi
-    if [[ $i -eq 40 ]]; then
+    if [[ $i -eq 20 ]]; then
       echo "  ✗ :${port} (check ${LOG_DIR})"
     fi
     sleep 0.5
   done
 done
 
-if lsof -iTCP:3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+if lsof -iTCP:3000 -sTCP:LISTEN -t >/dev/null 2>&1 && ${CURL} "http://localhost:3000" >/dev/null 2>&1; then
   echo "==> Web already on :3000"
 else
-  echo "==> Starting Next.js web..."
+  if lsof -iTCP:3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo "==> Restarting web (stale or error)..."
+    lsof -tiTCP:3000 -sTCP:LISTEN | xargs kill 2>/dev/null || true
+    sleep 1
+  else
+    echo "==> Starting Next.js web..."
+  fi
   cd "${ROOT}/apps/web"
   nohup npm run dev:clean > "${LOG_DIR}/web.log" 2>&1 &
   echo $! > "${LOG_DIR}/web.pid"
 fi
 
 echo "==> Waiting for web..."
-for i in $(seq 1 60); do
-  if curl -sf "http://localhost:3000" >/dev/null 2>&1; then
+for i in $(seq 1 45); do
+  if ${CURL} "http://localhost:3000" >/dev/null 2>&1; then
     echo "  ✓ http://localhost:3000"
     break
+  fi
+  if [[ $i -eq 45 ]]; then
+    echo "  ✗ http://localhost:3000 (check ${LOG_DIR}/web.log)"
   fi
   sleep 1
 done
 
 echo ""
-echo "NEXSOCIO is ready:"
+echo "NexSocio is ready:"
 echo "  Web:           http://localhost:3000"
 echo "  Identity:      http://localhost:8001/docs"
 echo "  Social:        http://localhost:8002/docs"
