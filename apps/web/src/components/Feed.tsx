@@ -303,21 +303,29 @@ export function Feed() {
     try {
       const resolvedFeedType = feedTypeForSector(activeSector, feedType);
 
-      const feed = await getFeed(session.accessToken, {
-        feedType: resolvedFeedType,
-        context: activeSector,
-      });
+      const dashPromise =
+        activeSector === "business_corporate"
+          ? getCorporateDashboard(session.accessToken)
+          : activeSector === "business_general"
+            ? getProfessionalDashboard(session.accessToken)
+            : null;
+
+      const [feed, dash] = await Promise.all([
+        getFeed(session.accessToken, {
+          feedType: resolvedFeedType,
+          context: activeSector,
+        }),
+        dashPromise,
+      ]);
       setPosts(feed.posts);
 
-      if (activeSector === "business_corporate") {
-        const dash = await getCorporateDashboard(session.accessToken);
+      if (activeSector === "business_corporate" && dash && "memberships" in dash) {
         setInsights(dash.insights.map((i) => ({ label: i.label, value: i.value })));
         setMemberships(dash.memberships);
         if (!activeOrgId && dash.memberships[0]) {
           setActiveOrgId(dash.memberships[0].org_id);
         }
-      } else if (activeSector === "business_general") {
-        const dash = await getProfessionalDashboard(session.accessToken);
+      } else if (activeSector === "business_general" && dash) {
         setInsights(dash.insights.map((i) => ({ label: i.label, value: i.value })));
         setMemberships([]);
       } else {

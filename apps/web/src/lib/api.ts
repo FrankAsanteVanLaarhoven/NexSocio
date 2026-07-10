@@ -75,18 +75,34 @@ const COMMERCE_URL = process.env.NEXT_PUBLIC_COMMERCE_URL || "http://localhost:8
 const COLLABORATION_URL = process.env.NEXT_PUBLIC_COLLABORATION_URL || "http://localhost:8009";
 const NOTIFICATION_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL || "http://localhost:8010";
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
+
 async function request<T>(
   baseUrl: string,
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS
 ): Promise<T> {
-  const res = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new Error(`Request timed out — is the service running? (${baseUrl})`);
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const text = await res.text();
   let json: unknown;

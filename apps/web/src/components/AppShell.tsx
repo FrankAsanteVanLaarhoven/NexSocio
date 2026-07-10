@@ -1,13 +1,21 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { TacticalGrid } from "@nexus/ui";
 import { BetaBanner } from "./BetaBanner";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { EphemeralHeader } from "./EphemeralHeader";
 import { SectorBanner } from "./SectorBanner";
-import { LocationTracker } from "./LocationTracker";
-import { VoiceCommander } from "./VoiceCommander";
 import { APP_CONTAINER } from "@/lib/layout";
+
+const LocationTracker = dynamic(
+  () => import("./LocationTracker").then((m) => m.LocationTracker),
+  { ssr: false }
+);
+const VoiceCommander = dynamic(
+  () => import("./VoiceCommander").then((m) => m.VoiceCommander),
+  { ssr: false }
+);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (

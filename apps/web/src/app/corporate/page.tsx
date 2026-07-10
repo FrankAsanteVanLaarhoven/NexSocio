@@ -64,13 +64,16 @@ export default function CorporatePage() {
 
   async function refresh() {
     if (!session) return;
-    const dash = await getCorporateDashboard(session.accessToken);
+    const [dash, services] = await Promise.all([
+      getCorporateDashboard(session.accessToken),
+      listPublicCorporateServices(sectorFilter === "all" ? undefined : sectorFilter),
+    ]);
     setMemberships(dash.memberships);
     setCompliance(dash.compliance ?? []);
     setNetworking(dash.networking_access ?? []);
     setInsights(dash.insights.map((i) => ({ label: i.label, value: i.value })));
     if (!activeOrgId && dash.memberships[0]) setActiveOrgId(dash.memberships[0].org_id);
-    setPublicServices(await listPublicCorporateServices(sectorFilter === "all" ? undefined : sectorFilter));
+    setPublicServices(services);
   }
 
   useEffect(() => {
