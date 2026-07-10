@@ -2,7 +2,7 @@
 
 import type { Comment, Post } from "@nexus/types";
 import { Button, Input, ModeBadge, Panel } from "@nexus/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   composeWithAI,
@@ -13,9 +13,11 @@ import {
   getMe,
   getCorporateDashboard,
   getProfessionalDashboard,
+  recordQualifiedView,
   reportPost,
   searchPlaces,
 } from "@/lib/api";
+import { LiveGiftPanel } from "@/components/LiveGiftPanel";
 import { inAppMapUrl } from "@/components/InAppLink";
 import { LiveLocationTag } from "@/components/LiveLocationTag";
 import { MediaUploader } from "@/components/MediaUploader";
@@ -28,7 +30,7 @@ import { useTranslation } from "@/i18n";
 import type { OrgMembership, PlaceResult } from "@nexus/types";
 import {
   feedTypeForSector,
-  FILTER_CSS,
+  getFilterCss,
   normalizeSector,
   sectorBadgeClass,
   type PostSector,
@@ -37,17 +39,26 @@ import {
 function PostCard({
   post,
   token,
+  currentUserId,
   onReport,
 }: {
   post: Post;
   token: string;
+  currentUserId: string;
   onReport: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [showComments, setShowComments] = useState(false);
+  const [showGifts, setShowGifts] = useState(false);
   const [commentMsg, setCommentMsg] = useState<string | null>(null);
+  const [viewMsg, setViewMsg] = useState<string | null>(null);
+  const viewCounted = useRef(false);
+  const isOwnPost = post.author_id === currentUserId;
+  const canGift = !isOwnPost;
+  const trackViews =
+    !isOwnPost && (isVideoUrl(post.media_url ?? "") || post.post_type === "reel" || post.post_type === "live");
   const likes = useSettingsStore((s) => s.likes);
   const toggleLike = useSettingsStore((s) => s.toggleLike);
   const liked = likes.includes(post.id);
@@ -129,8 +140,21 @@ function PostCard({
               controls
               playsInline
               className="w-full max-h-80 object-cover bg-black"
-              style={{
-                filter: FILTER_CSS[post.filter_preset ?? ""] ?? undefined,
+              style={{ filter: getFilterCss(post.filter_preset) }}
+              onTimeUpdate={(e) => {
+                if (!trackViews || viewCounted.current) return;
+                if (e.currentTarget.currentTime >= 5) {
+                  viewCounted.current = true;
+                  recordQualifiedView(token, {
+                    post_id: post.id,
+                    creator_id: post.author_id,
+                    watch_seconds: Math.floor(e.currentTarget.currentTime),
+                  })
+                    .then((res) => {
+                      if (res.counted) setViewMsg(t("feed.viewCounted"));
+                    })
+                    .catch(() => {});
+                }
               }}
             />
           ) : isImageUrl(post.media_url) || post.post_type === "photo" ? (
@@ -138,9 +162,7 @@ function PostCard({
               src={resolveMediaUrl(post.media_url)}
               alt=""
               className="w-full max-h-80 object-cover"
-              style={{
-                filter: FILTER_CSS[post.filter_preset ?? ""] ?? undefined,
-              }}
+              style={{ filter: getFilterCss(post.filter_preset) }}
             />
           ) : (
             <p className="p-3 text-[10px] text-[#5A5A5A]">
@@ -167,6 +189,15 @@ function PostCard({
         >
           {t("feed.comment")}
         </button>
+        {canGift && (
+          <button
+            type="button"
+            onClick={() => setShowGifts(!showGifts)}
+            className={`text-xs transition-colors ${showGifts ? "text-[#FFB300]" : "text-[#5A5A5A] hover:text-[#FFB300]"}`}
+          >
+            {t("feed.gift")}
+          </button>
+        )}
         {post.place_lat != null ? (
           <Link
             href={inAppMapUrl({
@@ -185,6 +216,16 @@ function PostCard({
           </button>
         )}
       </div>
+      {showGifts && canGift && (
+        <div className="mt-3 rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] p-3">
+          <LiveGiftPanel
+            token={token}
+            recipientId={post.author_id}
+            liveSessionId={post.is_live_session ? post.id : undefined}
+          />
+        </div>
+      )}
+      {viewMsg && <p className="mt-2 text-[10px] text-[#00E5FF]">{viewMsg}</p>}
       {showComments && (
         <div className="mt-3 space-y-2">
           {comments.map((c) => (
@@ -637,7 +678,13 @@ export function Feed() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-              <PostCard key={post.id} post={post} token={session.accessToken} onReport={handleReport} />
+              <PostCard
+                key={post.id}
+                post={post}
+                token={session.accessToken}
+                currentUserId={session.userId}
+                onReport={handleReport}
+              />
           ))}
         </div>
       )}

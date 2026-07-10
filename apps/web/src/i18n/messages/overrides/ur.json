@@ -22,7 +22,21 @@
     "personal": "ذاتی",
     "professional": "پیشہ ورانہ",
     "persShort": "ذاتی",
-    "profShort": "پیشہ"
+    "profShort": "پیشہ",
+    "bizShort": "Biz",
+    "corpShort": "Corp"
+  },
+  "sector": {
+    "personal": "Personal",
+    "businessGeneral": "Business",
+    "businessCorporate": "Corporate",
+    "personalDesc": "Social · reels · friends — never mixed with business",
+    "businessGeneralDesc": "Shops · promos · marketplace — your trade lane",
+    "businessCorporateDesc": "Companies · careers · LinkedIn-style updates",
+    "postingAs": "Posting as",
+    "corporateHub": "Corporate hub",
+    "selectOrg": "Post as organization",
+    "noOrg": "Join or create a company to post in Corporate"
   },
   "common": {
     "loading": "لوڈ ہو رہا ہے…",
@@ -113,10 +127,30 @@
     "kidsRegisterAt": "Children can only sign in with Face ID. Register at",
     "kidsRegisterFirst": "first (parental approval required)."
   },
+  "corporate": {
+    "title": "Corporate",
+    "subtitle": "Companies · careers · B2B networking — separate from personal and general business",
+    "tabCompanies": "Companies",
+    "tabPeople": "People",
+    "tabJobs": "Jobs",
+    "yourCompanies": "Your organizations",
+    "createCompany": "Create company page",
+    "companyName": "Company name",
+    "slug": "URL slug",
+    "industry": "Industry",
+    "discover": "Discover companies",
+    "industryUnknown": "General",
+    "orgCreated": "Company page created — you can post in Corporate feed",
+    "orgFailed": "Could not create company"
+  },
   "feed": {
     "title": "فیڈ",
     "titlePro": "پیشہ ورانہ فیڈ",
+    "titleBusiness": "Business Feed",
+    "titleCorporate": "Corporate Feed",
     "context": "سیاق:",
+    "placeholderBusiness": "Promote your business, product, or service…",
+    "placeholderCorporate": "Share a company update, insight, or hiring post…",
     "connectionsOnly": "صرف کنکشنز",
     "connections": "Connections",
     "global": "عالمی",
@@ -151,7 +185,10 @@
     "commentPlaceholder": "تبصرہ شامل کریں (شائع سے پہلے معائنہ)...",
     "commentSubmitted": "تبصرہ جائزے کے لیے بھیجا گیا",
     "commentPosted": "تبصرہ پوسٹ ہوا",
-    "place": "جگہ"
+    "place": "جگہ",
+    "gift": "🎁 Gift",
+    "giftSent": "Gift sent!",
+    "viewCounted": "View counted toward creator rewards"
   },
   "calls": {
     "title": "کالز",
@@ -716,7 +753,12 @@
     "streamPlaceholder": "یہ سٹریم کس بارے میں ہے؟",
     "viewers": "{n} ناظرین",
     "locationHint": "فالوورز آپ کی لائیو پوسٹ پر چھوٹا مقام + وقت ٹیگ دیکھتے ہیں",
-    "locationDisabled": "Enable live location tags in Settings → Location Finder"
+    "locationDisabled": "Enable live location tags in Settings → Location Finder",
+    "giftsTitle": "Live gifts",
+    "giftsHint": "Viewers send gifts from your live post in Feed",
+    "giftsEarned": "Gifts earned this stream",
+    "recentGifts": "Recent gift earnings",
+    "noGiftsYet": "No gifts yet — share your live post"
   },
   "marketplace": {
     "title": "مارکیٹ پلیس",
@@ -856,6 +898,32 @@
     "title": "ایپ میں ریڈر",
     "reader": "NEXSOCIO ریڈر",
     "noUrl": "کوئی مضمون URL نہیں"
+  },
+  "creator": {
+    "title": "Creator rewards",
+    "subtitle": "NexCoins · qualified views · live gifts · payouts",
+    "nexCoins": "NexCoins",
+    "creatorBalance": "Creator balance",
+    "qualifiedViews": "Qualified views",
+    "thisMonth": "This month",
+    "rewardsEstimate": "View rewards estimate",
+    "giftsEarned": "Gift earnings",
+    "affiliateEarned": "Affiliate earnings",
+    "buyCoins": "Buy NexCoins",
+    "buyPack": "Buy {coins} coins · £{price}",
+    "payout": "Payout to wallet",
+    "payoutHint": "Move creator earnings to your main wallet balance",
+    "payoutSuccess": "Payout complete — check Wallet",
+    "buySuccess": "NexCoins added to your balance",
+    "recentEarnings": "Recent earnings",
+    "noEarnings": "No earnings yet — post reels and go live",
+    "sendGift": "Send a gift",
+    "coins": "{n} coins",
+    "giftFailed": "Could not send gift",
+    "loadFailed": "Could not load creator dashboard",
+    "per1kViews": "£0.08 per 1,000 qualified views (5s+ watch)",
+    "giftCut": "Creators keep 70% of gift value",
+    "qualifiedViewRule": "Views count after 5 seconds of watch time"
   },
   "errors": {
     "generic": "کچھ غلط ہو گیا"

@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.security.jwt import decode_access_token
+from services.commerce.application.creator_service import CreatorService
 from services.commerce.application.services import CommerceService
 from services.commerce.infrastructure.config import Settings
 from services.commerce.infrastructure.database import get_engine, get_session_factory
@@ -60,3 +61,9 @@ async def get_auth_context(
         email=payload.email or "",
         display_name=payload.display_name or "Member",
     )
+
+
+async def get_creator_service(
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> CreatorService:
+    return CreatorService(db)

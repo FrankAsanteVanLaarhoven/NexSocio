@@ -3,16 +3,29 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from nexus_common.domain.models import ApiResponse, HealthResponse
 
-from services.commerce.api.deps import AuthContext, get_auth_context, get_commerce_service, get_settings
+from services.commerce.api.deps import (
+    AuthContext,
+    get_auth_context,
+    get_commerce_service,
+    get_creator_service,
+    get_settings,
+)
+from services.commerce.application.creator_service import CreatorService
 from services.commerce.application.dtos import (
     AddToCartRequest,
+    BuyCoinsRequest,
     CartResponse,
     CheckoutResponse,
     CreateProductRequest,
+    CreatorDashboardResponse,
+    GiftCatalogItem,
+    GiftEventResponse,
     MarketplaceDashboard,
     OrderResponse,
     PaymentProviderRequest,
     ProductResponse,
+    RecordViewRequest,
+    SendGiftRequest,
     TransactionResponse,
     WalletResponse,
 )
@@ -138,3 +151,54 @@ async def seller_orders(
     service: Annotated[CommerceService, Depends(get_commerce_service)],
 ) -> ApiResponse[list[OrderResponse]]:
     return ApiResponse(data=await service.list_seller_orders(auth.user_id))
+
+
+@router.get("/creator/gifts", response_model=ApiResponse[list[GiftCatalogItem]])
+async def list_gifts(
+    service: Annotated[CreatorService, Depends(get_creator_service)],
+) -> ApiResponse[list[GiftCatalogItem]]:
+    return ApiResponse(data=await service.list_gifts())
+
+
+@router.post("/creator/gifts/send", response_model=ApiResponse[GiftEventResponse])
+async def send_gift(
+    request: SendGiftRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[CreatorService, Depends(get_creator_service)],
+) -> ApiResponse[GiftEventResponse]:
+    result = await service.send_gift(auth.user_id, auth.display_name, request)
+    return ApiResponse(data=result)
+
+
+@router.post("/creator/coins/buy", response_model=ApiResponse[WalletResponse])
+async def buy_coins(
+    request: BuyCoinsRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[CreatorService, Depends(get_creator_service)],
+) -> ApiResponse[WalletResponse]:
+    return ApiResponse(data=await service.buy_coins(auth.user_id, request))
+
+
+@router.post("/creator/views", response_model=ApiResponse[dict])
+async def record_view(
+    request: RecordViewRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[CreatorService, Depends(get_creator_service)],
+) -> ApiResponse[dict]:
+    return ApiResponse(data=await service.record_qualified_view(auth.user_id, request))
+
+
+@router.get("/creator/dashboard", response_model=ApiResponse[CreatorDashboardResponse])
+async def creator_dashboard(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[CreatorService, Depends(get_creator_service)],
+) -> ApiResponse[CreatorDashboardResponse]:
+    return ApiResponse(data=await service.get_creator_dashboard(auth.user_id))
+
+
+@router.post("/creator/payout", response_model=ApiResponse[WalletResponse])
+async def creator_payout(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[CreatorService, Depends(get_creator_service)],
+) -> ApiResponse[WalletResponse]:
+    return ApiResponse(data=await service.payout_creator_balance(auth.user_id))

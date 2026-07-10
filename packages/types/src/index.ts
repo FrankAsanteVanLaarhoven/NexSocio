@@ -500,6 +500,7 @@ export interface Wallet {
   balance: number;
   currency: string;
   bonus_coins: number;
+  creator_balance?: number;
   stripe_connected: boolean;
   paypal_connected: boolean;
 }
@@ -698,6 +699,33 @@ export interface PodcastEpisode {
 export interface ShareResult {
   shared_count: number;
   contact_ids: string[];
+}
+
+export interface GiftCatalogItem {
+  id: string;
+  emoji: string;
+  name: string;
+  coin_cost: number;
+  creator_payout_gbp: number;
+}
+
+export interface CreatorEarning {
+  id: string;
+  source: string;
+  amount: number;
+  label: string;
+  created_at: string;
+}
+
+export interface CreatorDashboard {
+  nex_coins: number;
+  creator_balance: number;
+  qualified_views_month: number;
+  rewards_estimate_gbp: number;
+  gifts_earned_month_gbp: number;
+  affiliate_earned_month_gbp: number;
+  coin_packs: { id: string; coins: number; price_gbp: number }[];
+  recent_earnings: CreatorEarning[];
 }
 
 export interface BusinessProfile {

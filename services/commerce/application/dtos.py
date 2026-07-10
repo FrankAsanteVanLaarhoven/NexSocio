@@ -9,8 +9,62 @@ class WalletResponse(BaseModel):
     balance: float
     currency: str
     bonus_coins: int
+    creator_balance: float = 0.0
     stripe_connected: bool
     paypal_connected: bool
+
+
+class GiftCatalogItem(BaseModel):
+    id: str
+    emoji: str
+    name: str
+    coin_cost: int
+    creator_payout_gbp: float
+
+
+class SendGiftRequest(BaseModel):
+    recipient_id: UUID
+    gift_id: str = Field(..., max_length=32)
+    live_session_id: str | None = Field(default=None, max_length=64)
+
+
+class GiftEventResponse(BaseModel):
+    id: UUID
+    gift_id: str
+    gift_emoji: str
+    gift_name: str
+    coins_spent: int
+    creator_earned: float
+    recipient_id: UUID
+
+
+class BuyCoinsRequest(BaseModel):
+    pack_id: str = Field(..., pattern=r"^(starter|popular|pro)$")
+
+
+class RecordViewRequest(BaseModel):
+    post_id: UUID
+    creator_id: UUID
+    watch_seconds: int = Field(..., ge=1, le=3600)
+
+
+class CreatorEarningResponse(BaseModel):
+    id: UUID
+    source: str
+    amount: float
+    label: str
+    created_at: datetime
+
+
+class CreatorDashboardResponse(BaseModel):
+    nex_coins: int
+    creator_balance: float
+    qualified_views_month: int
+    rewards_estimate_gbp: float
+    gifts_earned_month_gbp: float
+    affiliate_earned_month_gbp: float
+    coin_packs: list[dict]
+    recent_earnings: list[CreatorEarningResponse]
 
 
 class TransactionResponse(BaseModel):

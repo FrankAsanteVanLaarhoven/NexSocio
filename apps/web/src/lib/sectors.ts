@@ -38,9 +38,15 @@ export const SECTOR_META: Record<
   },
 };
 
-export const PERSONAL_FILTERS = new Set(["none", "cyber", "warm", "mono", "neon", "vintage"]);
-export const BUSINESS_GENERAL_FILTERS = new Set(["none", "warm", "mono", "cyber"]);
-export const CORPORATE_FILTERS = new Set(["none", "mono"]);
+import { CREATOR_FILTERS } from "./creator-filters";
+
+const ALL_FILTER_IDS = new Set(CREATOR_FILTERS.map((f) => f.id));
+
+export const PERSONAL_FILTERS = ALL_FILTER_IDS;
+export const BUSINESS_GENERAL_FILTERS = new Set([
+  "none", "nexsocio", "warm", "mono", "cyber", "golden", "clean", "glow",
+]);
+export const CORPORATE_FILTERS = new Set(["none", "mono", "clean"]);
 
 export function allowedFilters(sector: PostSector): Set<string> {
   if (sector === "personal") return PERSONAL_FILTERS;
@@ -58,13 +64,7 @@ export function studioModesFor(sector: PostSector): readonly string[] {
   return STUDIO_MODES_CORPORATE;
 }
 
-export const FILTER_CSS: Record<string, string> = {
-  cyber: "saturate(1.4) contrast(1.1) hue-rotate(180deg)",
-  warm: "sepia(0.35) saturate(1.2)",
-  mono: "grayscale(1) contrast(1.15)",
-  neon: "saturate(2) contrast(1.3) brightness(1.1)",
-  vintage: "sepia(0.6) contrast(0.9)",
-};
+export { FILTER_CSS, getFilterCss } from "./creator-filters";
 
 export function sectorBadgeClass(sector: PostSector): string {
   if (sector === "business_corporate") return "text-[#4FC3F7]";

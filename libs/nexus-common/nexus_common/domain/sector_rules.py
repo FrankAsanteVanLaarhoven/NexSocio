@@ -6,9 +6,14 @@ from nexus_common.domain.enums import PostSector
 
 _LEGACY_PROFESSIONAL = "professional"
 
-PERSONAL_FILTERS = frozenset({"none", "cyber", "warm", "mono", "neon", "vintage"})
-BUSINESS_GENERAL_FILTERS = frozenset({"none", "warm", "mono", "cyber"})
-CORPORATE_FILTERS = frozenset({"none", "mono"})
+PERSONAL_FILTERS = frozenset({
+    "none", "nexsocio", "cyber", "warm", "cool", "mono", "neon", "vintage",
+    "golden", "dream", "glow", "pop", "fade", "noir", "sunset", "ocean", "candy", "clean",
+})
+BUSINESS_GENERAL_FILTERS = frozenset({
+    "none", "nexsocio", "warm", "mono", "cyber", "golden", "clean", "glow",
+})
+CORPORATE_FILTERS = frozenset({"none", "mono", "clean"})
 
 PERSONAL_POST_TYPES = frozenset({"text", "reel", "photo", "live"})
 BUSINESS_GENERAL_POST_TYPES = frozenset({"text", "reel", "photo", "live"})

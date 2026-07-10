@@ -18,6 +18,7 @@ class WalletModel(Base):
     balance: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     currency: Mapped[str] = mapped_column(String(8), nullable=False, default="GBP")
     bonus_coins: Mapped[int] = mapped_column(Integer, nullable=False, default=120)
+    creator_balance: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     stripe_connected: Mapped[bool] = mapped_column(Boolean, default=False)
     paypal_connected: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -86,6 +87,61 @@ class OrderModel(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="processing")
     total: Mapped[float] = mapped_column(Float, nullable=False)
     currency: Mapped[str] = mapped_column(String(8), nullable=False, default="GBP")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class GiftCatalogModel(Base):
+    __tablename__ = "gift_catalog"
+    __table_args__ = {"schema": "commerce"}
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    emoji: Mapped[str] = mapped_column(String(8), nullable=False)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    coin_cost: Mapped[int] = mapped_column(Integer, nullable=False)
+    creator_payout_gbp: Mapped[float] = mapped_column(Float, nullable=False)
+
+
+class GiftEventModel(Base):
+    __tablename__ = "gift_events"
+    __table_args__ = {"schema": "commerce"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    recipient_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    gift_id: Mapped[str] = mapped_column(String(32), nullable=False)
+    coins_spent: Mapped[int] = mapped_column(Integer, nullable=False)
+    creator_earned: Mapped[float] = mapped_column(Float, nullable=False)
+    live_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class QualifiedViewModel(Base):
+    __tablename__ = "qualified_views"
+    __table_args__ = (
+        UniqueConstraint("post_id", "viewer_id", name="uq_qualified_view_post_viewer"),
+        {"schema": "commerce"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    creator_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    viewer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    watch_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    counted: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CreatorEarningModel(Base):
+    __tablename__ = "creator_earnings"
+    __table_args__ = {"schema": "commerce"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(32), nullable=False)
+    amount: Mapped[float] = mapped_column(Float, nullable=False)
+    currency: Mapped[str] = mapped_column(String(8), nullable=False, default="GBP")
+    label: Mapped[str] = mapped_column(String(256), nullable=False)
+    reference_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

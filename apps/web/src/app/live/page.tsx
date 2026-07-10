@@ -1,13 +1,14 @@
 "use client";
 
+import type { CreatorDashboard } from "@nexus/types";
 import { Button, Input, Panel } from "@nexus/ui";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { LiveLocationTag } from "@/components/LiveLocationTag";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
-import { createMediaPost } from "@/lib/api";
+import { createMediaPost, getCreatorDashboard } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { listOrgMemberships } from "@/lib/api";
 import { normalizeSector } from "@/lib/sectors";
@@ -38,8 +39,28 @@ export default function LivePage() {
     lng: number;
   } | null>(null);
   const [liveSince, setLiveSince] = useState<string | null>(null);
+  const [livePostId, setLivePostId] = useState<string | null>(null);
+  const [giftDash, setGiftDash] = useState<CreatorDashboard | null>(null);
+  const giftsAtStart = useRef(0);
 
   useLocationTracker(live);
+
+  const refreshGifts = useCallback(async () => {
+    if (!session) return;
+    try {
+      const dash = await getCreatorDashboard(session.accessToken);
+      setGiftDash(dash);
+    } catch {
+      setGiftDash(null);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!live || !session) return;
+    refreshGifts();
+    const id = setInterval(refreshGifts, 8000);
+    return () => clearInterval(id);
+  }, [live, session, refreshGifts]);
 
   async function goLive() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -70,7 +91,7 @@ export default function LivePage() {
         label: loc?.label,
       });
 
-      await createMediaPost(session.accessToken, {
+      const post = await createMediaPost(session.accessToken, {
         body: title || "🔴 Live now on NEXSOCIO",
         post_type: "live",
         context: activeSector,
@@ -80,6 +101,10 @@ export default function LivePage() {
         location_lng: loc?.lng,
         is_live_session: true,
       });
+      setLivePostId(post.id);
+      const dash = await getCreatorDashboard(session.accessToken);
+      setGiftDash(dash);
+      giftsAtStart.current = dash.gifts_earned_month_gbp;
     }
   }
 
@@ -89,6 +114,8 @@ export default function LivePage() {
     setLive(false);
     setLiveLocation(null);
     setLiveSince(null);
+    setLivePostId(null);
+    setGiftDash(null);
     if (session) {
       pingLocation(session.accessToken, { source: "live", isLive: false }).catch(() => {});
     }
@@ -151,6 +178,56 @@ export default function LivePage() {
                 </p>
               </div>
             </Panel>
+
+            {live && (
+              <Panel open title={t("live.giftsTitle")}>
+                <p className="text-xs text-[#8A8A8A]">{t("live.giftsHint")}</p>
+                {livePostId && (
+                  <p className="mt-2 text-[10px] text-[#5A5A5A]">
+                    Post ID: {livePostId.slice(0, 8)}…
+                  </p>
+                )}
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-[#1F1F1F] bg-[#111111] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">
+                      {t("live.giftsEarned")}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-[#FFB300]">
+                      £{Math.max(0, (giftDash?.gifts_earned_month_gbp ?? 0) - giftsAtStart.current).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#1F1F1F] bg-[#111111] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">
+                      {t("creator.nexCoins")}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-[#00E5FF]">
+                      {giftDash?.nex_coins ?? "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">
+                    {t("live.recentGifts")}
+                  </p>
+                  {(giftDash?.recent_earnings ?? []).filter((e) => e.source === "live_gift").length === 0 ? (
+                    <p className="text-xs text-[#8A8A8A]">{t("live.noGiftsYet")}</p>
+                  ) : (
+                    (giftDash?.recent_earnings ?? [])
+                      .filter((e) => e.source === "live_gift")
+                      .slice(0, 5)
+                      .map((e) => (
+                        <div
+                          key={e.id}
+                          className="flex items-center justify-between text-xs border-b border-[#1F1F1F] py-1.5"
+                        >
+                          <span className="text-[#F5F5F5]">{e.label}</span>
+                          <span className="text-[#FFB300]">+£{e.amount.toFixed(2)}</span>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </Panel>
+            )}
           </div>
         )}
       </AuthHydrationGate>

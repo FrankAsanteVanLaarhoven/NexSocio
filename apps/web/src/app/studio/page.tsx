@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { FilterCarousel } from "@/components/FilterCarousel";
 import { MediaUploader } from "@/components/MediaUploader";
+import { CREATOR_FILTERS } from "@/lib/creator-filters";
 import {
   composeWithAI,
   createMediaPost,
@@ -25,15 +27,6 @@ import {
 import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
 import { useTranslation } from "@/i18n";
 
-const FILTERS = [
-  { id: "none", label: "Original" },
-  { id: "cyber", label: "Cyber", css: "saturate(1.4) contrast(1.1) hue-rotate(180deg)" },
-  { id: "warm", label: "Warm", css: "sepia(0.35) saturate(1.2)" },
-  { id: "mono", label: "Mono", css: "grayscale(1) contrast(1.15)" },
-  { id: "neon", label: "Neon", css: "saturate(2) contrast(1.3) brightness(1.1)" },
-  { id: "vintage", label: "Vintage", css: "sepia(0.6) contrast(0.9)" },
-];
-
 type StudioMode = "reel" | "photo" | "ai_video" | "podcast" | "vlog" | "tv";
 
 export default function StudioPage() {
@@ -41,7 +34,7 @@ export default function StudioPage() {
   const session = useAuthStore((s) => s.session);
   const activeSector = normalizeSector(session?.viewContext);
   const allowedModes = studioModesFor(activeSector);
-  const visibleFilters = FILTERS.filter((f) => allowedFilters(activeSector).has(f.id));
+  const allowedFilterIds = allowedFilters(activeSector);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState("none");
@@ -111,7 +104,7 @@ export default function StudioPage() {
     canvas.height = videoRef.current.videoHeight || 1280;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const f = FILTERS.find((x) => x.id === filter);
+    const f = CREATOR_FILTERS.find((x) => x.id === filter);
     ctx.filter = f?.css || "none";
     ctx.drawImage(videoRef.current, 0, 0);
     const data = canvas.toDataURL("image/jpeg", 0.9);
@@ -376,24 +369,15 @@ export default function StudioPage() {
                         playsInline
                         muted
                         className="h-full w-full object-cover"
-                        style={{ filter: FILTERS.find((f) => f.id === filter)?.css || "none" }}
+                        style={{ filter: CREATOR_FILTERS.find((f) => f.id === filter)?.css || "none" }}
                       />
                     )}
                   </div>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {visibleFilters.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setFilter(f.id)}
-                        className={`shrink-0 px-3 py-1.5 text-[10px] rounded-full border ${
-                          filter === f.id ? "border-[#00E5FF] text-[#00E5FF]" : "border-[#2A2A2A] text-[#8A8A8A]"
-                        }`}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
+                  <FilterCarousel
+                    value={filter}
+                    onChange={setFilter}
+                    allowedIds={allowedFilterIds}
+                  />
                   <MediaUploader
                     context={mode === "reel" ? "reel" : "photo"}
                     token={session.accessToken}

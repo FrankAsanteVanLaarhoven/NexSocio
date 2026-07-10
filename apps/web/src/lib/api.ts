@@ -788,6 +788,58 @@ export async function getWallet(token: string): Promise<Wallet> {
   });
 }
 
+export async function listGiftCatalog(): Promise<import("@nexus/types").GiftCatalogItem[]> {
+  return request(COMMERCE_URL, "/api/v1/creator/gifts");
+}
+
+export async function sendLiveGift(
+  token: string,
+  data: { recipient_id: string; gift_id: string; live_session_id?: string }
+): Promise<{ id: string; gift_emoji: string; gift_name: string; creator_earned: number }> {
+  return request(COMMERCE_URL, "/api/v1/creator/gifts/send", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function buyNexCoins(
+  token: string,
+  packId: "starter" | "popular" | "pro"
+): Promise<Wallet> {
+  return request<Wallet>(COMMERCE_URL, "/api/v1/creator/coins/buy", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ pack_id: packId }),
+  });
+}
+
+export async function recordQualifiedView(
+  token: string,
+  data: { post_id: string; creator_id: string; watch_seconds: number }
+): Promise<{ counted: boolean }> {
+  return request(COMMERCE_URL, "/api/v1/creator/views", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getCreatorDashboard(
+  token: string
+): Promise<import("@nexus/types").CreatorDashboard> {
+  return request(COMMERCE_URL, "/api/v1/creator/dashboard", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function payoutCreatorBalance(token: string): Promise<Wallet> {
+  return request<Wallet>(COMMERCE_URL, "/api/v1/creator/payout", {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
 export async function getWalletTransactions(token: string): Promise<WalletTransaction[]> {
   return request<WalletTransaction[]>(COMMERCE_URL, "/api/v1/wallet/transactions", {
     headers: authHeaders(token),

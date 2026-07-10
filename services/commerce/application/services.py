@@ -396,6 +396,7 @@ class CommerceService:
             balance=w.balance,
             currency=w.currency,
             bonus_coins=w.bonus_coins,
+            creator_balance=getattr(w, "creator_balance", 0.0) or 0.0,
             stripe_connected=w.stripe_connected,
             paypal_connected=w.paypal_connected,
         )
