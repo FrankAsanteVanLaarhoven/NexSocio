@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Input, Panel } from "@nexus/ui";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
@@ -9,6 +9,8 @@ import { LiveLocationTag } from "@/components/LiveLocationTag";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { createMediaPost } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { listOrgMemberships } from "@/lib/api";
+import { normalizeSector } from "@/lib/sectors";
 import { pingLocation, resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
 import { useTranslation } from "@/i18n";
@@ -16,6 +18,15 @@ import { useTranslation } from "@/i18n";
 export default function LivePage() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
+  const activeSector = normalizeSector(session?.viewContext);
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session || activeSector !== "business_corporate") return;
+    listOrgMemberships(session.accessToken)
+      .then((m) => setActiveOrgId(m[0]?.org_id ?? null))
+      .catch(() => setActiveOrgId(null));
+  }, [session, activeSector]);
   const showLiveTag = useSettingsStore((s) => s.showLiveLocationTag);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [live, setLive] = useState(false);
@@ -62,7 +73,8 @@ export default function LivePage() {
       await createMediaPost(session.accessToken, {
         body: title || "🔴 Live now on NEXSOCIO",
         post_type: "live",
-        context: session.viewContext ?? "personal",
+        context: activeSector,
+        org_id: activeSector === "business_corporate" ? activeOrgId : undefined,
         location_label: loc?.label,
         location_lat: loc?.lat,
         location_lng: loc?.lng,

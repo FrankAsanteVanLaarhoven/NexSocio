@@ -27,6 +27,7 @@ class CreatePostRequest(BaseModel):
     location_lat: float | None = None
     location_lng: float | None = None
     is_live_session: bool = False
+    org_id: UUID | None = None
 
 
 class MediaUploadResponse(BaseModel):
@@ -77,6 +78,8 @@ class PostResponse(BaseModel):
     location_lat: float | None = None
     location_lng: float | None = None
     is_live_session: bool = False
+    org_id: UUID | None = None
+    org_name: str | None = None
     created_at: datetime
 
 

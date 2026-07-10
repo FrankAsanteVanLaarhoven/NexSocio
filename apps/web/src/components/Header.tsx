@@ -7,6 +7,8 @@ import { APP_CONTAINER } from "@/lib/layout";
 import { usePathname } from "next/navigation";
 import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import { useAuthStore } from "@/lib/auth-store";
+import { normalizeSector, POST_SECTORS, SECTOR_META } from "@/lib/sectors";
+import { useTranslation } from "@/i18n";
 
 const NAV = [
   { href: "/feed", label: "Feed" },
@@ -21,8 +23,9 @@ export function Header() {
 
   const hydrated = useAuthHydrated();
   const session = useAuthStore((s) => s.session);
-  const viewContext = session?.viewContext ?? "personal";
-  const setViewContext = useAuthStore((s) => s.setViewContext);
+  const activeSector = normalizeSector(session?.viewContext);
+  const setActiveSector = useAuthStore((s) => s.setActiveSector);
+  const { t } = useTranslation();
   const clearSession = useAuthStore((s) => s.clearSession);
 
   return (
@@ -70,19 +73,23 @@ export function Header() {
         {hydrated && session && (
           <div className="flex items-center gap-3">
             <div className="flex rounded-md border border-[#2A2A2A] p-0.5">
-              {(["personal", "professional"] as const).map((ctx) => (
+              {POST_SECTORS.map((sector) => (
                 <button
-                  key={ctx}
-                  onClick={() => setViewContext(ctx)}
-                  className={`px-2.5 py-1 text-[10px] uppercase tracking-wider rounded transition-colors ${
-                    viewContext === ctx
-                      ? ctx === "professional"
+                  key={sector}
+                  type="button"
+                  onClick={() => setActiveSector(sector)}
+                  title={t(SECTOR_META[sector].labelKey)}
+                  className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded transition-colors ${
+                    activeSector === sector
+                      ? sector === "business_corporate"
                         ? "bg-[#4FC3F7]/20 text-[#4FC3F7]"
-                        : "bg-[#00E5FF]/20 text-[#00E5FF]"
+                        : sector === "business_general"
+                          ? "bg-[#FFB300]/20 text-[#FFB300]"
+                          : "bg-[#00E5FF]/20 text-[#00E5FF]"
                       : "text-[#5A5A5A] hover:text-[#8A8A8A]"
                   }`}
                 >
-                  {ctx}
+                  {SECTOR_META[sector].short}
                 </button>
               ))}
             </div>

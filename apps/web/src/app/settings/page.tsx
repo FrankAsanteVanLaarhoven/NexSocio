@@ -8,6 +8,7 @@ import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { AppIcon, resolveIconName, type AppIconName } from "@/components/icons/AppIcon";
 import { useAuthStore } from "@/lib/auth-store";
+import { normalizeSector } from "@/lib/sectors";
 import { useTranslation } from "@/i18n";
 import { useSettingsRegistry } from "@/lib/use-settings-registry";
 
@@ -15,9 +16,9 @@ type SectorFilter = "personal" | "professional" | "all";
 
 export default function SettingsPage() {
   const session = useAuthStore((s) => s.session);
-  const viewContext = session?.viewContext ?? "personal";
+  const activeSector = normalizeSector(session?.viewContext);
   const [sector, setSector] = useState<SectorFilter>(
-    viewContext === "professional" ? "professional" : "personal"
+    activeSector === "personal" ? "personal" : "professional"
   );
   const [query, setQuery] = useState("");
 

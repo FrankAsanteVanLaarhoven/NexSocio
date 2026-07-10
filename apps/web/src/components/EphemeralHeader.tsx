@@ -9,8 +9,9 @@ import { AppIcon, type AppIconName } from "@/components/icons/AppIcon";
 import { useTranslation } from "@/i18n";
 import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import { useAuthStore } from "@/lib/auth-store";
-import { APP_CONTAINER } from "@/lib/layout";
+import { HEADER_CONTAINER } from "@/lib/layout";
 import { useSettingsStore } from "@/lib/settings-store";
+import { normalizeSector, POST_SECTORS, SECTOR_META, type PostSector } from "@/lib/sectors";
 
 const DOCK: { href: string; labelKey: string; icon: AppIconName }[] = [
   { href: "/feed", labelKey: "nav.feed", icon: "feed" },
@@ -30,16 +31,45 @@ const DOCK: { href: string; labelKey: string; icon: AppIconName }[] = [
   { href: "/settings", labelKey: "nav.settings", icon: "settings" },
 ];
 
-export function EphemeralHeader() {
+function NavLink({
+  href,
+  labelKey,
+  icon,
+  active,
+}: {
+  href: string;
+  labelKey: string;
+  icon: AppIconName;
+  active: boolean;
+}) {
   const { t } = useTranslation();
+
+  return (
+    <Link
+      href={href}
+      title={t(labelKey)}
+      className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-wider transition-colors sm:px-3 sm:py-2 sm:text-xs ${
+        active
+          ? "bg-accent-muted text-accent shadow-[inset_0_0_0_1px_var(--color-accent-border)]"
+          : "text-faint hover:bg-surface-elevated hover:text-primary"
+      }`}
+    >
+      <AppIcon name={icon} size={16} className={active ? "text-accent" : "text-faint"} />
+      <span className="hidden md:inline">{t(labelKey)}</span>
+    </Link>
+  );
+}
+
+export function EphemeralHeader() {
   const pathname = usePathname();
   const hydrated = useAuthHydrated();
   const session = useAuthStore((s) => s.session);
-  const viewContext = session?.viewContext ?? "personal";
-  const setViewContext = useAuthStore((s) => s.setViewContext);
+  const activeSector = normalizeSector(session?.viewContext);
+  const setActiveSector = useAuthStore((s) => s.setActiveSector);
   const clearSession = useAuthStore((s) => s.clearSession);
   const ephemeralNav = useSettingsStore((s) => s.ephemeralNav);
   const voiceOn = useSettingsStore((s) => s.voiceControlEnabled);
+  const { t } = useTranslation();
 
   const [revealed, setRevealed] = useState(!ephemeralNav);
   const [nearTop, setNearTop] = useState(false);
@@ -70,7 +100,7 @@ export function EphemeralHeader() {
       }`}
       style={showNav ? { backgroundColor: "var(--color-header-bg)" } : undefined}
     >
-      <div className={`${APP_CONTAINER} flex h-[4.5rem] items-center gap-5 lg:gap-8`}>
+      <div className={`${HEADER_CONTAINER} flex min-h-[4.5rem] flex-wrap items-center gap-x-4 gap-y-2 py-2 lg:gap-x-6`}>
         <BrandLogo
           href="/"
           variant="header"
@@ -80,38 +110,25 @@ export function EphemeralHeader() {
 
         {hydrated && session && (
           <nav
-            className={`min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden transition-all duration-500 ${
+            className={`order-3 w-full lg:order-2 lg:min-w-0 lg:flex-1 transition-all duration-500 ${
               showNav ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none"
             }`}
           >
-            <div className="flex items-center gap-1.5 pr-2">
-              {DOCK.map((item) => {
-                const active = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={t(item.labelKey)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium uppercase tracking-wider transition-colors sm:text-xs ${
-                      active
-                        ? "bg-accent-muted text-accent shadow-[inset_0_0_0_1px_var(--color-accent-border)]"
-                        : "text-faint hover:bg-surface-elevated hover:text-primary"
-                    }`}
-                  >
-                    <AppIcon
-                      name={item.icon}
-                      size={16}
-                      className={active ? "text-accent" : "text-faint"}
-                    />
-                    <span className="hidden lg:inline">{t(item.labelKey)}</span>
-                  </Link>
-                );
-              })}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {DOCK.map((item) => (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  labelKey={item.labelKey}
+                  icon={item.icon}
+                  active={pathname === item.href}
+                />
+              ))}
             </div>
           </nav>
         )}
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:gap-3 lg:order-3">
           {voiceOn && (
             <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-accent" title={t("nav.voiceActive")} />
           )}
@@ -130,23 +147,30 @@ export function EphemeralHeader() {
           )}
           {hydrated && session && (
             <>
-              <div className="hidden rounded-lg border border-default p-1 sm:flex">
-                {(["personal", "professional"] as const).map((ctx) => (
-                  <button
-                    key={ctx}
-                    type="button"
-                    onClick={() => setViewContext(ctx)}
-                    className={`rounded-md px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${
-                      viewContext === ctx
-                        ? ctx === "professional"
-                          ? "bg-[color-mix(in_srgb,var(--color-pro)_15%,transparent)] text-pro"
-                          : "bg-accent-muted text-accent"
-                        : "text-dim hover:text-primary"
-                    }`}
-                  >
-                    {ctx === "personal" ? t("nav.persShort") : t("nav.profShort")}
-                  </button>
-                ))}
+              <div className="hidden rounded-lg border border-default p-0.5 sm:flex">
+                {POST_SECTORS.map((sector) => {
+                  const meta = SECTOR_META[sector];
+                  const active = activeSector === sector;
+                  return (
+                    <button
+                      key={sector}
+                      type="button"
+                      onClick={() => setActiveSector(sector)}
+                      title={t(meta.labelKey)}
+                      className={`rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider ${
+                        active
+                          ? sector === "business_corporate"
+                            ? "bg-[#4FC3F7]/15 text-[#4FC3F7]"
+                            : sector === "business_general"
+                              ? "bg-[#FFB300]/15 text-[#FFB300]"
+                              : "bg-accent-muted text-accent"
+                          : "text-dim hover:text-primary"
+                      }`}
+                    >
+                      {meta.short}
+                    </button>
+                  );
+                })}
               </div>
               <ModeBadge mode={session.mode} />
               <button

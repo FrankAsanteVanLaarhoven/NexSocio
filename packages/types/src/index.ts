@@ -1,7 +1,14 @@
 export type UserMode = "kids" | "prime" | "professional";
 export type SubscriptionTier = "free" | "premium" | "business";
-export type ViewContext = "personal" | "professional";
-export type FeedType = "global" | "connections" | "professional";
+export type PostSector = "personal" | "business_general" | "business_corporate";
+/** @deprecated Use PostSector — 'professional' is normalized to business_general */
+export type ViewContext = PostSector | "professional";
+export type FeedType =
+  | "global"
+  | "connections"
+  | "professional"
+  | "business_general"
+  | "business_corporate";
 export type VerificationStatus = "pending" | "verified" | "failed";
 export type ContentVisibility = "public" | "connections" | "private";
 
@@ -90,7 +97,8 @@ export interface UpdateProfileRequest {
 export interface CreatePostRequest {
   body: string;
   visibility?: ContentVisibility;
-  context?: ViewContext;
+  context?: ViewContext | PostSector;
+  org_id?: string | null;
   media_url?: string | null;
   post_type?: PostType;
   filter_preset?: string | null;
@@ -118,7 +126,9 @@ export interface Post {
   author_name: string;
   body: string;
   mode: UserMode;
-  context: ViewContext;
+  context: PostSector;
+  org_id?: string | null;
+  org_name?: string | null;
   visibility: ContentVisibility;
   media_url?: string | null;
   moderation_status?: string;
@@ -387,7 +397,7 @@ export interface AuthSession {
   displayName: string;
   mode: UserMode;
   ageVerified: boolean;
-  viewContext: ViewContext;
+  viewContext: PostSector;
 }
 
 export type AuthMethod =
@@ -688,4 +698,38 @@ export interface PodcastEpisode {
 export interface ShareResult {
   shared_count: number;
   contact_ids: string[];
+}
+
+export interface BusinessProfile {
+  id: string;
+  user_id: string;
+  business_name: string;
+  category?: string | null;
+  tagline?: string | null;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  industry?: string | null;
+  size_band?: string | null;
+  website?: string | null;
+  description?: string | null;
+  verified: boolean;
+  created_at?: string | null;
+}
+
+export interface OrgMembership {
+  org_id: string;
+  org_name: string;
+  role: string;
+  title?: string | null;
+}
+
+export interface CorporateDashboard {
+  profile: UserProfile;
+  memberships: OrgMembership[];
+  insights: { label: string; value: string; trend?: string }[];
+  hiring_posts: number;
 }

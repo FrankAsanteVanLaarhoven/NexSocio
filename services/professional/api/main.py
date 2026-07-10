@@ -10,7 +10,12 @@ from services.professional.infrastructure.config import Settings
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(app: FastAPI):
+    from services.professional.infrastructure.database import get_engine, init_db
+
+    cfg: Settings = app.state.settings
+    engine = get_engine(cfg.database_url)
+    await init_db(engine)
     yield
 
 

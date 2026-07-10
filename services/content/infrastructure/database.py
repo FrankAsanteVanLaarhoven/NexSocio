@@ -34,6 +34,8 @@ async def init_db(engine) -> None:
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS location_lat DOUBLE PRECISION",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS location_lng DOUBLE PRECISION",
             "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS is_live_session BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE content.posts ADD COLUMN IF NOT EXISTS org_id UUID",
+            "UPDATE content.posts SET context = 'business_general' WHERE context = 'professional'",
         ]:
             await conn.execute(text(stmt))
 

@@ -5,7 +5,8 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus_common.domain.enums import ContentVisibility, FeedType, UserMode, ViewContext
+from nexus_common.domain.enums import ContentVisibility, FeedType, PostSector, UserMode, ViewContext
+from nexus_common.domain.sector_rules import normalize_sector, validate_post_for_sector
 from nexus_common.safety.moderation import ModerationEngine
 from services.content.application.ai_compose import compose_with_ai
 from services.content.application.dtos import (
@@ -41,6 +42,19 @@ class ContentService:
                 )
         except httpx.HTTPError:
             pass
+
+    async def _verify_org_membership(self, user_id: UUID, org_id: UUID, token: str) -> None:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(
+                    f"{self.settings.professional_service_url}/api/v1/organizations/{org_id}/membership-check",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if res.status_code == 200 and res.json().get("data") is True:
+                    return
+        except httpx.HTTPError:
+            pass
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
 
     async def _can_hide_ai_tag(self, token: str) -> bool:
         try:
@@ -85,13 +99,26 @@ class ContentService:
 
         await self._moderate(body, mode, post_id)
 
+        sector = normalize_sector(request.context.value)
+        if request.org_id and sector != PostSector.BUSINESS_CORPORATE:
+            raise HTTPException(status_code=400, detail="org_id is only allowed for corporate posts")
+        validate_post_for_sector(
+            sector=sector,
+            post_type=request.post_type,
+            filter_preset=request.filter_preset,
+            org_id=str(request.org_id) if request.org_id else None,
+        )
+        if sector == PostSector.BUSINESS_CORPORATE and request.org_id and token:
+            await self._verify_org_membership(author_id, request.org_id, token)
+
         post = PostModel(
             id=post_id,
             author_id=author_id,
             author_name=display_name,
             body=body,
             mode=mode.value,
-            context=request.context.value,
+            context=sector.value,
+            org_id=request.org_id,
             visibility=request.visibility.value,
             media_url=request.media_url,
             moderation_status="approved",
@@ -141,15 +168,20 @@ class ContentService:
     ) -> FeedResponse:
         query = select(PostModel).order_by(PostModel.created_at.desc()).limit(limit)
 
-        if feed_type == FeedType.PROFESSIONAL or context == ViewContext.PROFESSIONAL:
-            query = query.where(PostModel.context == ViewContext.PROFESSIONAL.value)
-        else:
-            query = query.where(PostModel.context == ViewContext.PERSONAL.value)
+        sector = normalize_sector(context.value)
+        if feed_type == FeedType.PROFESSIONAL:
+            sector = PostSector.BUSINESS_GENERAL
+        elif feed_type == FeedType.BUSINESS_CORPORATE:
+            sector = PostSector.BUSINESS_CORPORATE
+        elif feed_type == FeedType.BUSINESS_GENERAL:
+            sector = PostSector.BUSINESS_GENERAL
+
+        query = query.where(PostModel.context == sector.value)
 
         if mode:
             query = query.where(PostModel.mode == mode.value)
 
-        if feed_type == FeedType.CONNECTIONS and user_id and token:
+        if sector == PostSector.PERSONAL and feed_type == FeedType.CONNECTIONS and user_id and token:
             connection_ids = await self._get_connection_ids(user_id, token)
             query = query.where(PostModel.author_id.in_(connection_ids))
 
@@ -164,7 +196,7 @@ class ContentService:
             posts=[self._to_response(p) for p in posts],
             total=total,
             feed_type=feed_type.value,
-            context=context.value,
+            context=sector.value,
         )
 
     async def create_comment(
@@ -216,7 +248,7 @@ class ContentService:
             author_name=post.author_name,
             body=post.body,
             mode=UserMode(post.mode),
-            context=ViewContext(post.context) if post.context else ViewContext.PERSONAL,
+            context=self._sector_to_view_context(post.context),
             visibility=ContentVisibility(post.visibility),
             media_url=post.media_url,
             moderation_status=post.moderation_status,
@@ -236,8 +268,18 @@ class ContentService:
             location_lat=getattr(post, "location_lat", None),
             location_lng=getattr(post, "location_lng", None),
             is_live_session=getattr(post, "is_live_session", False) or False,
+            org_id=getattr(post, "org_id", None),
             created_at=post.created_at,
         )
+
+    @staticmethod
+    def _sector_to_view_context(raw: str | None) -> ViewContext:
+        sector = normalize_sector(raw or PostSector.PERSONAL.value)
+        if sector == PostSector.BUSINESS_CORPORATE:
+            return ViewContext.BUSINESS_CORPORATE
+        if sector == PostSector.BUSINESS_GENERAL:
+            return ViewContext.BUSINESS_GENERAL
+        return ViewContext.PERSONAL
 
     async def get_placed_posts(self, limit: int = 50) -> list[dict]:
         from services.content.application.dtos import PlacePostResponse

@@ -474,6 +474,64 @@ export async function getProfessionalDashboard(token: string): Promise<Professio
   });
 }
 
+export async function getCorporateDashboard(token: string): Promise<import("@nexus/types").CorporateDashboard> {
+  return request(PROFESSIONAL_URL, "/api/v1/dashboard/corporate", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function listOrganizations(
+  industry?: string
+): Promise<import("@nexus/types").Organization[]> {
+  const qs = industry ? `?industry=${encodeURIComponent(industry)}` : "";
+  return request(PROFESSIONAL_URL, `/api/v1/organizations${qs}`);
+}
+
+export async function createOrganization(
+  token: string,
+  data: {
+    name: string;
+    slug: string;
+    industry?: string;
+    size_band?: string;
+    website?: string;
+    description?: string;
+  }
+): Promise<import("@nexus/types").Organization> {
+  return request(PROFESSIONAL_URL, "/api/v1/organizations", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function listOrgMemberships(
+  token: string
+): Promise<import("@nexus/types").OrgMembership[]> {
+  return request(PROFESSIONAL_URL, "/api/v1/organizations/memberships", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getBusinessProfile(
+  token: string
+): Promise<import("@nexus/types").BusinessProfile | null> {
+  return request(PROFESSIONAL_URL, "/api/v1/business-profile", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function upsertBusinessProfile(
+  token: string,
+  data: { business_name: string; category?: string; tagline?: string }
+): Promise<import("@nexus/types").BusinessProfile> {
+  return request(PROFESSIONAL_URL, "/api/v1/business-profile", {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
 export async function getHubDashboard(token?: string): Promise<HubDashboard> {
   return request<HubDashboard>(HUB_URL, "/api/v1/dashboard", {
     headers: token ? authHeaders(token) : {},
@@ -708,6 +766,7 @@ export async function createMediaPost(
     media_url?: string;
     filter_preset?: string;
     context?: ViewContext;
+    org_id?: string | null;
     ai_assisted?: boolean;
     hide_ai_tag?: boolean;
     location_label?: string;

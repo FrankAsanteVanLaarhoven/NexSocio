@@ -16,6 +16,12 @@ import {
 import type { PodcastEpisode } from "@nexus/types";
 import type { UploadedMedia } from "@/lib/media-upload";
 import { useAuthStore } from "@/lib/auth-store";
+import { listOrgMemberships } from "@/lib/api";
+import {
+  allowedFilters,
+  normalizeSector,
+  studioModesFor,
+} from "@/lib/sectors";
 import { readFileAsDataUrl, renderTalkingAvatar } from "@/lib/talking-avatar";
 import { useTranslation } from "@/i18n";
 
@@ -33,6 +39,9 @@ type StudioMode = "reel" | "photo" | "ai_video" | "podcast" | "vlog" | "tv";
 export default function StudioPage() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
+  const activeSector = normalizeSector(session?.viewContext);
+  const allowedModes = studioModesFor(activeSector);
+  const visibleFilters = FILTERS.filter((f) => allowedFilters(activeSector).has(f.id));
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState("none");
@@ -50,6 +59,23 @@ export default function StudioPage() {
   const [epTitle, setEpTitle] = useState("");
   const [epDesc, setEpDesc] = useState("");
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>([]);
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session || activeSector !== "business_corporate") return;
+    listOrgMemberships(session.accessToken)
+      .then((m) => setActiveOrgId(m[0]?.org_id ?? null))
+      .catch(() => setActiveOrgId(null));
+  }, [session, activeSector]);
+
+  useEffect(() => {
+    if (!allowedFilters(activeSector).has(filter)) {
+      setFilter("none");
+    }
+    if (!allowedModes.includes(mode)) {
+      setMode(allowedModes[0] as StudioMode);
+    }
+  }, [activeSector, filter, mode, allowedModes]);
 
   const isBroadcastMode = mode === "podcast" || mode === "vlog" || mode === "tv";
 
@@ -177,7 +203,8 @@ export default function StudioPage() {
         post_type: resolvedPostType,
         media_url: mediaUrl,
         filter_preset: mode === "ai_video" ? "ai-talking-head" : filter,
-        context: session.viewContext ?? "personal",
+        context: activeSector,
+        org_id: activeSector === "business_corporate" ? activeOrgId : undefined,
         ai_assisted: usedAi || mode === "ai_video",
         hide_ai_tag: (usedAi || mode === "ai_video") && canHideAiTag && hideAiTag,
       });
@@ -206,12 +233,12 @@ export default function StudioPage() {
               <p className="text-xs text-[#8A8A8A] mt-1">{t("studio.subtitle")}</p>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {(["reel", "photo", "ai_video", "podcast", "vlog", "tv"] as const).map((m) => (
+              {allowedModes.map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => {
-                    setMode(m);
+                    setMode(m as StudioMode);
                     setPreview(null);
                     setUploadedMedia(null);
                     setMsg(null);
@@ -354,7 +381,7 @@ export default function StudioPage() {
                     )}
                   </div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {FILTERS.map((f) => (
+                    {visibleFilters.map((f) => (
                       <button
                         key={f.id}
                         type="button"

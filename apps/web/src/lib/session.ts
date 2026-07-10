@@ -11,7 +11,7 @@ export function applyAuthLogin(result: AuthLoginResponse | KidsRegisterResponse)
     displayName: result.display_name,
     mode: result.mode,
     ageVerified: "age_verified" in result ? result.age_verified : true,
-    viewContext: "personal",
+    viewContext: "personal" as const,
   });
   recordLoginLocation(result.access_token);
 }

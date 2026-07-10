@@ -1,6 +1,7 @@
 "use client";
 
-import type { AuthSession, UserMode, ViewContext } from "@nexus/types";
+import type { AuthSession, PostSector, UserMode } from "@nexus/types";
+import { normalizeSector } from "@/lib/sectors";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -12,7 +13,9 @@ interface AuthState {
   setSession: (session: AuthSession) => void;
   updateMode: (mode: UserMode, accessToken: string) => void;
   updateDisplayName: (displayName: string) => void;
-  setViewContext: (context: ViewContext) => void;
+  setActiveSector: (sector: PostSector) => void;
+  /** @deprecated use setActiveSector */
+  setViewContext: (sector: PostSector) => void;
   setFeedType: (feedType: "global" | "connections") => void;
   clearSession: () => void;
 }
@@ -28,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           session: {
             ...session,
-            viewContext: session.viewContext ?? "personal",
+            viewContext: normalizeSector(session.viewContext),
           },
         }),
       updateMode: (mode, accessToken) =>
@@ -39,8 +42,14 @@ export const useAuthStore = create<AuthState>()(
         set((state) =>
           state.session ? { session: { ...state.session, displayName } } : state
         ),
-      setViewContext: (viewContext) =>
-        set((state) => (state.session ? { session: { ...state.session, viewContext } } : state)),
+      setActiveSector: (sector) =>
+        set((state) =>
+          state.session ? { session: { ...state.session, viewContext: normalizeSector(sector) } } : state
+        ),
+      setViewContext: (sector) =>
+        set((state) =>
+          state.session ? { session: { ...state.session, viewContext: normalizeSector(sector) } } : state
+        ),
       setFeedType: (feedType) => set({ feedType }),
       clearSession: () => set({ session: null, feedType: "global" }),
     }),
@@ -48,6 +57,9 @@ export const useAuthStore = create<AuthState>()(
       name: "nexsocio-auth",
       partialize: (state) => ({ session: state.session, feedType: state.feedType }),
       onRehydrateStorage: () => (state) => {
+        if (state?.session?.viewContext) {
+          state.session.viewContext = normalizeSector(state.session.viewContext);
+        }
         state?.setHasHydrated(true);
       },
     }

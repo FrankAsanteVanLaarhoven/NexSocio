@@ -18,6 +18,7 @@ import {
   getSalesOrders,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { normalizeSector } from "@/lib/sectors";
 import { useTranslation } from "@/i18n";
 
 const CATEGORIES = ["general", "apparel", "digital", "creator", "subscriptions"];
@@ -30,7 +31,7 @@ function formatPrice(amount: number, currency: string) {
 export default function ShopPage() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
-  const viewContext = session?.viewContext ?? "personal";
+  const activeSector = normalizeSector(session?.viewContext);
   const [listings, setListings] = useState<MarketplaceProduct[]>([]);
   const [purchases, setPurchases] = useState<Order[]>([]);
   const [sales, setSales] = useState<Order[]>([]);
@@ -107,7 +108,7 @@ export default function ShopPage() {
               </Link>
               <h1 className="text-xl font-semibold text-[#F5F5F5] mt-2">{t("shop.title")}</h1>
               <p className="text-xs text-[#8A8A8A]">
-                {viewContext === "professional" ? t("shop.subtitle") : t("shop.subtitlePersonal")}
+                {activeSector !== "personal" ? t("shop.subtitle") : t("shop.subtitlePersonal")}
               </p>
             </div>
 

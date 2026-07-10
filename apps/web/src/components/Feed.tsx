@@ -11,6 +11,7 @@ import {
   getComments,
   getFeed,
   getMe,
+  getCorporateDashboard,
   getProfessionalDashboard,
   reportPost,
   searchPlaces,
@@ -24,7 +25,14 @@ import type { UploadedMedia } from "@/lib/media-upload";
 import { resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
 import { useTranslation } from "@/i18n";
-import type { PlaceResult } from "@nexus/types";
+import type { OrgMembership, PlaceResult } from "@nexus/types";
+import {
+  feedTypeForSector,
+  FILTER_CSS,
+  normalizeSector,
+  sectorBadgeClass,
+  type PostSector,
+} from "@/lib/sectors";
 
 function PostCard({
   post,
@@ -121,12 +129,18 @@ function PostCard({
               controls
               playsInline
               className="w-full max-h-80 object-cover bg-black"
+              style={{
+                filter: FILTER_CSS[post.filter_preset ?? ""] ?? undefined,
+              }}
             />
           ) : isImageUrl(post.media_url) || post.post_type === "photo" ? (
             <img
               src={resolveMediaUrl(post.media_url)}
               alt=""
               className="w-full max-h-80 object-cover"
+              style={{
+                filter: FILTER_CSS[post.filter_preset ?? ""] ?? undefined,
+              }}
             />
           ) : (
             <p className="p-3 text-[10px] text-[#5A5A5A]">
@@ -215,9 +229,11 @@ function PostCard({
 export function Feed() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session)!;
-  const viewContext = session.viewContext ?? "personal";
+  const activeSector = normalizeSector(session.viewContext);
   const feedType = useAuthStore((s) => s.feedType);
   const setFeedType = useAuthStore((s) => s.setFeedType);
+  const [memberships, setMemberships] = useState<OrgMembership[]>([]);
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,31 +257,35 @@ export function Feed() {
   const loadFeed = useCallback(async () => {
     setLoading(true);
     try {
-      const resolvedFeedType =
-        viewContext === "professional"
-          ? "professional"
-          : feedType === "connections"
-            ? "connections"
-            : "global";
+      const resolvedFeedType = feedTypeForSector(activeSector, feedType);
 
       const feed = await getFeed(session.accessToken, {
         feedType: resolvedFeedType,
-        context: viewContext,
+        context: activeSector,
       });
       setPosts(feed.posts);
 
-      if (viewContext === "professional") {
+      if (activeSector === "business_corporate") {
+        const dash = await getCorporateDashboard(session.accessToken);
+        setInsights(dash.insights.map((i) => ({ label: i.label, value: i.value })));
+        setMemberships(dash.memberships);
+        if (!activeOrgId && dash.memberships[0]) {
+          setActiveOrgId(dash.memberships[0].org_id);
+        }
+      } else if (activeSector === "business_general") {
         const dash = await getProfessionalDashboard(session.accessToken);
         setInsights(dash.insights.map((i) => ({ label: i.label, value: i.value })));
+        setMemberships([]);
       } else {
         setInsights([]);
+        setMemberships([]);
       }
     } catch {
       setPosts([]);
     } finally {
       setLoading(false);
     }
-  }, [session.accessToken, viewContext, feedType]);
+  }, [session.accessToken, activeSector, feedType, activeOrgId]);
 
   useEffect(() => {
     loadFeed();
@@ -290,8 +310,8 @@ export function Feed() {
     setAiComposing(true);
     try {
       const result = await composeWithAI(session.accessToken, body.trim(), {
-        tone: viewContext === "professional" ? "professional" : "friendly",
-        context: viewContext === "professional" ? "professional" : "social",
+        tone: activeSector !== "personal" ? "professional" : "friendly",
+        context: activeSector !== "personal" ? "professional" : "social",
       });
       setBody(result.composed);
       setUsedAi(true);
@@ -332,9 +352,13 @@ export function Feed() {
           /* optional */
         }
       }
+      if (activeSector === "business_corporate" && !activeOrgId) {
+        return;
+      }
       await createPost(session.accessToken, {
         body: body.trim(),
-        context: viewContext,
+        context: activeSector,
+        org_id: activeSector === "business_corporate" ? activeOrgId : undefined,
         ai_assisted: usedAi,
         hide_ai_tag: usedAi && canHideAiTag && hideAiTag,
         place_id: selectedPlace?.place_id,
@@ -370,11 +394,18 @@ export function Feed() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[#F5F5F5]">
-            {viewContext === "professional" ? t("feed.titlePro") : t("feed.title")}
+            {activeSector === "business_corporate"
+              ? t("feed.titleCorporate")
+              : activeSector === "business_general"
+                ? t("feed.titleBusiness")
+                : t("feed.title")}
           </h2>
           <p className="text-xs text-[#8A8A8A] mt-1">
-            {t("feed.context")} <span className="text-[#00E5FF] capitalize">{viewContext}</span>
-            {viewContext === "personal" && (
+            {t("feed.context")}{" "}
+            <span className={sectorBadgeClass(activeSector)}>
+              {t(`sector.${activeSector === "business_general" ? "businessGeneral" : activeSector === "business_corporate" ? "businessCorporate" : "personal"}`)}
+            </span>
+            {activeSector === "personal" && (
               <span className="ml-2">
                 · {feedType === "connections" ? t("feed.connectionsOnly") : t("feed.global")}
               </span>
@@ -386,7 +417,7 @@ export function Feed() {
         </Button>
       </div>
 
-      {viewContext === "personal" && (
+      {activeSector === "personal" && (
         <div className="flex gap-2">
           {(["global", "connections"] as const).map((type) => (
             <button
@@ -404,7 +435,7 @@ export function Feed() {
         </div>
       )}
 
-      {viewContext === "professional" && insights.length > 0 && (
+      {activeSector !== "personal" && insights.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {insights.map((item) => (
             <div
@@ -429,6 +460,34 @@ export function Feed() {
         }}
       >
         <div className="space-y-4">
+          {activeSector === "business_corporate" && (
+            <div className="space-y-2">
+              {memberships.length === 0 ? (
+                <p className="text-xs text-[#FFB300]">
+                  {t("sector.noOrg")}{" "}
+                  <Link href="/corporate" className="text-[#00E5FF] underline-offset-2 hover:underline">
+                    {t("sector.corporateHub")}
+                  </Link>
+                </p>
+              ) : (
+                <label className="block text-[10px] uppercase tracking-wider text-[#5A5A5A]">
+                  {t("sector.selectOrg")}
+                  <select
+                    value={activeOrgId ?? ""}
+                    onChange={(e) => setActiveOrgId(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2 text-sm text-[#F5F5F5]"
+                  >
+                    {memberships.map((m) => (
+                      <option key={m.org_id} value={m.org_id}>
+                        {m.org_name}
+                        {m.title ? ` · ${m.title}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          )}
           <textarea
             value={body}
             onChange={(e) => {
@@ -436,9 +495,11 @@ export function Feed() {
               if (usedAi) setUsedAi(false);
             }}
             placeholder={
-              viewContext === "professional"
-                ? t("feed.placeholderPro")
-                : t("feed.placeholder")
+              activeSector === "business_corporate"
+                ? t("feed.placeholderCorporate")
+                : activeSector === "business_general"
+                  ? t("feed.placeholderBusiness")
+                  : t("feed.placeholder")
             }
             rows={4}
             className="w-full resize-none rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2.5 text-sm text-[#F5F5F5] placeholder:text-[#5A5A5A] focus:outline-none focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#00E5FF]/20"
@@ -446,7 +507,9 @@ export function Feed() {
           <div className="rounded-md border border-[#1F1F1F] p-3 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-[#5A5A5A]">{t("feed.attachMedia")}</p>
             <div className="flex gap-2 mb-2">
-              {(["text", "photo", "reel"] as const).map((mediaType) => (
+              {(["text", "photo", "reel"] as const)
+                .filter((mediaType) => !(activeSector === "business_corporate" && mediaType === "reel"))
+                .map((mediaType) => (
                 <button
                   key={mediaType}
                   type="button"

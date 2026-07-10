@@ -20,6 +20,7 @@ class PostModel(Base):
     body: Mapped[str] = mapped_column(Text, nullable=False)
     mode: Mapped[str] = mapped_column(String(32), nullable=False)
     context: Mapped[str] = mapped_column(String(32), nullable=False, default="personal")
+    org_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
     visibility: Mapped[str] = mapped_column(String(32), nullable=False, default="public")
     media_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     moderation_status: Mapped[str] = mapped_column(String(32), nullable=False, default="approved")

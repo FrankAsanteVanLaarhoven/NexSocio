@@ -8,6 +8,7 @@ import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
 import { useCreateTeam, useTeamMembers, useTeams } from "@/hooks/queries/useTeams";
 import { useAuthStore } from "@/lib/auth-store";
+import { normalizeSector } from "@/lib/sectors";
 import { useTranslation } from "@/i18n";
 
 export default function TeamsPage() {
@@ -24,7 +25,10 @@ export default function TeamsPage() {
     if (!name.trim()) return;
     await createTeam.mutateAsync({
       name: name.trim(),
-      sector: session?.viewContext === "professional" ? "professional" : "business",
+      sector:
+        normalizeSector(session?.viewContext) === "business_corporate"
+          ? "professional"
+          : "business",
     });
     setName("");
   }
