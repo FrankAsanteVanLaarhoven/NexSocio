@@ -71,7 +71,7 @@ if lsof -iTCP:3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
 else
   echo "==> Starting Next.js web..."
   cd "${ROOT}/apps/web"
-  nohup npm run dev > "${LOG_DIR}/web.log" 2>&1 &
+  nohup npm run dev:clean > "${LOG_DIR}/web.log" 2>&1 &
   echo $! > "${LOG_DIR}/web.pid"
 fi
 
