@@ -175,3 +175,20 @@ class BusinessProfileModel(Base):
     category: Mapped[str | None] = mapped_column(String(64), nullable=True)
     tagline: Mapped[str | None] = mapped_column(String(256), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class BusinessSubscriptionModel(Base):
+    """SME / solo-trader business tools — marketplace selling and promo lane."""
+
+    __tablename__ = "business_subscriptions"
+    __table_args__ = {"schema": "professional"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
+    plan: Mapped[str] = mapped_column(String(64), nullable=False, default="business_tools")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="none")
+    trial_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    monthly_price_gbp: Mapped[float] = mapped_column(Float, default=19.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

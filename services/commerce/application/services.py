@@ -112,6 +112,24 @@ class CommerceService:
         except Exception as exc:
             raise HTTPException(status_code=503, detail="Corporate verification service unavailable") from exc
 
+    async def _assert_business_can_sell(self, seller_id: UUID) -> None:
+        url = f"{self.settings.professional_service_url}/api/v1/business/users/{seller_id}/can-sell"
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                res = await client.get(url)
+                if res.status_code >= 400:
+                    raise HTTPException(status_code=403, detail="Business tools subscription required to sell")
+                allowed = res.json().get("data", False)
+                if not allowed:
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Start a free business tools trial on /shop to list on the marketplace",
+                    )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Business verification service unavailable") from exc
+
     async def create_product(
         self, seller_id: UUID, seller_name: str, request: CreateProductRequest
     ) -> ProductResponse:
@@ -119,6 +137,8 @@ class CommerceService:
         if request.org_id:
             org_uuid = UUID(request.org_id)
             await self._assert_org_can_sell(org_uuid)
+        else:
+            await self._assert_business_can_sell(seller_id)
         product = ProductModel(
             id=uuid4(),
             seller_id=seller_id,

@@ -7,12 +7,14 @@ from nexus_common.domain.models import ApiResponse, HealthResponse
 from services.professional.api.deps import (
     AuthContext,
     get_auth_context,
+    get_business_compliance_service,
     get_career_service,
     get_compliance_service,
     get_professional_service,
     get_settings,
     get_token,
 )
+from services.professional.application.business_compliance import BusinessComplianceService
 from services.professional.application.career_service import CareerService
 from services.professional.application.corporate_compliance import CorporateComplianceService
 from services.professional.application.dtos import (
@@ -26,6 +28,8 @@ from services.professional.application.dtos import (
     PeopleSearchResult,
     UpsertCareerProfileRequest,
     BusinessProfileResponse,
+    BusinessToolsAccess,
+    BusinessToolsStatus,
     CorporateComplianceStatus,
     CorporateCredentialResponse,
     CorporateDashboardResponse,
@@ -108,6 +112,38 @@ async def upsert_business_profile(
 ) -> ApiResponse[BusinessProfileResponse]:
     result = await service.upsert_business_profile(auth.user_id, request)
     return ApiResponse(data=result)
+
+
+@router.get("/business/tools", response_model=ApiResponse[BusinessToolsAccess])
+async def business_tools_access(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    compliance: Annotated[BusinessComplianceService, Depends(get_business_compliance_service)],
+) -> ApiResponse[BusinessToolsAccess]:
+    return ApiResponse(data=await compliance.tools_access(auth.user_id))
+
+
+@router.get("/business/subscription", response_model=ApiResponse[BusinessToolsStatus])
+async def business_subscription_status(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    compliance: Annotated[BusinessComplianceService, Depends(get_business_compliance_service)],
+) -> ApiResponse[BusinessToolsStatus]:
+    return ApiResponse(data=await compliance.get_status(auth.user_id))
+
+
+@router.post("/business/subscription/trial", response_model=ApiResponse[BusinessToolsAccess])
+async def start_business_tools_trial(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    compliance: Annotated[BusinessComplianceService, Depends(get_business_compliance_service)],
+) -> ApiResponse[BusinessToolsAccess]:
+    return ApiResponse(data=await compliance.start_trial(auth.user_id))
+
+
+@router.get("/business/users/{user_id}/can-sell", response_model=ApiResponse[bool])
+async def business_user_can_sell(
+    user_id: UUID,
+    compliance: Annotated[BusinessComplianceService, Depends(get_business_compliance_service)],
+) -> ApiResponse[bool]:
+    return ApiResponse(data=await compliance.can_sell(user_id))
 
 
 @router.get("/organizations", response_model=ApiResponse[list[OrganizationResponse]])

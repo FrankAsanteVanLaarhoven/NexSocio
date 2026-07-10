@@ -11,6 +11,7 @@ from nexus_common.domain.corporate_sectors import (
     extract_email_domain,
     is_corporate_email,
 )
+from services.professional.application.business_compliance import BusinessComplianceService
 from services.professional.application.corporate_compliance import CorporateComplianceService
 from services.professional.application.dtos import (
     BusinessProfileResponse,
@@ -79,14 +80,19 @@ class ProfessionalService:
         profile = await self.get_profile(token)
         biz = await self.get_business_profile(UUID(str(profile.user_id)))
         biz_name = biz.business_name if biz else profile.company or "Your business"
+        business_tools = None
+        if self.db:
+            business_tools = await BusinessComplianceService(self.db).tools_access(profile.user_id)
+        tools_label = "Active" if business_tools and business_tools.tools_allowed else "Trial needed"
         return ProfessionalDashboardResponse(
             profile=profile,
             insights=[
                 NetworkInsight(label="Business page", value=biz_name, trend="active"),
-                NetworkInsight(label="Profile views", value="128", trend="up"),
+                NetworkInsight(label="Business tools", value=tools_label, trend="neutral"),
                 NetworkInsight(label="Marketplace clicks", value="34", trend="up"),
             ],
             connection_suggestions=["Local sellers near you", "Creators in your category"],
+            business_tools=business_tools,
         )
 
     async def get_corporate_dashboard(self, token: str, user_id: UUID) -> CorporateDashboardResponse:

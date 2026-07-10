@@ -26,10 +26,28 @@ class NetworkInsight(BaseModel):
     trend: str = "neutral"
 
 
+class BusinessToolsStatus(BaseModel):
+    user_id: UUID
+    tools_active: bool = False
+    trial_active: bool = False
+    trial_ends_at: datetime | None = None
+    subscription_status: str = "none"
+    monthly_price_gbp: float = 19.0
+
+
+class BusinessToolsAccess(BaseModel):
+    user_id: UUID
+    tools_allowed: bool = False
+    status: str = "none"
+    trial_ends_at: datetime | None = None
+    message: str = ""
+
+
 class ProfessionalDashboardResponse(BaseModel):
     profile: ProfessionalProfileResponse
     insights: list[NetworkInsight]
     connection_suggestions: list[str]
+    business_tools: BusinessToolsAccess | None = None
 
 
 class BusinessProfileResponse(BaseModel):

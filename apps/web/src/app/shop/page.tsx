@@ -1,6 +1,6 @@
 "use client";
 
-import type { MarketplaceProduct, Order } from "@nexus/types";
+import type { BusinessProfile, BusinessToolsAccess, MarketplaceProduct, Order } from "@nexus/types";
 import { Button, Input, Panel } from "@nexus/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -12,10 +12,14 @@ import { StatCard } from "@/components/settings/SettingsSectionShell";
 import type { UploadedMedia } from "@/lib/media-upload";
 import {
   createProduct,
+  getBusinessProfile,
+  getBusinessToolsAccess,
   getMarketplaceDashboard,
   getMyProducts,
   getOrders,
   getSalesOrders,
+  startBusinessToolsTrial,
+  upsertBusinessProfile,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { normalizeSector } from "@/lib/sectors";
@@ -31,6 +35,7 @@ function formatPrice(amount: number, currency: string) {
 export default function ShopPage() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
+  const setActiveSector = useAuthStore((s) => s.setActiveSector);
   const activeSector = normalizeSector(session?.viewContext);
   const [listings, setListings] = useState<MarketplaceProduct[]>([]);
   const [purchases, setPurchases] = useState<Order[]>([]);
@@ -43,20 +48,38 @@ export default function ShopPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [listingMedia, setListingMedia] = useState<UploadedMedia | null>(null);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+  const [toolsAccess, setToolsAccess] = useState<BusinessToolsAccess | null>(null);
+  const [bizName, setBizName] = useState("");
+  const [bizCategory, setBizCategory] = useState("general");
+  const [bizTagline, setBizTagline] = useState("");
+  const [bizSaving, setBizSaving] = useState(false);
+  const [trialLoading, setTrialLoading] = useState(false);
+
+  const canSell = toolsAccess?.tools_allowed ?? false;
 
   const load = useCallback(async () => {
     if (!session) return;
     try {
-      const [mine, orders, sellerOrders, dashboard] = await Promise.all([
+      const [mine, orders, sellerOrders, dashboard, profile, tools] = await Promise.all([
         getMyProducts(session.accessToken),
         getOrders(session.accessToken),
         getSalesOrders(session.accessToken),
         getMarketplaceDashboard(session.accessToken),
+        getBusinessProfile(session.accessToken),
+        getBusinessToolsAccess(session.accessToken),
       ]);
       setListings(mine);
       setPurchases(orders);
       setSales(sellerOrders);
       setDash(dashboard);
+      setBusinessProfile(profile);
+      setToolsAccess(tools);
+      if (profile) {
+        setBizName(profile.business_name);
+        setBizCategory(profile.category ?? "general");
+        setBizTagline(profile.tagline ?? "");
+      }
     } catch {
       setListings([]);
     }
@@ -66,8 +89,42 @@ export default function ShopPage() {
     load();
   }, [load]);
 
+  async function handleSaveBusiness() {
+    if (!session || !bizName.trim()) return;
+    setBizSaving(true);
+    setMessage(null);
+    try {
+      const profile = await upsertBusinessProfile(session.accessToken, {
+        business_name: bizName.trim(),
+        category: bizCategory,
+        tagline: bizTagline.trim() || undefined,
+      });
+      setBusinessProfile(profile);
+      setMessage(t("shop.businessSaved"));
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : t("shop.createFailed"));
+    } finally {
+      setBizSaving(false);
+    }
+  }
+
+  async function handleStartTrial() {
+    if (!session) return;
+    setTrialLoading(true);
+    setMessage(null);
+    try {
+      const access = await startBusinessToolsTrial(session.accessToken);
+      setToolsAccess(access);
+      setMessage(access.message);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : t("shop.trialFailed"));
+    } finally {
+      setTrialLoading(false);
+    }
+  }
+
   async function handleCreate() {
-    if (!session || !title.trim() || !price) return;
+    if (!session || !title.trim() || !price || !canSell) return;
     setSubmitting(true);
     setMessage(null);
     try {
@@ -110,7 +167,45 @@ export default function ShopPage() {
               <p className="text-xs text-[#8A8A8A]">
                 {activeSector !== "personal" ? t("shop.subtitle") : t("shop.subtitlePersonal")}
               </p>
+              {activeSector === "personal" && (
+                <button
+                  type="button"
+                  onClick={() => setActiveSector("business_general")}
+                  className="mt-2 text-[10px] text-[#FFB300] hover:text-[#FFD54F]"
+                >
+                  {t("shop.switchToBusiness")}
+                </button>
+              )}
             </div>
+
+            <Panel open title={t("shop.businessPage")}>
+              <p className="mb-3 text-xs text-[#8A8A8A]">{t("shop.businessPageHint")}</p>
+              <div className="space-y-2">
+                <Input label={t("shop.businessName")} value={bizName} onChange={(e) => setBizName(e.target.value)} placeholder={t("shop.businessNamePlaceholder")} />
+                <Input label={t("shop.businessCategory")} value={bizCategory} onChange={(e) => setBizCategory(e.target.value)} placeholder="general, apparel, services…" />
+                <Input label={t("shop.businessTagline")} value={bizTagline} onChange={(e) => setBizTagline(e.target.value)} placeholder={t("shop.businessTaglinePlaceholder")} />
+                <Button size="sm" loading={bizSaving} disabled={!bizName.trim()} onClick={handleSaveBusiness}>
+                  {businessProfile ? t("shop.updateBusiness") : t("shop.createBusiness")}
+                </Button>
+              </div>
+            </Panel>
+
+            <Panel open title={t("shop.businessTools")}>
+              <div className="space-y-2 text-xs">
+                <p className={canSell ? "text-[#00C853]" : "text-[#FFB300]"}>
+                  {toolsAccess?.message ?? t("shop.toolsGate")}
+                </p>
+                <p className="text-[10px] text-[#5A5A5A]">{t("shop.trialOffer")}</p>
+                {!canSell && businessProfile && (
+                  <Button size="sm" loading={trialLoading} onClick={handleStartTrial}>
+                    {t("shop.startTrial")}
+                  </Button>
+                )}
+                {!businessProfile && (
+                  <p className="text-[10px] text-[#8A8A8A]">{t("shop.needBusinessPage")}</p>
+                )}
+              </div>
+            </Panel>
 
             <div className="grid grid-cols-3 gap-3">
               <StatCard label={t("shop.statsListings")} value={String(dash.active_listings)} />
@@ -126,6 +221,9 @@ export default function ShopPage() {
             </Link>
 
             <Panel open title={t("shop.createListing")}>
+              {!canSell && (
+                <p className="mb-3 text-xs text-[#FFB300]">{t("shop.listingGate")}</p>
+              )}
               <div className="space-y-3">
                 <Input label={t("shop.titleLabel")} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("shop.titlePlaceholder")} />
                 <textarea
@@ -154,7 +252,7 @@ export default function ShopPage() {
                   onClear={() => setListingMedia(null)}
                   compact
                 />
-                <Button className="w-full" loading={submitting} disabled={!title.trim() || !price} onClick={handleCreate}>
+                <Button className="w-full" loading={submitting} disabled={!canSell || !title.trim() || !price} onClick={handleCreate}>
                   {t("shop.publishListing")}
                 </Button>
                 {message && <p className="text-[10px] text-[#8A8A8A]">{message}</p>}

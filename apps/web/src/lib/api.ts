@@ -710,6 +710,21 @@ export async function upsertBusinessProfile(
   });
 }
 
+export async function getBusinessToolsAccess(
+  token: string
+): Promise<import("@nexus/types").BusinessToolsAccess> {
+  return request(PROFESSIONAL_URL, "/api/v1/business/tools", { headers: authHeaders(token) });
+}
+
+export async function startBusinessToolsTrial(
+  token: string
+): Promise<import("@nexus/types").BusinessToolsAccess> {
+  return request(PROFESSIONAL_URL, "/api/v1/business/subscription/trial", {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
 export async function getHubDashboard(token?: string): Promise<HubDashboard> {
   return request<HubDashboard>(HUB_URL, "/api/v1/dashboard", {
     headers: token ? authHeaders(token) : {},

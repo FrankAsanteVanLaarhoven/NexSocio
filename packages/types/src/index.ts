@@ -192,10 +192,28 @@ export interface ProfessionalProfile {
   bio?: string | null;
 }
 
+export interface BusinessToolsAccess {
+  user_id: string;
+  tools_allowed: boolean;
+  status: string;
+  trial_ends_at?: string | null;
+  message: string;
+}
+
+export interface BusinessToolsStatus {
+  user_id: string;
+  tools_active: boolean;
+  trial_active: boolean;
+  trial_ends_at?: string | null;
+  subscription_status: string;
+  monthly_price_gbp: number;
+}
+
 export interface ProfessionalDashboard {
   profile: ProfessionalProfile;
   insights: { label: string; value: string; trend: string }[];
   connection_suggestions: string[];
+  business_tools?: BusinessToolsAccess | null;
 }
 
 export interface FeatureFlags {
