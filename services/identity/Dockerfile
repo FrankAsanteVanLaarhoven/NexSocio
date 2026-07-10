@@ -1,10 +1,10 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
-RUN pip install --no-cache-dir hatchling
 COPY libs/nexus-common /app/libs/nexus-common
 COPY services/identity /app/services/identity
 WORKDIR /app/services/identity
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir -e ../../libs/nexus-common \
+    fastapi "uvicorn[standard]" "sqlalchemy[asyncio]" asyncpg alembic pydantic-settings bcrypt python-multipart email-validator
 
 FROM python:3.11-slim
 WORKDIR /app

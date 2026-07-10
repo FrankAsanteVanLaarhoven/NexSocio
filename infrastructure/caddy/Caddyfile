@@ -1,0 +1,47 @@
+# API reverse proxy — one host, subdomain routing to docker-compose.prod ports
+# Replace {$API_HOST_IP} in DNS with your server IP; point each subdomain here.
+# Usage: caddy run --config infrastructure/caddy/Caddyfile
+
+{
+  email admin@nexsocio.com
+}
+
+identity.nexsocio.com {
+  reverse_proxy localhost:8001
+}
+
+social.nexsocio.com {
+  reverse_proxy localhost:8002
+}
+
+content.nexsocio.com {
+  reverse_proxy localhost:8003
+}
+
+professional.nexsocio.com {
+  reverse_proxy localhost:8004
+}
+
+safety.nexsocio.com {
+  reverse_proxy localhost:8005
+}
+
+robot.nexsocio.com {
+  reverse_proxy localhost:8006
+}
+
+hub.nexsocio.com {
+  reverse_proxy localhost:8007
+}
+
+commerce.nexsocio.com {
+  reverse_proxy localhost:8008
+}
+
+collaboration.nexsocio.com {
+  reverse_proxy localhost:8009
+}
+
+notification.nexsocio.com {
+  reverse_proxy localhost:8010
+}

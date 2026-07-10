@@ -3,7 +3,7 @@ WORKDIR /app
 COPY libs/nexus-common /app/libs/nexus-common
 COPY services/collaboration /app/services/collaboration
 WORKDIR /app/services/collaboration
-RUN pip install --no-cache-dir ../../libs/nexus-common . 2>/dev/null || pip install -e ../../libs/nexus-common fastapi uvicorn sqlalchemy asyncpg pydantic-settings httpx
+RUN pip install --no-cache-dir ../../libs/nexus-common . 2>/dev/null || pip install -e ../../libs/nexus-common fastapi uvicorn sqlalchemy asyncpg pydantic-settings httpx email-validator
 
 FROM python:3.11-slim
 WORKDIR /app

@@ -28,13 +28,13 @@ async def init_db(engine) -> None:
             )
         # Seed default twins if empty
         await conn.execute(text("""
-            INSERT INTO robot_agent.digital_twins (id, agent_id, owner_id, name, status, safety_channel, social_status, capabilities)
-            SELECT gen_random_uuid(), 'twin-001', '00000000-0000-0000-0000-000000000001', 'NEXSOCIO Explorer', 'standby', 'certified_stub_v1', 'available', 'navigation,sensing'
+            INSERT INTO robot_agent.digital_twins (id, agent_id, owner_id, name, status, safety_channel, social_status, capabilities, is_active)
+            SELECT gen_random_uuid(), 'twin-001', '00000000-0000-0000-0000-000000000001', 'NEXSOCIO Explorer', 'standby', 'certified_stub_v1', 'available', 'navigation,sensing', false
             WHERE NOT EXISTS (SELECT 1 FROM robot_agent.digital_twins WHERE agent_id = 'twin-001')
         """))
         await conn.execute(text("""
-            INSERT INTO robot_agent.digital_twins (id, agent_id, owner_id, name, status, safety_channel, social_status, capabilities)
-            SELECT gen_random_uuid(), 'twin-002', '00000000-0000-0000-0000-000000000001', 'Safety Monitor', 'online', 'certified_stub_v1', 'monitoring', 'safety,alerts'
+            INSERT INTO robot_agent.digital_twins (id, agent_id, owner_id, name, status, safety_channel, social_status, capabilities, is_active)
+            SELECT gen_random_uuid(), 'twin-002', '00000000-0000-0000-0000-000000000001', 'Safety Monitor', 'online', 'certified_stub_v1', 'monitoring', 'safety,alerts', false
             WHERE NOT EXISTS (SELECT 1 FROM robot_agent.digital_twins WHERE agent_id = 'twin-002')
         """))
 

@@ -3,7 +3,7 @@ WORKDIR /app
 COPY libs/nexus-common /app/libs/nexus-common
 COPY services/hub /app/services/hub
 WORKDIR /app/services/hub
-RUN pip install -e ../../libs/nexus-common fastapi uvicorn httpx pydantic-settings
+RUN pip install -e ../../libs/nexus-common fastapi uvicorn httpx pydantic-settings email-validator
 
 FROM python:3.11-slim
 WORKDIR /app

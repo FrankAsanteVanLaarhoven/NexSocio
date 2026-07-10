@@ -3,7 +3,7 @@ WORKDIR /app
 COPY libs/nexus-common /app/libs/nexus-common
 COPY services/commerce /app/services/commerce
 WORKDIR /app/services/commerce
-RUN pip install -e ../../libs/nexus-common fastapi uvicorn sqlalchemy asyncpg pydantic-settings
+RUN pip install -e ../../libs/nexus-common fastapi uvicorn sqlalchemy asyncpg pydantic-settings email-validator
 
 FROM python:3.11-slim
 WORKDIR /app

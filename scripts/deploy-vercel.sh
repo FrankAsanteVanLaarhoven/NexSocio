@@ -40,8 +40,8 @@ ${VERCEL} deploy --prod --yes
 
 echo ""
 echo "==> Attaching domains to project nexsocio..."
-${VERCEL} domains add nexsocio.com 2>/dev/null || echo "  (nexsocio.com — add manually in Vercel → Settings → Domains if needed)"
-${VERCEL} domains add www.nexsocio.com 2>/dev/null || echo "  (www.nexsocio.com — add manually if needed)"
+${VERCEL} domains add nexsocio.com nexsocio 2>/dev/null || echo "  (nexsocio.com already attached)"
+${VERCEL} domains add www.nexsocio.com nexsocio 2>/dev/null || echo "  (www already attached)"
 
 echo ""
 "${ROOT}/scripts/setup-hostinger-vercel-dns.sh"

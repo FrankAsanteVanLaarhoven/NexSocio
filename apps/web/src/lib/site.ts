@@ -4,11 +4,23 @@ import { BRAND_DISPLAY_NAME } from "./brand";
 export const SITE_DOMAIN = "nexsocio.com";
 export const SITE_NAME = BRAND_DISPLAY_NAME;
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  (process.env.NODE_ENV === "production"
-    ? `https://${SITE_DOMAIN}`
-    : "http://localhost:3000");
+function resolveSiteUrl(): string {
+  const fallback =
+    process.env.NODE_ENV === "production"
+      ? `https://${SITE_DOMAIN}`
+      : "http://localhost:3000";
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!raw || raw.includes("\n")) return fallback;
+  try {
+    const parsed = new URL(raw);
+    if (!parsed.protocol.startsWith("http")) return fallback;
+    return raw.replace(/\/$/, "");
+  } catch {
+    return fallback;
+  }
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const SITE_URL_WWW = `https://www.${SITE_DOMAIN}`;
 
