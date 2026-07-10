@@ -11,7 +11,7 @@ export default function ConnectivitySettingsPage() {
         <SettingToggle label="Prefer WiFi for media" hint="Save mobile data" on={true} onChange={() => {}} />
       </Panel>
       <Panel open title="Airdrop & nearby share">
-        <p className="text-xs text-[#8A8A8A]">Share posts, contacts, and files with nearby NEXSOCIO users.</p>
+        <p className="text-xs text-[#8A8A8A]">Share posts, contacts, and files with nearby NexSocio users.</p>
         <SettingToggle label="Discoverable nearby" on={false} onChange={() => {}} />
       </Panel>
       <Panel open title="Remote access">

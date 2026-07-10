@@ -67,7 +67,7 @@ export default function LocationSettingsPage() {
     <SettingsSectionShell section="location">
       <Panel open title="Find Me — Safety">
         <p className="text-xs text-[#8A8A8A] leading-relaxed mb-3">
-          If you get lost while using the app, turn on Find Me so trusted contacts and NEXSOCIO
+          If you get lost while using the app, turn on Find Me so trusted contacts and NexSocio
           members can locate you on the safety map.
         </p>
         <div className="space-y-2">

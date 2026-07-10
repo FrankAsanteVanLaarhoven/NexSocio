@@ -8,7 +8,7 @@ export default function LegalSettingsPage() {
     <SettingsSectionShell section="legal">
       <Panel open title="Terms of service">
         <p className="text-xs text-[#8A8A8A] leading-relaxed">
-          By using NEXSOCIO you agree to our community guidelines, content policies, and acceptable use terms.
+          By using NexSocio you agree to our community guidelines, content policies, and acceptable use terms.
         </p>
       </Panel>
       <Panel open title="Privacy policy">

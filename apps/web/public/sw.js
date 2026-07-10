@@ -16,7 +16,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "NEXSOCIO", body: "New notification", url: "/inbox" };
+  let data = { title: "NexSocio", body: "New notification", url: "/inbox" };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch {

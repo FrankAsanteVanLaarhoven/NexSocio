@@ -10,7 +10,7 @@ export default function GroupsSettingsPage() {
   return (
     <SettingsSectionShell section="groups">
       <Panel open title="Your groups">
-        {["NEXSOCIO Creators", "London Tech", "Digital Twin Builders"].map((g) => (
+        {["NexSocio Creators", "London Tech", "Digital Twin Builders"].map((g) => (
           <div key={g} className="flex justify-between py-2 border-b border-[#1F1F1F] text-sm text-[#F5F5F5]">
             {g}
             <span className="text-[10px] text-[#5A5A5A]">24 members</span>

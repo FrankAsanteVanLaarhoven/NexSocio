@@ -224,7 +224,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     sector: "both",
     items: [
       { id: "voice", label: "Voice control", href: "/settings/account#voice", sector: "both", icon: "🎤" },
-      { id: "ai-tag", label: "NEXSOCIO AI tagging", href: "/settings/account#ai", sector: "both", icon: "✦" },
+      { id: "ai-tag", label: "NexSocio AI tagging", href: "/settings/account#ai", sector: "both", icon: "✦" },
       { id: "ephemeral", label: "Ephemeral navigation", href: "/settings/account#ui", sector: "both", icon: "◌" },
     ],
   },

@@ -1,6 +1,8 @@
-/** Canonical production domain for NEXSOCIO */
+import { BRAND_DISPLAY_NAME } from "./brand";
+
+/** Canonical production domain for NexSocio */
 export const SITE_DOMAIN = "nexsocio.com";
-export const SITE_NAME = "NEXSOCIO";
+export const SITE_NAME = BRAND_DISPLAY_NAME;
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||

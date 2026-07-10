@@ -5,7 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WEB="${ROOT}/apps/web"
 
-echo "NEXSOCIO → Vercel production deploy"
+echo "NexSocio → Vercel production deploy"
+echo "  Vercel project: nexsocio"
 echo "  Monorepo root:  ${ROOT}"
 echo "  App directory:  apps/web"
 echo "  Domain:         nexsocio.com"
@@ -26,8 +27,8 @@ if [[ ! -d .vercel && -d "${WEB}/.vercel" ]]; then
 fi
 
 if [[ ! -d .vercel ]]; then
-  echo "Linking Vercel project (first run)..."
-  ${VERCEL} link
+  echo "Linking Vercel project nexsocio (first run)..."
+  ${VERCEL} link --project nexsocio --yes
 fi
 
 if [[ "${1:-}" == "--sync-env" ]]; then

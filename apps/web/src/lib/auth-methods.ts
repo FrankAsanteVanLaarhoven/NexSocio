@@ -107,11 +107,11 @@ export async function registerWebAuthn(
   const credential = (await navigator.credentials.create({
     publicKey: {
       challenge: textToBuffer(options.challenge),
-      rp: { name: "NEXSOCIO", id: options.rp_id },
+      rp: { name: "NexSocio", id: options.rp_id },
       user: {
         id: textToBuffer(options.user_id || ""),
         name: options.user_name || "user",
-        displayName: options.user_display_name || "NEXSOCIO User",
+        displayName: options.user_display_name || "NexSocio User",
       },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },

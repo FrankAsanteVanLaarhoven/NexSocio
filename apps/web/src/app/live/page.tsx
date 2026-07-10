@@ -92,7 +92,7 @@ export default function LivePage() {
       });
 
       const post = await createMediaPost(session.accessToken, {
-        body: title || "🔴 Live now on NEXSOCIO",
+        body: title || "🔴 Live now on NexSocio",
         post_type: "live",
         context: activeSector,
         org_id: activeSector === "business_corporate" ? activeOrgId : undefined,

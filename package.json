@@ -1,8 +1,8 @@
 {
-  "name": "nexus",
+  "name": "nexsocio",
   "version": "1.0.0",
   "private": true,
-  "description": "NEXSOCIO — production social platform with WebRTC calls, meetings, push inbox, marketplace, digital twins, and safety moderation. Next.js PWA (20 languages) + 10 FastAPI microservices.",
+  "description": "NexSocio — production social platform with WebRTC calls, meetings, push inbox, marketplace, digital twins, and safety moderation. Next.js PWA (20 languages) + 10 FastAPI microservices.",
   "workspaces": [
     "apps/*",
     "packages/*",

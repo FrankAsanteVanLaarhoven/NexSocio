@@ -50,7 +50,7 @@ function ReadContent() {
       )}
 
       {article && (
-        <Panel open title={article.title} subtitle={`${article.publisher} · NEXSOCIO Reader`}>
+        <Panel open title={article.title} subtitle={`${article.publisher} · NexSocio Reader`}>
           <article
             className="prose-invert text-sm leading-relaxed text-[#D4D4D4] space-y-3 [&_a]:text-[#00E5FF] [&_p]:mb-3"
             dangerouslySetInnerHTML={{ __html: article.content_html }}

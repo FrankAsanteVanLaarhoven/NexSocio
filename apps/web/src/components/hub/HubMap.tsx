@@ -49,7 +49,7 @@ export function HubMap({ events }: { events: MapEvent[] }) {
       <div className="absolute bottom-2 left-2 flex gap-3 text-[9px] text-[#5A5A5A]">
         <span><span className="inline-block h-1.5 w-1.5 rounded-full bg-[#00E5FF] mr-1" />Market</span>
         <span><span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7C4DFF] mr-1" />Social</span>
-        <span><span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FFB300] mr-1" />NEXSOCIO</span>
+        <span><span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FFB300] mr-1" />NexSocio</span>
       </div>
     </div>
   );
