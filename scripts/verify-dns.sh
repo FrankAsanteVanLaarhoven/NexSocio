@@ -19,10 +19,11 @@ check() {
 
 check "nexsocio.com" "(expect 76.76.21.21 or Vercel IP)"
 check "www.nexsocio.com" "(expect cname.vercel-dns.com)"
-check "identity.nexsocio.com" "(expect your API server IP)"
-check "professional.nexsocio.com" "(expect your API server IP)"
+
+for sub in identity social content professional safety robot hub commerce collaboration notification; do
+  check "${sub}.nexsocio.com" "(expect your API server IP)"
+done
 
 echo ""
-echo "Hostinger apex + www (Vercel):"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 "${ROOT}/scripts/setup-hostinger-vercel-dns.sh"
