@@ -1,31 +1,40 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import RedirectResponse
 from nexus_common.domain.models import ApiResponse, HealthResponse
 
 from services.professional.api.deps import (
     AuthContext,
     get_auth_context,
+    get_billing_service,
     get_business_compliance_service,
     get_career_service,
     get_compliance_service,
+    get_optional_auth_context,
     get_professional_service,
     get_settings,
     get_token,
 )
+from services.professional.application.billing_service import BillingService
 from services.professional.application.business_compliance import BusinessComplianceService
 from services.professional.application.career_service import CareerService
 from services.professional.application.corporate_compliance import CorporateComplianceService
 from services.professional.application.dtos import (
+    ActivateCheckoutRequest,
+    ActivateSubscriptionResponse,
+    AddToShortlistRequest,
     ApplyJobRequest,
     CareerProfileResponse,
     CreateExperienceRequest,
+    CreateSubscriptionCheckoutRequest,
     CreateJobRequest,
     ExperienceResponse,
     JobApplicationResponse,
     JobPostingResponse,
     PeopleSearchResult,
+    TalentShortlistEntry,
     UpsertCareerProfileRequest,
     BusinessProfileResponse,
     BusinessToolsAccess,
@@ -36,11 +45,15 @@ from services.professional.application.dtos import (
     CorporateServiceListingResponse,
     CreateCorporateServiceRequest,
     CreateOrganizationRequest,
+    CvParseRequest,
+    CvParseResponse,
+    CorporateSectorCommunityResponse,
     OrganizationResponse,
     OrgMembershipResponse,
     OrgNetworkingAccess,
     ProfessionalDashboardResponse,
     ProfessionalProfileResponse,
+    SubscriptionCheckoutResponse,
     SubmitCorporateCredentialsRequest,
     UpdateProfessionalProfileRequest,
     UpsertBusinessProfileRequest,
@@ -138,6 +151,21 @@ async def start_business_tools_trial(
     return ApiResponse(data=await compliance.start_trial(auth.user_id))
 
 
+@router.post("/business/subscription/checkout", response_model=ApiResponse[SubscriptionCheckoutResponse])
+async def business_subscription_checkout(
+    request: CreateSubscriptionCheckoutRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    billing: Annotated[BillingService, Depends(get_billing_service)],
+) -> ApiResponse[SubscriptionCheckoutResponse]:
+    result = await billing.create_business_checkout(
+        auth.user_id,
+        request.success_url,
+        request.cancel_url,
+        customer_email=auth.email or None,
+    )
+    return ApiResponse(data=result)
+
+
 @router.get("/business/users/{user_id}/can-sell", response_model=ApiResponse[bool])
 async def business_user_can_sell(
     user_id: UUID,
@@ -162,6 +190,13 @@ async def corporate_sectors(
     compliance: Annotated[CorporateComplianceService, Depends(get_compliance_service)],
 ) -> ApiResponse[list[dict]]:
     return ApiResponse(data=compliance.list_sectors())
+
+
+@router.get("/corporate/communities", response_model=ApiResponse[list[CorporateSectorCommunityResponse]])
+async def corporate_communities(
+    compliance: Annotated[CorporateComplianceService, Depends(get_compliance_service)],
+) -> ApiResponse[list[CorporateSectorCommunityResponse]]:
+    return ApiResponse(data=await compliance.list_communities())
 
 
 @router.get("/corporate/services/public", response_model=ApiResponse[list[CorporateServiceListingResponse]])
@@ -225,6 +260,59 @@ async def start_networking_trial(
     if not await service.user_belongs_to_org(auth.user_id, org_id):
         raise HTTPException(status_code=403, detail="Must be an organisation member")
     return ApiResponse(data=await compliance.start_networking_trial(org_id))
+
+
+@router.post(
+    "/organizations/{org_id}/subscription/checkout",
+    response_model=ApiResponse[SubscriptionCheckoutResponse],
+)
+async def corporate_subscription_checkout(
+    org_id: UUID,
+    request: CreateSubscriptionCheckoutRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    service: Annotated[ProfessionalService, Depends(get_professional_service)],
+    billing: Annotated[BillingService, Depends(get_billing_service)],
+) -> ApiResponse[SubscriptionCheckoutResponse]:
+    if not await service.user_belongs_to_org(auth.user_id, org_id):
+        raise HTTPException(status_code=403, detail="Must be an organisation member")
+    result = await billing.create_corporate_checkout(
+        org_id,
+        auth.user_id,
+        request.success_url,
+        request.cancel_url,
+        customer_email=auth.email or None,
+    )
+    return ApiResponse(data=result)
+
+
+@router.post("/billing/activate-success", response_model=ApiResponse[ActivateSubscriptionResponse])
+async def activate_subscription_success(
+    request: ActivateCheckoutRequest,
+    billing: Annotated[BillingService, Depends(get_billing_service)],
+) -> ApiResponse[ActivateSubscriptionResponse]:
+    return ApiResponse(data=await billing.activate_from_checkout(request.session_id))
+
+
+@router.get("/billing/activate-dev")
+async def activate_subscription_dev(
+    plan: str,
+    user_id: UUID,
+    success_url: str,
+    billing: Annotated[BillingService, Depends(get_billing_service)],
+    org_id: UUID | None = None,
+) -> RedirectResponse:
+    await billing.activate_dev(plan=plan, user_id=user_id, org_id=org_id)
+    return RedirectResponse(url=success_url, status_code=303)
+
+
+@router.post("/billing/webhook")
+async def stripe_billing_webhook(
+    request: Request,
+    billing: Annotated[BillingService, Depends(get_billing_service)],
+) -> dict[str, str]:
+    payload = await request.body()
+    signature = request.headers.get("stripe-signature")
+    return await billing.handle_webhook(payload, signature)
 
 
 @router.get(
@@ -349,10 +437,20 @@ async def search_people(
 @router.get("/career/jobs", response_model=ApiResponse[list[JobPostingResponse]])
 async def list_jobs(
     career: Annotated[CareerService, Depends(get_career_service)],
+    auth: Annotated[AuthContext | None, Depends(get_optional_auth_context)],
     sector: str | None = Query(default=None),
     q: str | None = Query(default=None),
 ) -> ApiResponse[list[JobPostingResponse]]:
-    return ApiResponse(data=await career.list_jobs(sector=sector, query=q))
+    user_id = auth.user_id if auth else None
+    return ApiResponse(data=await career.list_jobs(sector=sector, query=q, user_id=user_id))
+
+
+@router.post("/career/cv/parse", response_model=ApiResponse[CvParseResponse])
+async def parse_cv(
+    request: CvParseRequest,
+    career: Annotated[CareerService, Depends(get_career_service)],
+) -> ApiResponse[CvParseResponse]:
+    return ApiResponse(data=career.parse_cv(request.cv_url))
 
 
 @router.post("/career/jobs", response_model=ApiResponse[JobPostingResponse])
@@ -389,3 +487,40 @@ async def list_applications(
     career: Annotated[CareerService, Depends(get_career_service)],
 ) -> ApiResponse[list[JobApplicationResponse]]:
     return ApiResponse(data=await career.list_job_applications(auth.user_id, job_id))
+
+
+@router.patch("/career/jobs/{job_id}/close", response_model=ApiResponse[JobPostingResponse])
+@router.post("/career/jobs/{job_id}/close", response_model=ApiResponse[JobPostingResponse])
+async def close_job(
+    job_id: UUID,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    career: Annotated[CareerService, Depends(get_career_service)],
+) -> ApiResponse[JobPostingResponse]:
+    return ApiResponse(data=await career.close_job(auth.user_id, job_id))
+
+
+@router.get("/career/shortlist", response_model=ApiResponse[list[TalentShortlistEntry]])
+async def list_shortlist(
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    career: Annotated[CareerService, Depends(get_career_service)],
+) -> ApiResponse[list[TalentShortlistEntry]]:
+    return ApiResponse(data=await career.list_shortlist(auth.user_id))
+
+
+@router.post("/career/shortlist", response_model=ApiResponse[TalentShortlistEntry])
+async def add_to_shortlist(
+    request: AddToShortlistRequest,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    career: Annotated[CareerService, Depends(get_career_service)],
+) -> ApiResponse[TalentShortlistEntry]:
+    return ApiResponse(data=await career.add_to_shortlist(auth.user_id, request))
+
+
+@router.delete("/career/shortlist/{candidate_user_id}", response_model=ApiResponse[dict])
+async def remove_from_shortlist(
+    candidate_user_id: UUID,
+    auth: Annotated[AuthContext, Depends(get_auth_context)],
+    career: Annotated[CareerService, Depends(get_career_service)],
+) -> ApiResponse[dict]:
+    await career.remove_from_shortlist(auth.user_id, candidate_user_id)
+    return ApiResponse(data={"deleted": True})

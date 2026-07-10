@@ -12,6 +12,8 @@ uploads/
 # Build
 dist/
 .next/
+test-results/
+playwright-report/
 out/
 build/
 *.tsbuildinfo

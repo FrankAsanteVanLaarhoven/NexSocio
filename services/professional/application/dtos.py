@@ -259,6 +259,25 @@ class JobPostingResponse(BaseModel):
     education_level: str | None = None
     status: str
     created_at: datetime | None = None
+    match_score: int | None = None
+
+
+class CvParseRequest(BaseModel):
+    cv_url: str = Field(..., min_length=4, max_length=2048)
+
+
+class CvParseResponse(BaseModel):
+    cv_url: str
+    headline: str | None = None
+    skills: str | None = None
+    extracted_preview: str = ""
+
+
+class CorporateSectorCommunityResponse(BaseModel):
+    id: UUID
+    sector_id: str
+    sector_name: str
+    member_count: int = 0
 
 
 class ApplyJobRequest(BaseModel):
@@ -275,3 +294,40 @@ class JobApplicationResponse(BaseModel):
     cv_url: str | None = None
     status: str
     created_at: datetime | None = None
+
+
+class AddToShortlistRequest(BaseModel):
+    candidate_user_id: UUID
+
+
+class TalentShortlistEntry(BaseModel):
+    id: UUID
+    candidate_user_id: UUID
+    display_name: str
+    headline: str | None = None
+    profile_score: int = 0
+    created_at: datetime | None = None
+
+
+class CreateSubscriptionCheckoutRequest(BaseModel):
+    success_url: str = Field(..., min_length=8, max_length=2048)
+    cancel_url: str = Field(..., min_length=8, max_length=2048)
+
+
+class SubscriptionCheckoutResponse(BaseModel):
+    checkout_url: str
+    session_id: str
+    dev_mode: bool = False
+    plan: str
+
+
+class ActivateCheckoutRequest(BaseModel):
+    session_id: str = Field(..., min_length=3, max_length=256)
+
+
+class ActivateSubscriptionResponse(BaseModel):
+    plan: str
+    status: str
+    user_id: UUID
+    org_id: UUID | None = None
+    message: str

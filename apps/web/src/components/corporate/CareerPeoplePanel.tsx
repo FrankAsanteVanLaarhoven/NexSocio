@@ -3,10 +3,16 @@
 import type { CorporateSector, PeopleSearchResult } from "@nexus/types";
 import { Button, Input, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
-import { searchCareerPeople } from "@/lib/api";
+import { addToTalentShortlist, listTalentShortlist, removeFromTalentShortlist, searchCareerPeople } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 
-export function CareerPeoplePanel({ sectors }: { sectors: CorporateSector[] }) {
+export function CareerPeoplePanel({
+  token,
+  sectors,
+}: {
+  token: string;
+  sectors: CorporateSector[];
+}) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [skills, setSkills] = useState("");
@@ -14,6 +20,9 @@ export function CareerPeoplePanel({ sectors }: { sectors: CorporateSector[] }) {
   const [people, setPeople] = useState<PeopleSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
+  const [shortlistLoadingId, setShortlistLoadingId] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
 
   const runSearch = useCallback(async () => {
     setLoading(true);
@@ -33,9 +42,46 @@ export function CareerPeoplePanel({ sectors }: { sectors: CorporateSector[] }) {
     }
   }, [query, skills, sector]);
 
+  const loadShortlist = useCallback(async () => {
+    try {
+      const entries = await listTalentShortlist(token);
+      setShortlistedIds(new Set(entries.map((e) => e.candidate_user_id)));
+    } catch {
+      setShortlistedIds(new Set());
+    }
+  }, [token]);
+
   useEffect(() => {
     runSearch().catch(() => {});
   }, [runSearch]);
+
+  useEffect(() => {
+    loadShortlist().catch(() => {});
+  }, [loadShortlist]);
+
+  async function toggleShortlist(person: PeopleSearchResult) {
+    setShortlistLoadingId(person.user_id);
+    setMsg(null);
+    try {
+      if (shortlistedIds.has(person.user_id)) {
+        await removeFromTalentShortlist(token, person.user_id);
+        setShortlistedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(person.user_id);
+          return next;
+        });
+        setMsg(t("career.shortlistRemoved"));
+      } else {
+        await addToTalentShortlist(token, person.user_id);
+        setShortlistedIds((prev) => new Set(prev).add(person.user_id));
+        setMsg(t("career.shortlistAdded"));
+      }
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : t("errors.generic"));
+    } finally {
+      setShortlistLoadingId(null);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -121,9 +167,19 @@ export function CareerPeoplePanel({ sectors }: { sectors: CorporateSector[] }) {
                       <p className="mt-1 text-[10px] text-[#5A5A5A]">📍 {p.location}</p>
                     )}
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[10px] text-[#5A5A5A]">{t("career.profileStrength")}</p>
-                    <p className="text-lg font-bold text-[#4FC3F7]">{p.profile_score}%</p>
+                  <div className="shrink-0 text-right space-y-2">
+                    <div>
+                      <p className="text-[10px] text-[#5A5A5A]">{t("career.profileStrength")}</p>
+                      <p className="text-lg font-bold text-[#4FC3F7]">{p.profile_score}%</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={shortlistedIds.has(p.user_id) ? "secondary" : "ghost"}
+                      loading={shortlistLoadingId === p.user_id}
+                      onClick={() => toggleShortlist(p)}
+                    >
+                      {shortlistedIds.has(p.user_id) ? t("career.shortlisted") : t("career.shortlist")}
+                    </Button>
                   </div>
                 </div>
               </li>
@@ -131,6 +187,8 @@ export function CareerPeoplePanel({ sectors }: { sectors: CorporateSector[] }) {
           </ul>
         )}
       </Panel>
+
+      {msg && <p className="text-xs text-[#00E5FF]">{msg}</p>}
     </div>
   );
 }

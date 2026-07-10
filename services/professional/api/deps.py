@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.security.jwt import decode_access_token
+from services.professional.application.billing_service import BillingService
 from services.professional.application.business_compliance import BusinessComplianceService
 from services.professional.application.career_service import CareerService
 from services.professional.application.corporate_compliance import CorporateComplianceService
@@ -17,6 +18,7 @@ from services.professional.infrastructure.database import get_engine, get_sessio
 settings = Settings()
 _session_factory = None
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
 class AuthContext:
@@ -64,6 +66,22 @@ async def get_token(
     return credentials.credentials
 
 
+async def get_optional_auth_context(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(optional_security)],
+) -> AuthContext | None:
+    if not credentials:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials, settings.jwt_secret)
+    except Exception:
+        return None
+    return AuthContext(
+        user_id=UUID(payload["sub"]),
+        email=payload.get("email", ""),
+        display_name=payload.get("display_name", "User"),
+    )
+
+
 async def get_professional_service(
     cfg: Annotated[Settings, Depends(get_settings)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -87,3 +105,10 @@ async def get_business_compliance_service(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> BusinessComplianceService:
     return BusinessComplianceService(db)
+
+
+async def get_billing_service(
+    cfg: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> BillingService:
+    return BillingService(cfg, db)

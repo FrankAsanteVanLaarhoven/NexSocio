@@ -19,6 +19,11 @@ _CORPORATE_ORG_COLUMNS = [
     ("can_serve_public", "BOOLEAN DEFAULT FALSE"),
 ]
 
+_SUBSCRIPTION_STRIPE_COLUMNS = [
+    ("stripe_customer_id", "VARCHAR(128)"),
+    ("stripe_subscription_id", "VARCHAR(128)"),
+]
+
 
 async def init_db(engine) -> None:
     async with engine.begin() as conn:
@@ -28,6 +33,13 @@ async def init_db(engine) -> None:
             await conn.execute(
                 text(f"ALTER TABLE professional.organizations ADD COLUMN IF NOT EXISTS {col} {typedef}")
             )
+        for table in ("business_subscriptions", "org_subscriptions"):
+            for col, typedef in _SUBSCRIPTION_STRIPE_COLUMNS:
+                await conn.execute(
+                    text(
+                        f"ALTER TABLE professional.{table} ADD COLUMN IF NOT EXISTS {col} {typedef}"
+                    )
+                )
 
 
 def get_session_factory(engine) -> async_sessionmaker[AsyncSession]:

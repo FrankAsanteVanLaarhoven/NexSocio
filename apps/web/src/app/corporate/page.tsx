@@ -8,16 +8,20 @@ import type {
   OrgNetworkingAccess,
 } from "@nexus/types";
 import { Button, Input, Panel } from "@nexus/ui";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
+import { CareerEducationPanel } from "@/components/corporate/CareerEducationPanel";
 import { CareerJobsPanel } from "@/components/corporate/CareerJobsPanel";
 import { CareerPeoplePanel } from "@/components/corporate/CareerPeoplePanel";
 import { CareerProfilePanel } from "@/components/corporate/CareerProfilePanel";
 import { CareerRecruiterPanel } from "@/components/corporate/CareerRecruiterPanel";
 import {
+  activateSubscriptionCheckout,
   createCorporateService,
+  createCorporateSubscriptionCheckout,
   createOrganization,
   getCorporateDashboard,
   listCorporateSectors,
@@ -30,7 +34,7 @@ import {
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/i18n";
 
-export default function CorporatePage() {
+function CorporatePageContent() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const setActiveSector = useAuthStore((s) => s.setActiveSector);
@@ -46,6 +50,8 @@ export default function CorporatePage() {
   const [tab, setTab] = useState<
     "profile" | "people" | "jobs" | "recruit" | "companies" | "services"
   >("profile");
+  const [jobsSubTab, setJobsSubTab] = useState<"jobs" | "education">("jobs");
+  const [jobsSectorFilter, setJobsSectorFilter] = useState<string | undefined>(undefined);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -58,9 +64,17 @@ export default function CorporatePage() {
   const [servicePrice, setServicePrice] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   const activeCompliance = compliance.find((c) => c.org_id === activeOrgId);
   const activeNetworking = networking.find((n) => n.org_id === activeOrgId);
+  const isSubscribed = activeNetworking?.status === "active";
+  const showSubscribe =
+    !!activeOrgId &&
+    activeCompliance?.can_serve_public &&
+    !isSubscribed &&
+    (activeNetworking?.status === "expired" || activeNetworking?.status === "none");
 
   async function refresh() {
     if (!session) return;
@@ -82,6 +96,41 @@ export default function CorporatePage() {
     listCorporateSectors().then(setSectors).catch(() => setSectors([]));
     refresh().catch(() => {});
   }, [session, setActiveSector, sectorFilter]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const billing = searchParams.get("billing");
+    if (billing !== "success") return;
+    if (!sessionId || sessionId.startsWith("dev_")) {
+      if (billing === "success") {
+        refresh().then(() => setMsg(t("corporate.subscribed")));
+      }
+      return;
+    }
+    activateSubscriptionCheckout(sessionId)
+      .then((result) => {
+        setMsg(result.message);
+        return refresh();
+      })
+      .catch((e) => setMsg(e instanceof Error ? e.message : t("corporate.subscribeFailed")));
+  }, [searchParams, t]);
+
+  async function handleSubscribe() {
+    if (!session || !activeOrgId) return;
+    setSubscribeLoading(true);
+    setMsg(null);
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    try {
+      const result = await createCorporateSubscriptionCheckout(session.accessToken, activeOrgId, {
+        success_url: `${origin}/corporate?billing=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/corporate`,
+      });
+      window.location.href = result.checkout_url;
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : t("corporate.subscribeFailed"));
+      setSubscribeLoading(false);
+    }
+  }
 
   async function handleCreateOrg() {
     if (!session || !name.trim() || !slug.trim() || !corporateEmail.trim()) return;
@@ -319,10 +368,18 @@ export default function CorporatePage() {
                           </Button>
                         </>
                       )}
-                      {activeCompliance.can_serve_public && !activeNetworking?.networking_allowed && (
+                      {activeCompliance.can_serve_public && !activeNetworking?.networking_allowed && activeNetworking?.status !== "expired" && (
                         <Button size="sm" variant="secondary" loading={loading} onClick={handleTrial}>
                           {t("corporate.startTrial")}
                         </Button>
+                      )}
+                      {showSubscribe && (
+                        <Button size="sm" loading={subscribeLoading} onClick={handleSubscribe}>
+                          {t("corporate.subscribe")}
+                        </Button>
+                      )}
+                      {isSubscribed && (
+                        <p className="text-[10px] text-[#00C853]">{t("corporate.subscribed")}</p>
                       )}
                     </div>
                   </Panel>
@@ -431,15 +488,20 @@ export default function CorporatePage() {
 
             {tab === "people" && (
               activeNetworking?.networking_allowed ? (
-                <CareerPeoplePanel sectors={sectors} />
+                <CareerPeoplePanel token={session.accessToken} sectors={sectors} />
               ) : (
                 <Panel open title={t("corporate.tabPeople")}>
                   <div className="space-y-2 text-xs text-[#8A8A8A]">
                     <p>{t("corporate.networkingGate")}</p>
                     <p>{t("corporate.trialOffer")}</p>
-                    {activeOrgId && activeCompliance?.can_serve_public && (
+                    {activeOrgId && activeCompliance?.can_serve_public && activeNetworking?.status !== "expired" && (
                       <Button size="sm" loading={loading} onClick={handleTrial}>
                         {t("corporate.startTrial")}
+                      </Button>
+                    )}
+                    {showSubscribe && (
+                      <Button size="sm" variant="secondary" loading={subscribeLoading} onClick={handleSubscribe}>
+                        {t("corporate.subscribe")}
                       </Button>
                     )}
                   </div>
@@ -448,7 +510,43 @@ export default function CorporatePage() {
             )}
 
             {tab === "jobs" && session && (
-              <CareerJobsPanel token={session.accessToken} sectors={sectors} />
+              <div className="space-y-4">
+                <div className="flex gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setJobsSubTab("jobs")}
+                    className={`rounded-md px-3 py-1.5 ${
+                      jobsSubTab === "jobs" ? "bg-[#4FC3F7]/15 text-[#4FC3F7]" : "text-[#5A5A5A]"
+                    }`}
+                  >
+                    {t("career.nexJobs")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setJobsSubTab("education")}
+                    className={`rounded-md px-3 py-1.5 ${
+                      jobsSubTab === "education" ? "bg-[#4FC3F7]/15 text-[#4FC3F7]" : "text-[#5A5A5A]"
+                    }`}
+                  >
+                    {t("career.educationTitle")}
+                  </button>
+                </div>
+                {jobsSubTab === "jobs" ? (
+                  <CareerJobsPanel
+                    token={session.accessToken}
+                    sectors={sectors}
+                    initialSector={jobsSectorFilter}
+                  />
+                ) : (
+                  <CareerEducationPanel
+                    sectors={sectors}
+                    onViewJobs={(sector) => {
+                      setJobsSectorFilter(sector);
+                      setJobsSubTab("jobs");
+                    }}
+                  />
+                )}
+              </div>
             )}
 
             {tab === "recruit" && session && (
@@ -472,5 +570,19 @@ export default function CorporatePage() {
         )}
       </AuthHydrationGate>
     </AppShell>
+  );
+}
+
+export default function CorporatePage() {
+  return (
+    <Suspense
+      fallback={
+        <AppShell>
+          <div className="mx-auto max-w-3xl p-6 text-xs text-[#8A8A8A]">Loading…</div>
+        </AppShell>
+      }
+    >
+      <CorporatePageContent />
+    </Suspense>
   );
 }

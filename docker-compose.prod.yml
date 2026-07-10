@@ -1,44 +1,114 @@
-# Production-hardened overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Production stack — postgres, redis, and all 10 FastAPI services.
+# Usage: JWT_SECRET=<strong-secret> docker compose -f docker-compose.prod.yml up -d --build
 
 services:
-  identity:
+  postgres:
+    image: postgres:16-alpine
     restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
     environment:
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
-      LOG_LEVEL: INFO
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus}
+      POSTGRES_DB: nexus
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  content:
+  redis:
+    image: redis:7-alpine
     restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  identity:
+    build:
+      context: .
+      dockerfile: services/identity/Dockerfile
+    restart: always
+    ports:
+      - "8001:8001"
     environment:
-      SAFETY_SERVICE_URL: http://safety:8005
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   social-graph:
+    build:
+      context: .
+      dockerfile: services/social_graph/Dockerfile
     restart: always
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      IDENTITY_SERVICE_URL: http://identity:8001
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_started
+
+  content:
+    build:
+      context: .
+      dockerfile: services/content/Dockerfile
+    restart: always
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      SOCIAL_GRAPH_SERVICE_URL: http://social-graph:8002
+      SAFETY_SERVICE_URL: http://safety:8005
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      social-graph:
+        condition: service_started
 
   professional:
+    build:
+      context: .
+      dockerfile: services/professional/Dockerfile
     restart: always
+    ports:
+      - "8004:8004"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      IDENTITY_SERVICE_URL: http://identity:8001
+      CONTENT_SERVICE_URL: http://content:8003
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_started
 
   safety:
     build:
       context: .
       dockerfile: services/safety/Dockerfile
+    restart: always
     ports:
       - "8005:8005"
-    restart: always
     environment:
-      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
-      CORS_ORIGINS: '["https://nexsocio.com","https://www.nexsocio.com"]'
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,16 +117,90 @@ services:
     build:
       context: .
       dockerfile: services/robot_agent/Dockerfile
+    restart: always
     ports:
       - "8006:8006"
-    restart: always
     environment:
-      DATABASE_URL: postgresql+asyncpg://nexus:nexus@postgres:5432/nexus
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
       SAFETY_SERVICE_URL: http://safety:8005
-      CORS_ORIGINS: '["https://nexsocio.com","https://www.nexsocio.com"]'
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
     depends_on:
       postgres:
         condition: service_healthy
       safety:
         condition: service_started
+
+  hub:
+    build:
+      context: .
+      dockerfile: services/hub/Dockerfile
+    restart: always
+    ports:
+      - "8007:8007"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      CONTENT_SERVICE_URL: http://content:8003
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      content:
+        condition: service_started
+
+  commerce:
+    build:
+      context: .
+      dockerfile: services/commerce/Dockerfile
+    restart: always
+    ports:
+      - "8008:8008"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  collaboration:
+    build:
+      context: .
+      dockerfile: services/collaboration/Dockerfile
+    restart: always
+    ports:
+      - "8009:8009"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      SOCIAL_GRAPH_SERVICE_URL: http://social-graph:8002
+      NOTIFICATION_SERVICE_URL: http://notification:8010
+      TURN_URLS: ${TURN_URLS:-}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_PASSWORD: ${TURN_PASSWORD:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      social-graph:
+        condition: service_started
+      notification:
+        condition: service_started
+
+  notification:
+    build:
+      context: .
+      dockerfile: services/notification/Dockerfile
+    restart: always
+    ports:
+      - "8010:8010"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nexus:${POSTGRES_PASSWORD:-nexus}@postgres:5432/nexus
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?VAPID_PUBLIC_KEY required}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?VAPID_PRIVATE_KEY required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["https://nexsocio.com","https://www.nexsocio.com"]'}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

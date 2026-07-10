@@ -699,6 +699,45 @@ export async function listOrgJobs(token: string, orgId: string): Promise<import(
   });
 }
 
+export async function closeJobPosting(
+  token: string,
+  jobId: string
+): Promise<import("@nexus/types").JobPosting> {
+  return request(PROFESSIONAL_URL, `/api/v1/career/jobs/${jobId}/close`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function listTalentShortlist(
+  token: string
+): Promise<import("@nexus/types").TalentShortlistEntry[]> {
+  return request(PROFESSIONAL_URL, "/api/v1/career/shortlist", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function addToTalentShortlist(
+  token: string,
+  candidateUserId: string
+): Promise<import("@nexus/types").TalentShortlistEntry> {
+  return request(PROFESSIONAL_URL, "/api/v1/career/shortlist", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ candidate_user_id: candidateUserId }),
+  });
+}
+
+export async function removeFromTalentShortlist(
+  token: string,
+  candidateUserId: string
+): Promise<void> {
+  await request(PROFESSIONAL_URL, `/api/v1/career/shortlist/${candidateUserId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+}
+
 export async function listOrgMemberships(
   token: string
 ): Promise<import("@nexus/types").OrgMembership[]> {
@@ -738,6 +777,38 @@ export async function startBusinessToolsTrial(
   return request(PROFESSIONAL_URL, "/api/v1/business/subscription/trial", {
     method: "POST",
     headers: authHeaders(token),
+  });
+}
+
+export async function createBusinessSubscriptionCheckout(
+  token: string,
+  data: { success_url: string; cancel_url: string }
+): Promise<import("@nexus/types").SubscriptionCheckoutResult> {
+  return request(PROFESSIONAL_URL, "/api/v1/business/subscription/checkout", {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createCorporateSubscriptionCheckout(
+  token: string,
+  orgId: string,
+  data: { success_url: string; cancel_url: string }
+): Promise<import("@nexus/types").SubscriptionCheckoutResult> {
+  return request(PROFESSIONAL_URL, `/api/v1/organizations/${orgId}/subscription/checkout`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+}
+
+export async function activateSubscriptionCheckout(
+  sessionId: string
+): Promise<import("@nexus/types").ActivateSubscriptionResult> {
+  return request(PROFESSIONAL_URL, "/api/v1/billing/activate-success", {
+    method: "POST",
+    body: JSON.stringify({ session_id: sessionId }),
   });
 }
 

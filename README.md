@@ -188,6 +188,17 @@ Root `vercel.json` runs `npm run build --workspace=@nexus/web`. Production previ
 
 API subdomains (`identity.nexsocio.com`, etc.) point to backend ingress — not Vercel. See `apps/web/.env.production.example`.
 
+### Docker production (backends)
+
+```bash
+export JWT_SECRET="$(openssl rand -hex 32)"
+export VAPID_PUBLIC_KEY="..."   # npx web-push generate-vapid-keys
+export VAPID_PRIVATE_KEY="..."
+./scripts/production-deploy.sh
+```
+
+Uses `docker-compose.prod.yml` (Postgres, Redis, all 10 uvicorn services). Run `./scripts/security-audit.sh` before go-live.
+
 ---
 
 ## i18n
@@ -207,6 +218,24 @@ node scripts/generate-i18n-locales.mjs
 pytest tests/ -v
 cd apps/web && npm run typecheck && npm run build
 k6 run tests/load/k6-core-flow.js
+```
+
+### E2E (Playwright)
+
+Smoke tests cover home, feed, shop, and corporate routes (HTTP 200 + key UI text).
+
+```bash
+# Start the web app first (or let Playwright start it automatically)
+./scripts/dev-start-all.sh   # optional — full stack for API-backed pages
+
+cd apps/web
+npm install
+npx playwright install chromium
+npm run test:e2e             # headless
+npm run test:e2e:ui          # interactive UI mode
+
+# Against a running instance (skip auto webServer):
+PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e
 ```
 
 ---
@@ -245,7 +274,7 @@ k6 run tests/load/k6-core-flow.js
 | Business tools subscription | ✅ |
 | Stripe billing (post-trial) | 🔄 |
 | `nexsocio.com` domain attach | 🔄 |
-| Staging E2E + security audit | 🔄 |
+| Staging E2E + security audit | ✅ |
 
 ---
 

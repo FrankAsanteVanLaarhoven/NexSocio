@@ -4,6 +4,7 @@ import type { CorporateSector, JobApplication, JobPosting, OrgNetworkingAccess }
 import { Button, Input, Panel } from "@nexus/ui";
 import { useCallback, useEffect, useState } from "react";
 import {
+  closeJobPosting,
   createJobPosting,
   listJobApplications,
   listOrgJobs,
@@ -36,6 +37,7 @@ export function CareerRecruiterPanel({
   const [skillsRequired, setSkillsRequired] = useState("");
   const [educationLevel, setEducationLevel] = useState("");
   const [loading, setLoading] = useState(false);
+  const [closingId, setClosingId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   const loadJobs = useCallback(async () => {
@@ -57,6 +59,24 @@ export function CareerRecruiterPanel({
       setApplications([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCloseJob(jobId: string) {
+    setClosingId(jobId);
+    setMsg(null);
+    try {
+      await closeJobPosting(token, jobId);
+      setMsg(t("career.jobClosed"));
+      if (selectedJobId === jobId) {
+        setSelectedJobId(null);
+        setApplications([]);
+      }
+      await loadJobs();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : t("errors.generic"));
+    } finally {
+      setClosingId(null);
     }
   }
 
@@ -188,17 +208,34 @@ export function CareerRecruiterPanel({
         ) : (
           <ul className="space-y-2">
             {jobs.map((job) => (
-              <li key={job.id}>
+              <li key={job.id} className="border-b border-[#1F1F1F] py-2">
                 <button
                   type="button"
                   onClick={() => loadApplications(job.id)}
-                  className={`flex w-full justify-between border-b border-[#1F1F1F] py-2 text-left text-xs ${
+                  className={`flex w-full justify-between text-left text-xs ${
                     selectedJobId === job.id ? "text-[#4FC3F7]" : "text-[#F5F5F5]"
                   }`}
                 >
                   <span>{job.title}</span>
-                  <span className="text-[10px] text-[#5A5A5A]">{job.status}</span>
+                  <span
+                    className={`text-[10px] ${
+                      job.status === "closed" ? "text-[#FFB300]" : "text-[#5A5A5A]"
+                    }`}
+                  >
+                    {job.status}
+                  </span>
                 </button>
+                {job.status !== "closed" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    loading={closingId === job.id}
+                    className="mt-1"
+                    onClick={() => handleCloseJob(job.id)}
+                  >
+                    {t("career.closeJob")}
+                  </Button>
+                )}
               </li>
             ))}
           </ul>

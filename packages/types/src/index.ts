@@ -620,6 +620,21 @@ export interface CheckoutResult {
   currency: string;
 }
 
+export interface SubscriptionCheckoutResult {
+  checkout_url: string;
+  session_id: string;
+  dev_mode: boolean;
+  plan: string;
+}
+
+export interface ActivateSubscriptionResult {
+  plan: string;
+  status: string;
+  user_id: string;
+  org_id?: string | null;
+  message: string;
+}
+
 export interface MarketplaceDashboard {
   active_listings: number;
   total_sales: number;
@@ -895,5 +910,14 @@ export interface JobApplication {
   cover_note?: string | null;
   cv_url?: string | null;
   status: string;
+  created_at?: string | null;
+}
+
+export interface TalentShortlistEntry {
+  id: string;
+  candidate_user_id: string;
+  display_name: string;
+  headline?: string | null;
+  profile_score: number;
   created_at?: string | null;
 }

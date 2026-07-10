@@ -9,13 +9,15 @@ import { useTranslation } from "@/i18n";
 export function CareerJobsPanel({
   token,
   sectors,
+  initialSector,
 }: {
   token: string;
   sectors: CorporateSector[];
+  initialSector?: string;
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
-  const [sector, setSector] = useState("all");
+  const [sector, setSector] = useState(initialSector ?? "all");
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
@@ -37,6 +39,10 @@ export function CareerJobsPanel({
       setLoading(false);
     }
   }, [query, sector]);
+
+  useEffect(() => {
+    if (initialSector) setSector(initialSector);
+  }, [initialSector]);
 
   useEffect(() => {
     loadJobs().catch(() => {});

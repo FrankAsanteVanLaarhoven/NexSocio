@@ -3,7 +3,8 @@
 import type { BusinessProfile, BusinessToolsAccess, MarketplaceProduct, Order } from "@nexus/types";
 import { Button, Input, Panel } from "@nexus/ui";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { AuthHydrationGate } from "@/components/AuthHydrationGate";
 import { LoginGateway } from "@/components/auth/LoginGateway";
@@ -11,6 +12,8 @@ import { MediaUploader } from "@/components/MediaUploader";
 import { StatCard } from "@/components/settings/SettingsSectionShell";
 import type { UploadedMedia } from "@/lib/media-upload";
 import {
+  activateSubscriptionCheckout,
+  createBusinessSubscriptionCheckout,
   createProduct,
   getBusinessProfile,
   getBusinessToolsAccess,
@@ -32,7 +35,7 @@ function formatPrice(amount: number, currency: string) {
   return `${sym}${amount.toFixed(2)}`;
 }
 
-export default function ShopPage() {
+function ShopPageContent() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const setActiveSector = useAuthStore((s) => s.setActiveSector);
@@ -55,8 +58,13 @@ export default function ShopPage() {
   const [bizTagline, setBizTagline] = useState("");
   const [bizSaving, setBizSaving] = useState(false);
   const [trialLoading, setTrialLoading] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   const canSell = toolsAccess?.tools_allowed ?? false;
+  const isSubscribed = toolsAccess?.status === "active";
+  const showSubscribe =
+    businessProfile && !isSubscribed && (toolsAccess?.status === "expired" || toolsAccess?.status === "none");
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -88,6 +96,41 @@ export default function ShopPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const billing = searchParams.get("billing");
+    if (billing !== "success") return;
+    if (!sessionId || sessionId.startsWith("dev_")) {
+      if (billing === "success") {
+        load().then(() => setMessage(t("shop.subscribed")));
+      }
+      return;
+    }
+    activateSubscriptionCheckout(sessionId)
+      .then((result) => {
+        setMessage(result.message);
+        return load();
+      })
+      .catch((e) => setMessage(e instanceof Error ? e.message : t("shop.subscribeFailed")));
+  }, [searchParams, load, t]);
+
+  async function handleSubscribe() {
+    if (!session) return;
+    setSubscribeLoading(true);
+    setMessage(null);
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    try {
+      const result = await createBusinessSubscriptionCheckout(session.accessToken, {
+        success_url: `${origin}/shop?billing=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/shop`,
+      });
+      window.location.href = result.checkout_url;
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : t("shop.subscribeFailed"));
+      setSubscribeLoading(false);
+    }
+  }
 
   async function handleSaveBusiness() {
     if (!session || !bizName.trim()) return;
@@ -196,10 +239,18 @@ export default function ShopPage() {
                   {toolsAccess?.message ?? t("shop.toolsGate")}
                 </p>
                 <p className="text-[10px] text-[#5A5A5A]">{t("shop.trialOffer")}</p>
-                {!canSell && businessProfile && (
+                {!canSell && businessProfile && toolsAccess?.status !== "expired" && (
                   <Button size="sm" loading={trialLoading} onClick={handleStartTrial}>
                     {t("shop.startTrial")}
                   </Button>
+                )}
+                {showSubscribe && (
+                  <Button size="sm" variant="secondary" loading={subscribeLoading} onClick={handleSubscribe}>
+                    {t("shop.subscribe")}
+                  </Button>
+                )}
+                {isSubscribed && (
+                  <p className="text-[10px] text-[#00C853]">{t("shop.subscribed")}</p>
                 )}
                 {!businessProfile && (
                   <p className="text-[10px] text-[#8A8A8A]">{t("shop.needBusinessPage")}</p>
@@ -323,5 +374,19 @@ export default function ShopPage() {
         )}
       </AuthHydrationGate>
     </AppShell>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppShell>
+          <div className="mx-auto max-w-lg p-6 text-xs text-[#8A8A8A]">Loading…</div>
+        </AppShell>
+      }
+    >
+      <ShopPageContent />
+    </Suspense>
   );
 }

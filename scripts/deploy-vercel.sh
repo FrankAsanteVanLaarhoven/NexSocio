@@ -39,9 +39,10 @@ echo "Deploying to production (full monorepo)..."
 ${VERCEL} deploy --prod --yes
 
 echo ""
-echo "Add domains in Vercel (if not linked to GitHub yet):"
-echo "  vercel domains add nexsocio.com"
-echo "  vercel domains add www.nexsocio.com"
+echo "==> Attaching domains to project nexsocio..."
+${VERCEL} domains add nexsocio.com 2>/dev/null || echo "  (nexsocio.com — add manually in Vercel → Settings → Domains if needed)"
+${VERCEL} domains add www.nexsocio.com 2>/dev/null || echo "  (www.nexsocio.com — add manually if needed)"
+
 echo ""
 "${ROOT}/scripts/setup-hostinger-vercel-dns.sh"
 echo ""

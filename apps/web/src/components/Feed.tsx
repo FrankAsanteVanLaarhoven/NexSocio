@@ -28,6 +28,7 @@ import { resolveCurrentPosition } from "@/lib/location";
 import { useSettingsStore } from "@/lib/settings-store";
 import { useTranslation } from "@/i18n";
 import type { OrgMembership, PlaceResult } from "@nexus/types";
+import { BusinessOnboardingModal } from "@/components/business/BusinessOnboardingModal";
 import { detectBusinessIntent } from "@/lib/lane-guard";
 import {
   feedTypeForSector,
@@ -651,22 +652,7 @@ export function Feed() {
           {activeSector === "personal" && (
             <p className="text-[10px] text-[#5A5A5A]">{t("feed.personalLaneHint")}</p>
           )}
-          {laneFlag && activeSector === "personal" && (
-            <div className="rounded-md border border-[#FFB300]/40 bg-[#FFB300]/10 p-3 space-y-2">
-              <p className="text-xs text-[#FFB300]">{t("feed.laneBusinessFlag")}</p>
-              <p className="text-[10px] text-[#8A8A8A]">{t("feed.laneBusinessHint")}</p>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" onClick={switchToBusinessLane}>
-                  {t("feed.switchToBusiness")}
-                </Button>
-                <Link href="/shop">
-                  <Button size="sm" variant="secondary">
-                    {t("feed.setupBusinessTools")}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
+
           {usedAi && (
             <div className="flex items-center gap-2 rounded-md border border-[#7C4DFF]/30 bg-[#7C4DFF]/5 px-3 py-2">
               <span className="text-[10px] uppercase tracking-wider text-[#7C4DFF]">{t("feed.aiTag")}</span>
@@ -737,6 +723,17 @@ export function Feed() {
           ))}
         </div>
       )}
+
+      <BusinessOnboardingModal
+        open={laneFlag && activeSector === "personal"}
+        token={session.accessToken}
+        onClose={() => setLaneFlag(false)}
+        onSwitchLane={switchToBusinessLane}
+        onComplete={() => {
+          setLaneFlag(false);
+          setComposing(true);
+        }}
+      />
     </div>
   );
 }

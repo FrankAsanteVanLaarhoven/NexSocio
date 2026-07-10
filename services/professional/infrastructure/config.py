@@ -10,3 +10,8 @@ class Settings(BaseSettings):
     content_service_url: str = "http://localhost:8003"
     jwt_secret: str = "change-me-in-production"
     cors_origins: list[str] = ["http://localhost:3000"]
+    public_api_url: str = "http://localhost:8004"
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_business_price_id: str | None = None
+    stripe_corporate_price_id: str | None = None

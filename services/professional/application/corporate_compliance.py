@@ -19,6 +19,7 @@ from nexus_common.domain.corporate_sectors import (
 from services.professional.application.dtos import (
     CorporateComplianceStatus,
     CorporateCredentialResponse,
+    CorporateSectorCommunityResponse,
     CorporateServiceListingResponse,
     OrgNetworkingAccess,
     SubmitCorporateCredentialsRequest,
@@ -26,6 +27,7 @@ from services.professional.application.dtos import (
 )
 from services.professional.infrastructure.models import (
     CorporateCredentialModel,
+    CorporateSectorCommunityModel,
     CorporateServiceListingModel,
     OrganizationModel,
     OrgSubscriptionModel,
@@ -39,6 +41,36 @@ class CorporateComplianceService:
     @staticmethod
     def list_sectors() -> list[dict]:
         return list(CORPORATE_SECTORS)
+
+    async def list_communities(self) -> list[CorporateSectorCommunityResponse]:
+        """List sector communities (stub — seeded from corporate sector taxonomy)."""
+        result = await self.db.execute(
+            select(CorporateSectorCommunityModel).order_by(CorporateSectorCommunityModel.sector_name)
+        )
+        rows = list(result.scalars().all())
+        if not rows:
+            for sector in CORPORATE_SECTORS:
+                row = CorporateSectorCommunityModel(
+                    id=uuid4(),
+                    sector_id=sector["id"],
+                    sector_name=sector["label"],
+                    member_count=0,
+                )
+                self.db.add(row)
+                rows.append(row)
+            await self.db.commit()
+            for row in rows:
+                await self.db.refresh(row)
+
+        return [
+            CorporateSectorCommunityResponse(
+                id=r.id,
+                sector_id=r.sector_id,
+                sector_name=r.sector_name,
+                member_count=r.member_count,
+            )
+            for r in rows
+        ]
 
     async def _org(self, org_id: UUID) -> OrganizationModel:
         result = await self.db.execute(

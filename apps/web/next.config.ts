@@ -5,11 +5,12 @@ import { fileURLToPath } from "url";
 const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 const nextConfig: NextConfig = {
+  compress: true,
   devIndicators: false,
   outputFileTracingRoot: rootDir,
   transpilePackages: ["@nexus/ui", "@nexus/types"],
   experimental: {
-    optimizePackageImports: ["@nexus/ui"],
+    optimizePackageImports: ["@nexus/ui", "lucide-react"],
   },
   headers: async () => [
     {

@@ -57,6 +57,8 @@ class OrgSubscriptionModel(Base):
     trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
     monthly_price_gbp: Mapped[float] = mapped_column(Float, default=49.0)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -177,6 +179,31 @@ class BusinessProfileModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class TalentShortlistModel(Base):
+    """Recruiter-curated talent shortlist for corporate hiring."""
+
+    __tablename__ = "talent_shortlist"
+    __table_args__ = {"schema": "professional"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recruiter_user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    candidate_user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CorporateSectorCommunityModel(Base):
+    """Stub sector communities — one per corporate sector taxonomy entry."""
+
+    __tablename__ = "corporate_sector_communities"
+    __table_args__ = {"schema": "professional"}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sector_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    sector_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    member_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class BusinessSubscriptionModel(Base):
     """SME / solo-trader business tools — marketplace selling and promo lane."""
 
@@ -191,4 +218,6 @@ class BusinessSubscriptionModel(Base):
     trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
     monthly_price_gbp: Mapped[float] = mapped_column(Float, default=19.0)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
