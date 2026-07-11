@@ -1,0 +1,44 @@
+# Caddy inside docker-compose.prod — routes subdomains to service containers
+{
+  email frankleroyvan@gmail.com
+}
+
+identity.nexsocio.com {
+  reverse_proxy identity:8001
+}
+
+social.nexsocio.com {
+  reverse_proxy social-graph:8002
+}
+
+content.nexsocio.com {
+  reverse_proxy content:8003
+}
+
+professional.nexsocio.com {
+  reverse_proxy professional:8004
+}
+
+safety.nexsocio.com {
+  reverse_proxy safety:8005
+}
+
+robot.nexsocio.com {
+  reverse_proxy robot-agent:8006
+}
+
+hub.nexsocio.com {
+  reverse_proxy hub:8007
+}
+
+commerce.nexsocio.com {
+  reverse_proxy commerce:8008
+}
+
+collaboration.nexsocio.com {
+  reverse_proxy collaboration:8009
+}
+
+notification.nexsocio.com {
+  reverse_proxy notification:8010
+}
