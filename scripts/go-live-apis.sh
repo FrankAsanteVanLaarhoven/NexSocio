@@ -3,6 +3,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/resolve-ngrok.sh
+source "${ROOT}/scripts/lib/resolve-ngrok.sh"
 cd "${ROOT}"
 
 echo "╔══════════════════════════════════════════════════════════╗"
@@ -37,8 +39,17 @@ if [[ -z "${NGROK_AUTHTOKEN:-}" ]]; then
   fi
 fi
 
+if ! resolve_ngrok_bin; then
+  echo "ngrok 3.20+ required. Your /usr/local/bin/ngrok is too old."
+  echo "  Fix: sudo ngrok update"
+  echo "  Or:  /opt/homebrew/bin/brew upgrade ngrok/ngrok/ngrok"
+  echo "  Then: export PATH=\"/opt/homebrew/bin:\$PATH\""
+  exit 1
+fi
+echo "    Using ${NGROK_BIN} ($(${NGROK_BIN} version 2>/dev/null | head -1))"
+
 if [[ -n "${NGROK_AUTHTOKEN:-}" ]]; then
-  ngrok config add-authtoken "${NGROK_AUTHTOKEN}" 2>/dev/null || true
+  "${NGROK_BIN}" config add-authtoken "${NGROK_AUTHTOKEN}" 2>/dev/null || true
   NGROK_HAS_AUTH=true
 fi
 
@@ -63,7 +74,7 @@ echo ""
 # ── Step 2: Quick tunnel test ──
 echo "==> [2/3] ngrok QUICK test (background, 60s)"
 pkill -f "ngrok http 80" 2>/dev/null || true
-ngrok http 80 --log=stdout > /tmp/nexsocio-ngrok.log 2>&1 &
+"${NGROK_BIN}" http 80 --log=stdout > /tmp/nexsocio-ngrok.log 2>&1 &
 NGROK_PID=$!
 sleep 5
 

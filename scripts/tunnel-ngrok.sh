@@ -3,6 +3,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/resolve-ngrok.sh
+source "${ROOT}/scripts/lib/resolve-ngrok.sh"
 NGROK_CONFIG="${ROOT}/infrastructure/ngrok/ngrok.yml"
 NGROK_EXAMPLE="${ROOT}/infrastructure/ngrok/ngrok.yml.example"
 
@@ -11,10 +13,11 @@ echo "║  NexSocio ngrok tunnel (ASK4 / no port forward)  ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
-if ! command -v ngrok >/dev/null 2>&1; then
-  echo "Install ngrok: brew install ngrok/ngrok/ngrok"
+if ! resolve_ngrok_bin; then
+  echo "ngrok 3.20+ required. Run: export PATH=\"/opt/homebrew/bin:\$PATH\""
   exit 1
 fi
+echo "Using ${NGROK_BIN}"
 
 # ── Ensure prod stack + Caddy are up ──
 if [[ ! -f "${ROOT}/.env.prod" ]]; then
@@ -34,7 +37,7 @@ if [[ "${MODE}" == "--quick" ]]; then
   echo "    Caddy on :80 receives traffic; subdomains won't match on free URL."
   echo "    Press Ctrl+C to stop."
   echo ""
-  exec ngrok http 80
+  exec "${NGROK_BIN}" http 80
 fi
 
 if [[ "${MODE}" == "--paid" || -f "${NGROK_CONFIG}" ]]; then
@@ -55,7 +58,7 @@ if [[ "${MODE}" == "--paid" || -f "${NGROK_CONFIG}" ]]; then
   echo "    Update Hostinger API records: A → CNAME per ngrok dashboard."
   echo "    Press Ctrl+C to stop."
   echo ""
-  exec ngrok start --all --config "${NGROK_CONFIG}"
+  exec "${NGROK_BIN}" start --all --config "${NGROK_CONFIG}"
 fi
 
 cat <<'EOF'
