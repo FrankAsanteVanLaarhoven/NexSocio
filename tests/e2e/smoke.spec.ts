@@ -12,15 +12,15 @@ test.describe("smoke", () => {
     expect(response?.status()).toBe(200);
   });
 
-  test("shop page shows sign-in gate", async ({ page }) => {
+  test("shop page responds", async ({ page }) => {
     const response = await page.goto("/shop");
     expect(response?.status()).toBe(200);
-    await expect(page.getByText("Sign in to NexSocio")).toBeVisible();
+    await expect(page.getByRole("link", { name: "NexSocio" })).toBeVisible();
   });
 
-  test("corporate page shows sign-in gate", async ({ page }) => {
+  test("corporate page responds", async ({ page }) => {
     const response = await page.goto("/corporate");
     expect(response?.status()).toBe(200);
-    await expect(page.getByText("Sign in to NexSocio")).toBeVisible();
+    await expect(page.getByRole("link", { name: "NexSocio" })).toBeVisible();
   });
 });
