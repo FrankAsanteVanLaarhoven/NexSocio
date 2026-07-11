@@ -50,6 +50,9 @@ Thumbs.db
 # CDK
 infrastructure/cdk/cdk.out/
 
+# ngrok (local tunnel config with authtoken)
+infrastructure/ngrok/ngrok.yml
+
 # Logs
 *.log
 npm-debug.log*

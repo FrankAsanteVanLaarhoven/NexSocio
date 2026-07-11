@@ -1,0 +1,53 @@
+# ngrok v3 — multi-subdomain API tunnel (requires ngrok paid + reserved domains)
+# Copy: cp infrastructure/ngrok/ngrok.yml.example infrastructure/ngrok/ngrok.yml
+# Set NGROK_AUTHTOKEN, then: ./scripts/tunnel-ngrok.sh
+#
+# In Hostinger, change each API A record → CNAME to the target ngrok shows
+# in the dashboard for that reserved domain.
+
+version: 3
+
+agent:
+  authtoken: YOUR_NGROK_AUTHTOKEN
+
+endpoints:
+  - name: identity
+    url: https://identity.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: social
+    url: https://social.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: content
+    url: https://content.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: professional
+    url: https://professional.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: safety
+    url: https://safety.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: robot
+    url: https://robot.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: hub
+    url: https://hub.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: commerce
+    url: https://commerce.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: collaboration
+    url: https://collaboration.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
+  - name: notification
+    url: https://notification.nexsocio.com
+    upstream:
+      url: http://127.0.0.1:80
