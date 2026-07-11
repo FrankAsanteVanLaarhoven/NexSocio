@@ -52,6 +52,7 @@ infrastructure/cdk/cdk.out/
 
 # ngrok (local tunnel config with authtoken)
 infrastructure/ngrok/ngrok.yml
+.env.ngrok
 
 # Logs
 *.log
