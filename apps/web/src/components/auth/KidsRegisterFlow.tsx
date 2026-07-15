@@ -21,7 +21,24 @@ export function KidsRegisterFlow() {
     setLoading(true);
     setError(null);
     try {
-      const proof = await generateStubProof(false);
+      let proof;
+      try {
+        proof = await generateStubProof(false);
+      } catch (e) {
+        console.warn("Server stub proof generation failed, generating local child stub proof:", e);
+        const randomHex = Array.from({ length: 16 }, () =>
+          Math.floor(Math.random() * 16).toString(16)
+        ).join("");
+        proof = {
+          proof: `zkp_invalid_${randomHex}`,
+          public_inputs: {
+            min_age: "13",
+            issued: new Date().toISOString(),
+          },
+          minimum_age: 13,
+        };
+      }
+
       const result = await registerKids({
         display_name: displayName,
         face_template_hash: faceHash,

@@ -1,4 +1,6 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from nexus_common.domain.models import parse_cors_origins
 
 
 class Settings(BaseSettings):
@@ -12,3 +14,8 @@ class Settings(BaseSettings):
     yahoo_user_agent: str = "Mozilla/5.0 (compatible; NEXSOCIO-Hub/1.0)"
     google_maps_api_key: str | None = None
     content_service_url: str = "http://localhost:8003"
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors(cls, v):
+        return parse_cors_origins(v)

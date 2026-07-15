@@ -1,4 +1,6 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from nexus_common.domain.models import parse_cors_origins
 
 
 class Settings(BaseSettings):
@@ -14,3 +16,8 @@ class Settings(BaseSettings):
     vapid_private_key: str = "UUxI4O8-FbRouAevSmBQ6o18hgj4fZePrNiMKQsW1Iw"
     vapid_claims_email: str = "mailto:admin@nexsocio.com"
     web_push_enabled: bool = True
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors(cls, v):
+        return parse_cors_origins(v)

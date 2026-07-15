@@ -1,4 +1,6 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from nexus_common.domain.models import parse_cors_origins
 
 
 class Settings(BaseSettings):
@@ -13,3 +15,8 @@ class Settings(BaseSettings):
     turn_urls: str = ""
     turn_username: str = ""
     turn_password: str = ""
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors(cls, v):
+        return parse_cors_origins(v)

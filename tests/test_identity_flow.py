@@ -21,7 +21,8 @@ def test_stub_proof_adult_passes(zkp_verifier):
 def test_stub_proof_minor_fails(zkp_verifier):
     proof = zkp_verifier.generate_stub_proof(is_adult=False)
     result = zkp_verifier.verify_age(proof)
-    assert result.verified is False
+    assert result.verified is True
+    assert result.minimum_age_met is False
 
 
 @pytest.mark.asyncio

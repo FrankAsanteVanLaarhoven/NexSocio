@@ -45,3 +45,16 @@ class ZKPVerificationResult(BaseModel):
     minimum_age_met: bool
     message: str
     proof_hash: str | None = None
+
+
+def parse_cors_origins(v) -> list[str]:
+    import json
+    if isinstance(v, str):
+        try:
+            decoded = json.loads(v)
+            if isinstance(decoded, list):
+                return [str(x) for x in decoded]
+        except json.JSONDecodeError:
+            pass
+        return [x.strip() for x in v.split(",") if x.strip()]
+    return v

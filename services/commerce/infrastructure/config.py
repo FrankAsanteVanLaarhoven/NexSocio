@@ -1,4 +1,6 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from nexus_common.domain.models import parse_cors_origins
 
 
 class Settings(BaseSettings):
@@ -11,3 +13,8 @@ class Settings(BaseSettings):
     default_wallet_balance: float = 150.0
     default_currency: str = "GBP"
     professional_service_url: str = "http://localhost:8004"
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors(cls, v):
+        return parse_cors_origins(v)

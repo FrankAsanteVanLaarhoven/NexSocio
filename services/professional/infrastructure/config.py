@@ -1,4 +1,6 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from nexus_common.domain.models import parse_cors_origins
 
 
 class Settings(BaseSettings):
@@ -15,3 +17,8 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str | None = None
     stripe_business_price_id: str | None = None
     stripe_corporate_price_id: str | None = None
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors(cls, v):
+        return parse_cors_origins(v)
