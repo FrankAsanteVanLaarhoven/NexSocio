@@ -14,6 +14,7 @@ class TokenPayload(BaseModel):
     email: str
     display_name: str = ""
     mode: str
+    role: str = "user"
     exp: int
 
     def resolved_display_name(self) -> str:
@@ -27,6 +28,7 @@ def create_access_token(
     mode: str,
     secret: str,
     expires_minutes: int = DEFAULT_EXPIRE_MINUTES,
+    role: str = "user",
 ) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     payload: dict[str, Any] = {
@@ -34,6 +36,7 @@ def create_access_token(
         "email": email,
         "display_name": display_name,
         "mode": mode,
+        "role": role,
         "exp": expire,
     }
     return jwt.encode(payload, secret, algorithm=DEFAULT_ALGORITHM)

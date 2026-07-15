@@ -49,6 +49,8 @@ class UserResponse(BaseModel):
     email: str
     display_name: str
     mode: UserMode
+    role: str = "user"
+    status: str = "active"
     age_verified: bool
     bio: str | None = None
     headline: str | None = None
@@ -68,3 +70,16 @@ class PublicUserResponse(BaseModel):
     headline: str | None = None
     skills: str | None = None
     company: str | None = None
+
+
+class AdminMemberResponse(BaseModel):
+    id: UUID
+    email: str
+    display_name: str
+    mode: str
+    role: str
+    status: str
+    is_live: bool
+    last_login_at: datetime | None = None
+    location_label: str | None = None
+    created_at: datetime

@@ -81,6 +81,8 @@ class AuthLoginResponse(BaseModel):
     email: str
     display_name: str
     mode: UserMode
+    role: str
+    status: str
     age_verified: bool
     access_token: str
     auth_method: str

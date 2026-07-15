@@ -10,6 +10,8 @@ export function applyAuthLogin(result: AuthLoginResponse | KidsRegisterResponse)
     email,
     displayName: result.display_name,
     mode: result.mode,
+    role: "role" in result ? result.role : "user",
+    status: "status" in result ? result.status : "active",
     ageVerified: "age_verified" in result ? result.age_verified : true,
     viewContext: "personal" as const,
   });

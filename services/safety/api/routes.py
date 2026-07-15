@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from nexus_common.domain.models import ApiResponse, HealthResponse
 
-from services.safety.api.deps import get_current_user_id, get_safety_service, get_settings
+from services.safety.api.deps import get_current_user_id, get_current_admin, get_safety_service, get_settings
 from services.safety.application.dtos import (
     ModerateRequest,
     ModerationResponse,
@@ -44,6 +44,15 @@ async def report(
 
 @router.get("/dashboard", response_model=ApiResponse[SafetyDashboardResponse])
 async def dashboard(
+    service: Annotated[SafetyService, Depends(get_safety_service)],
+) -> ApiResponse[SafetyDashboardResponse]:
+    result = await service.get_dashboard()
+    return ApiResponse(data=result)
+
+
+@router.get("/admin/safety/dashboard", response_model=ApiResponse[SafetyDashboardResponse])
+async def admin_dashboard(
+    admin_id: Annotated[UUID, Depends(get_current_admin)],
     service: Annotated[SafetyService, Depends(get_safety_service)],
 ) -> ApiResponse[SafetyDashboardResponse]:
     result = await service.get_dashboard()

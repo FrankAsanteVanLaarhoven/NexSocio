@@ -81,6 +81,8 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
         email: result.email,
         displayName: result.display_name,
         mode: result.mode,
+        role: result.role || "user",
+        status: result.status || "active",
         ageVerified: result.age_verified,
         viewContext: "personal",
       });

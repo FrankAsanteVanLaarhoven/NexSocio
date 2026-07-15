@@ -414,6 +414,8 @@ export interface AuthSession {
   email: string;
   displayName: string;
   mode: UserMode;
+  role: string;
+  status: string;
   ageVerified: boolean;
   viewContext: PostSector;
 }
@@ -431,6 +433,8 @@ export interface AuthLoginResponse {
   email: string;
   display_name: string;
   mode: UserMode;
+  role: string;
+  status: string;
   age_verified: boolean;
   access_token: string;
   auth_method: string;

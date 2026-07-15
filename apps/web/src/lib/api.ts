@@ -1457,3 +1457,59 @@ export async function listPodcastEpisodes(
     headers: authHeaders(token),
   });
 }
+
+export interface AdminMember {
+  id: string;
+  email: string;
+  display_name: string;
+  mode: string;
+  role: string;
+  status: string;
+  is_live: boolean;
+  last_login_at: string | null;
+  location_label: string | null;
+  created_at: string;
+}
+
+export interface SafetyDashboardData {
+  total_events: number;
+  blocked_count: number;
+  review_count: number;
+  open_reports: number;
+  incident_rate: number;
+  recent_events: Array<{
+    id: string;
+    action: string;
+    score: string;
+    labels: string;
+    status: string;
+    created_at: string;
+  }>;
+}
+
+export async function adminListMembers(token: string): Promise<AdminMember[]> {
+  return request<AdminMember[]>(IDENTITY_URL, "/api/v1/admin/users", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function adminUpdateMemberStatus(
+  token: string,
+  userId: string,
+  status: "active" | "suspended" | "banned"
+): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(
+    IDENTITY_URL,
+    `/api/v1/admin/users/${userId}/status?status=${encodeURIComponent(status)}`,
+    {
+      method: "PATCH",
+      headers: authHeaders(token),
+    }
+  );
+}
+
+export async function adminGetSafetyDashboard(token: string): Promise<SafetyDashboardData> {
+  return request<SafetyDashboardData>(SAFETY_URL, "/api/v1/admin/safety/dashboard", {
+    headers: authHeaders(token),
+  });
+}

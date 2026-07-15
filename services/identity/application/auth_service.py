@@ -66,14 +66,21 @@ class AuthService:
         return bcrypt.checkpw(pin.encode(), pin_hash.encode())
 
     def _issue_token(self, user: UserModel, auth_method: str) -> AuthLoginResponse:
+        if getattr(user, "status", "active") in ("suspended", "banned"):
+            raise HTTPException(
+                status_code=403,
+                detail=f"This account has been {user.status} due to safety policy violations."
+            )
         token = create_access_token(
-            user.id, user.email, user.display_name, user.mode, self.jwt_secret
+            user.id, user.email, user.display_name, user.mode, self.jwt_secret, role=user.role
         )
         return AuthLoginResponse(
             user_id=user.id,
             email=user.email,
             display_name=user.display_name,
             mode=UserMode(user.mode),
+            role=user.role,
+            status=user.status,
             age_verified=user.age_verified,
             access_token=token,
             auth_method=auth_method,
@@ -434,7 +441,7 @@ class AuthService:
         await self.db.refresh(user)
 
         token = create_access_token(
-            user_id, email, request.display_name, UserMode.KIDS.value, self.jwt_secret
+            user_id, email, request.display_name, UserMode.KIDS.value, self.jwt_secret, role=user.role
         )
         return KidsRegisterResponse(
             user_id=user_id,

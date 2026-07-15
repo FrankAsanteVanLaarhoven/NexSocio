@@ -19,6 +19,8 @@ class UserModel(Base):
     display_name: Mapped[str] = mapped_column(String(64), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     mode: Mapped[str] = mapped_column(String(32), nullable=False, default="prime")
+    role: Mapped[str] = mapped_column(String(32), nullable=False, default="user")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     age_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     zkp_proof_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -2,13 +2,14 @@ from uuid import UUID, uuid4
 
 import bcrypt
 from fastapi import HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.domain.enums import UserMode
 from nexus_common.security.jwt import create_access_token
 from nexus_common.security.zkp import ZKPVerifier
 from services.identity.application.dtos import (
+    AdminMemberResponse,
     ModeSelectRequest,
     ModeSelectResponse,
     PublicUserResponse,
@@ -17,7 +18,7 @@ from services.identity.application.dtos import (
     UpdateProfileRequest,
     UserResponse,
 )
-from services.identity.infrastructure.models import UserModel
+from services.identity.infrastructure.models import UserModel, UserLocationModel
 
 
 class IdentityService:
@@ -54,6 +55,8 @@ class IdentityService:
             email=user.email,
             display_name=user.display_name,
             mode=UserMode(user.mode),
+            role=user.role,
+            status=user.status,
             age_verified=user.age_verified,
             bio=user.bio,
             headline=user.headline,
@@ -92,7 +95,7 @@ class IdentityService:
         await self.db.refresh(user)
 
         token = create_access_token(
-            user_id, request.email, request.display_name, mode.value, self.jwt_secret
+            user_id, request.email, request.display_name, mode.value, self.jwt_secret, role=user.role
         )
 
         return RegisterResponse(
@@ -121,7 +124,7 @@ class IdentityService:
         await self.db.commit()
 
         token = create_access_token(
-            user_id, user.email, user.display_name, request.mode.value, self.jwt_secret
+            user_id, user.email, user.display_name, request.mode.value, self.jwt_secret, role=user.role
         )
         return ModeSelectResponse(user_id=user_id, mode=request.mode, access_token=token)
 
@@ -201,3 +204,58 @@ class IdentityService:
             )
             for u in users
         ]
+
+    async def list_members_admin(self) -> list[AdminMemberResponse]:
+        stmt = (
+            select(
+                UserModel.id,
+                UserModel.email,
+                UserModel.display_name,
+                UserModel.mode,
+                UserModel.role,
+                UserModel.status,
+                func.coalesce(UserLocationModel.is_live, False).label("is_live"),
+                UserLocationModel.last_login_at,
+                UserLocationModel.location_label,
+                UserModel.created_at,
+            )
+            .outerjoin(UserLocationModel, UserModel.id == UserLocationModel.user_id)
+            .order_by(UserModel.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        rows = result.all()
+        return [
+            AdminMemberResponse(
+                id=row.id,
+                email=row.email,
+                display_name=row.display_name,
+                mode=row.mode,
+                role=row.role,
+                status=row.status,
+                is_live=row.is_live,
+                last_login_at=row.last_login_at,
+                location_label=row.location_label,
+                created_at=row.created_at,
+            )
+            for row in rows
+        ]
+
+    async def update_user_status_admin(self, user_id: UUID, status: str) -> None:
+        if status not in ("active", "suspended", "banned"):
+            raise HTTPException(status_code=400, detail="Invalid status")
+        result = await self.db.execute(select(UserModel).where(UserModel.id == user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        user.status = status
+        await self.db.commit()
+
+    async def update_user_role_admin(self, user_id: UUID, role: str) -> None:
+        if role not in ("user", "moderator", "admin"):
+            raise HTTPException(status_code=400, detail="Invalid role")
+        result = await self.db.execute(select(UserModel).where(UserModel.id == user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        user.role = role
+        await self.db.commit()

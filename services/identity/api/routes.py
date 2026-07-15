@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from nexus_common.domain.feature_flags import BETA_COHORTS, DEFAULT_FLAGS, FeatureFlagsResponse
 from nexus_common.domain.models import ApiResponse, HealthResponse, ZKPAgeProof
 from nexus_common.security.zkp import ZKPVerifier
+from services.identity.infrastructure.models import UserModel
 
 from services.identity.application.auth_dtos import (
     AuthLoginResponse,
@@ -28,6 +29,7 @@ from services.identity.application.auth_dtos import (
     WebAuthnLoginRequest,
 )
 from services.identity.application.dtos import (
+    AdminMemberResponse,
     ModeSelectRequest,
     ModeSelectResponse,
     PublicUserResponse,
@@ -46,6 +48,7 @@ from services.identity.application.services import IdentityService
 from services.identity.api.deps import (
     get_auth_service,
     get_current_user_id,
+    get_current_admin,
     get_identity_service,
     get_location_service,
     get_settings,
@@ -349,3 +352,34 @@ async def register_kids(
     auth: Annotated[AuthService, Depends(get_auth_service)],
 ) -> ApiResponse[KidsRegisterResponse]:
     return ApiResponse(data=await auth.register_kids(request))
+
+
+@router.get("/admin/users", response_model=ApiResponse[list[AdminMemberResponse]])
+async def admin_list_users(
+    admin: Annotated[UserModel, Depends(get_current_admin)],
+    identity: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ApiResponse[list[AdminMemberResponse]]:
+    members = await identity.list_members_admin()
+    return ApiResponse(data=members)
+
+
+@router.patch("/admin/users/{user_id}/status", response_model=ApiResponse[dict])
+async def admin_update_user_status(
+    user_id: UUID,
+    status: str,
+    admin: Annotated[UserModel, Depends(get_current_admin)],
+    identity: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ApiResponse[dict]:
+    await identity.update_user_status_admin(user_id, status)
+    return ApiResponse(data={"success": True})
+
+
+@router.patch("/admin/users/{user_id}/role", response_model=ApiResponse[dict])
+async def admin_update_user_role(
+    user_id: UUID,
+    role: str,
+    admin: Annotated[UserModel, Depends(get_current_admin)],
+    identity: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ApiResponse[dict]:
+    await identity.update_user_role_admin(user_id, role)
+    return ApiResponse(data={"success": True})

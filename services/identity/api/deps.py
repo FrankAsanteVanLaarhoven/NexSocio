@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus_common.security.jwt import decode_access_token
@@ -12,6 +13,7 @@ from services.identity.application.location_service import LocationService
 from services.identity.application.services import IdentityService
 from services.identity.infrastructure.config import Settings
 from services.identity.infrastructure.database import get_session_factory
+from services.identity.infrastructure.models import UserModel
 
 settings = Settings()
 _session_factory = None
@@ -68,3 +70,24 @@ async def get_current_user_id(
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     return UUID(payload.sub)
+
+
+async def get_current_user(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+) -> UserModel:
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if getattr(user, "status", "active") in ("suspended", "banned"):
+        raise HTTPException(status_code=403, detail=f"This account has been {user.status}.")
+    return user
+
+
+async def get_current_admin(
+    user: Annotated[UserModel, Depends(get_current_user)]
+) -> UserModel:
+    if getattr(user, "role", "user") not in ("admin", "moderator"):
+        raise HTTPException(status_code=403, detail="Admin permissions required")
+    return user
