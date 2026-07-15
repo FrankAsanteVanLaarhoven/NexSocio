@@ -37,6 +37,8 @@ from services.identity.application.dtos import (
     RegisterResponse,
     UpdateProfileRequest,
     UserResponse,
+    CreateUserNoteRequest,
+    UserNoteResponse,
 )
 from services.identity.application.location_dtos import (
     LocationUpdateRequest,
@@ -383,3 +385,29 @@ async def admin_update_user_role(
 ) -> ApiResponse[dict]:
     await identity.update_user_role_admin(user_id, role)
     return ApiResponse(data={"success": True})
+
+
+@router.get("/admin/users/{user_id}/notes", response_model=ApiResponse[list[UserNoteResponse]])
+async def admin_list_user_notes(
+    user_id: UUID,
+    admin: Annotated[UserModel, Depends(get_current_admin)],
+    identity: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ApiResponse[list[UserNoteResponse]]:
+    notes = await identity.list_user_notes_admin(user_id)
+    return ApiResponse(data=notes)
+
+
+@router.post("/admin/users/{user_id}/notes", response_model=ApiResponse[UserNoteResponse])
+async def admin_create_user_note(
+    user_id: UUID,
+    request: CreateUserNoteRequest,
+    admin: Annotated[UserModel, Depends(get_current_admin)],
+    identity: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ApiResponse[UserNoteResponse]:
+    note = await identity.create_user_note_admin(
+        user_id=user_id,
+        moderator_id=admin.id,
+        moderator_name=admin.display_name,
+        request=request
+    )
+    return ApiResponse(data=note)

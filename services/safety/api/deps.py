@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus_common.security.jwt import decode_access_token
+from nexus_common.security.jwt import decode_access_token, TokenPayload
 from nexus_common.security.rate_limit import RateLimiter
 from services.safety.application.services import SafetyService
 from services.safety.infrastructure.config import Settings
@@ -38,8 +38,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_safety_service(
     db: Annotated[AsyncSession, Depends(get_db)],
+    cfg: Annotated[Settings, Depends(get_settings)],
 ) -> SafetyService:
-    return SafetyService(db, _limiter)
+    return SafetyService(db, _limiter, content_url=cfg.content_url)
 
 
 async def get_current_user_id(
@@ -62,3 +63,21 @@ async def get_current_admin(
     if getattr(payload, "role", "user") not in ("admin", "moderator"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin permissions required")
     return UUID(payload.sub)
+
+
+async def get_current_admin_payload(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    cfg: Annotated[Settings, Depends(get_settings)],
+) -> TokenPayload:
+    payload = decode_access_token(credentials.credentials, cfg.jwt_secret)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    if getattr(payload, "role", "user") not in ("admin", "moderator"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin permissions required")
+    return payload
+
+
+async def get_token(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+) -> str:
+    return credentials.credentials

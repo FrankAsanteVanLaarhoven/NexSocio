@@ -180,6 +180,7 @@ class ContentService:
             sector = PostSector.BUSINESS_GENERAL
 
         query = query.where(PostModel.context == sector.value)
+        query = query.where(PostModel.moderation_status != "removed")
 
         if mode:
             query = query.where(PostModel.mode == mode.value)
@@ -308,3 +309,12 @@ class ContentService:
             ).model_dump()
             for p in posts
         ]
+
+    async def update_post_moderation_status(self, post_id: UUID, status: str) -> bool:
+        result = await self.db.execute(select(PostModel).where(PostModel.id == post_id))
+        post = result.scalar_one_or_none()
+        if not post:
+            return False
+        post.moderation_status = status
+        await self.db.commit()
+        return True

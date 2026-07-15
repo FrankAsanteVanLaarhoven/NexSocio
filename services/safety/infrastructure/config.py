@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     cors_origins: list[str] = ["http://localhost:3000"]
     rate_limit_rpm: int = 120
+    content_url: str = "http://localhost:8003"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

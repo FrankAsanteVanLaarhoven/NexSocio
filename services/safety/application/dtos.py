@@ -38,3 +38,41 @@ class SafetyDashboardResponse(BaseModel):
     open_reports: int
     incident_rate: float
     recent_events: list[dict]
+
+
+class ContentReportResponse(BaseModel):
+    id: UUID
+    post_id: UUID
+    reporter_id: UUID
+    reason: str
+    details: str | None
+    status: str
+    created_at: datetime
+
+
+class ReportActionRequest(BaseModel):
+    action: str
+    reason: str
+
+
+class ModeratorActionLogResponse(BaseModel):
+    id: UUID
+    moderator_id: UUID
+    moderator_name: str
+    target_type: str
+    target_id: UUID
+    action: str
+    reason: str
+    created_at: datetime
+
+
+class SafetyPolicyUpdateRequest(BaseModel):
+    key: str
+    value: str
+
+
+class SafetyPolicyResponse(BaseModel):
+    key: str
+    value: str
+    updated_by: UUID
+    updated_at: datetime

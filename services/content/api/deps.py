@@ -78,3 +78,15 @@ async def get_token(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
 ) -> str:
     return credentials.credentials
+
+
+async def get_current_admin(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    cfg: Annotated[Settings, Depends(get_settings)],
+) -> UUID:
+    payload = decode_access_token(credentials.credentials, cfg.jwt_secret)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    if getattr(payload, "role", "user") not in ("admin", "moderator"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin permissions required")
+    return UUID(payload.sub)

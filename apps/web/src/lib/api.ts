@@ -1513,3 +1513,93 @@ export async function adminGetSafetyDashboard(token: string): Promise<SafetyDash
     headers: authHeaders(token),
   });
 }
+
+export interface ContentReport {
+  id: string;
+  post_id: string;
+  reporter_id: string;
+  reason: string;
+  details: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface ModeratorActionLog {
+  id: string;
+  moderator_id: string;
+  moderator_name: string;
+  target_type: string;
+  target_id: string;
+  action: string;
+  reason: string;
+  created_at: string;
+}
+
+export interface SafetyPolicy {
+  key: string;
+  value: string;
+  updated_by: string;
+  updated_at: string;
+}
+
+export interface UserModNote {
+  id: string;
+  user_id: string;
+  moderator_id: string;
+  moderator_name: string;
+  note: string;
+  created_at: string;
+}
+
+export async function adminListReports(token: string): Promise<ContentReport[]> {
+  return request<ContentReport[]>(SAFETY_URL, "/api/v1/admin/reports", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function adminModerateReport(
+  token: string,
+  reportId: string,
+  action: "approve" | "remove",
+  reason: string
+): Promise<boolean> {
+  return request<boolean>(SAFETY_URL, `/api/v1/admin/reports/${reportId}/action`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify({ action, reason }),
+  });
+}
+
+export async function adminListAuditLogs(token: string): Promise<ModeratorActionLog[]> {
+  return request<ModeratorActionLog[]>(SAFETY_URL, "/api/v1/admin/audit-logs", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function adminGetPolicies(token: string): Promise<SafetyPolicy[]> {
+  return request<SafetyPolicy[]>(SAFETY_URL, "/api/v1/admin/policies", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function adminUpdatePolicy(token: string, key: string, value: string): Promise<SafetyPolicy> {
+  return request<SafetyPolicy>(SAFETY_URL, "/api/v1/admin/policies", {
+    method: "PUT",
+    headers: authHeaders(token),
+    body: JSON.stringify({ key, value }),
+  });
+}
+
+export async function adminListUserNotes(token: string, userId: string): Promise<UserModNote[]> {
+  return request<UserModNote[]>(IDENTITY_URL, `/api/v1/admin/users/${userId}/notes`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function adminCreateUserNote(token: string, userId: string, note: string): Promise<UserModNote> {
+  return request<UserModNote>(IDENTITY_URL, `/api/v1/admin/users/${userId}/notes`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ note }),
+  });
+}

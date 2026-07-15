@@ -17,8 +17,10 @@ from services.identity.application.dtos import (
     RegisterResponse,
     UpdateProfileRequest,
     UserResponse,
+    CreateUserNoteRequest,
+    UserNoteResponse,
 )
-from services.identity.infrastructure.models import UserModel, UserLocationModel
+from services.identity.infrastructure.models import UserModel, UserLocationModel, UserModNoteModel
 
 
 class IdentityService:
@@ -259,3 +261,44 @@ class IdentityService:
             raise HTTPException(status_code=404, detail="User not found")
         user.role = role
         await self.db.commit()
+
+    async def list_user_notes_admin(self, user_id: UUID) -> list[UserNoteResponse]:
+        result = await self.db.execute(
+            select(UserModNoteModel)
+            .where(UserModNoteModel.user_id == user_id)
+            .order_by(UserModNoteModel.created_at.desc())
+        )
+        notes = result.scalars().all()
+        return [
+            UserNoteResponse(
+                id=n.id,
+                user_id=n.user_id,
+                moderator_id=n.moderator_id,
+                moderator_name=n.moderator_name,
+                note=n.note,
+                created_at=n.created_at,
+            )
+            for n in notes
+        ]
+
+    async def create_user_note_admin(
+        self, user_id: UUID, moderator_id: UUID, moderator_name: str, request: CreateUserNoteRequest
+    ) -> UserNoteResponse:
+        note = UserModNoteModel(
+            id=uuid4(),
+            user_id=user_id,
+            moderator_id=moderator_id,
+            moderator_name=moderator_name,
+            note=request.note,
+        )
+        self.db.add(note)
+        await self.db.commit()
+        await self.db.refresh(note)
+        return UserNoteResponse(
+            id=note.id,
+            user_id=note.user_id,
+            moderator_id=note.moderator_id,
+            moderator_name=note.moderator_name,
+            note=note.note,
+            created_at=note.created_at,
+        )

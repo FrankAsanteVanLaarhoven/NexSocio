@@ -83,3 +83,16 @@ class AdminMemberResponse(BaseModel):
     last_login_at: datetime | None = None
     location_label: str | None = None
     created_at: datetime
+
+
+class CreateUserNoteRequest(BaseModel):
+    note: str
+
+
+class UserNoteResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    moderator_id: UUID
+    moderator_name: str
+    note: str
+    created_at: datetime

@@ -14,6 +14,7 @@ from services.content.api.deps import (
     get_media_upload_service,
     get_settings,
     get_token,
+    get_current_admin,
 )
 from services.content.application.dtos import (
     AIComposeRequest,
@@ -147,3 +148,14 @@ async def list_comments(
 ) -> ApiResponse[list[CommentResponse]]:
     comments = await service.get_comments(post_id)
     return ApiResponse(data=comments)
+
+
+@router.patch("/admin/posts/{post_id}/moderation", response_model=ApiResponse[bool])
+async def admin_update_post_moderation(
+    post_id: UUID,
+    status: str = Query(..., description="approved or removed"),
+    admin_id: Annotated[UUID, Depends(get_current_admin)] = None,
+    service: Annotated[ContentService, Depends(get_content_service)] = None,
+) -> ApiResponse[bool]:
+    success = await service.update_post_moderation_status(post_id, status)
+    return ApiResponse(data=success)
